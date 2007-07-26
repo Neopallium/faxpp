@@ -17,12 +17,7 @@
 #ifndef __FAXPP__ERROR_H
 #define __FAXPP__ERROR_H
 
-/*********************
- *
- *  Errors
- *
- *********************/
-
+/// An enumeration of the error conditions returned by faxpp
 typedef enum {
   NO_ERROR  = 0,
   DOUBLE_DASH_IN_COMMENT,
@@ -47,11 +42,17 @@ typedef enum {
   EXPECTING_WHITESPACE,
   UNKNOWN_XML_VERSION,
   OUT_OF_MEMORY,
+
   ELEMENT_NAME_MISMATCH,
   NO_URI_FOR_PREFIX,
   DUPLICATE_ATTRIBUTES
 } FAXPP_Error;
 
+/**
+ * Returns a string describing the given error code
+ * \param err The error code
+ * \return a string
+ */
 const char *FAXPP_err_to_string(FAXPP_Error err);
 
 #endif

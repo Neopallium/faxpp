@@ -74,7 +74,7 @@ uint8_t FAXPP_utf_8_bytes[256] =
  * 010000-10FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
  */
 unsigned int
-FAXPP_utf8_decode(void *buffer, void *buffer_end,
+FAXPP_utf8_decode(const void *buffer, const void *buffer_end,
                   Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
@@ -156,7 +156,7 @@ FAXPP_utf8_decode(void *buffer, void *buffer_end,
  * 010000-10FFFF | 110110xx xxxxxxxx 110111xx xxxxxxxx
  */
 unsigned int
-FAXPP_utf16_be_decode(void *buffer, void *buffer_end,
+FAXPP_utf16_be_decode(const void *buffer, const void *buffer_end,
                       Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
@@ -195,7 +195,7 @@ FAXPP_utf16_be_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-FAXPP_utf16_le_decode(void *buffer, void *buffer_end,
+FAXPP_utf16_le_decode(const void *buffer, const void *buffer_end,
                       Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
@@ -234,7 +234,7 @@ FAXPP_utf16_le_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-FAXPP_utf16_native_decode(void *buffer, void *buffer_end,
+FAXPP_utf16_native_decode(const void *buffer, const void *buffer_end,
                           Char32 *ch)
 {
   uint16_t *buf = (uint16_t*)buffer;
@@ -270,7 +270,7 @@ FAXPP_utf16_native_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-FAXPP_ucs4_be_decode(void *buffer, void *buffer_end,
+FAXPP_ucs4_be_decode(const void *buffer, const void *buffer_end,
                      Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
@@ -292,7 +292,7 @@ FAXPP_ucs4_be_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-FAXPP_ucs4_le_decode(void *buffer, void *buffer_end,
+FAXPP_ucs4_le_decode(const void *buffer, const void *buffer_end,
                      Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
@@ -314,7 +314,7 @@ FAXPP_ucs4_le_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-FAXPP_ucs4_native_decode(void *buffer, void *buffer_end,
+FAXPP_ucs4_native_decode(const void *buffer, const void *buffer_end,
                          Char32 *ch)
 {
   uint32_t *buf = (uint32_t*)buffer;

@@ -361,6 +361,35 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, FAX
 }
 
 FAXPP_Error
+FAXPP_tokenizer_release_buffer(FAXPP_Tokenizer *tokenizer, void **buffer_position)
+{
+  if(buffer_position) *buffer_position = tokenizer->position;
+
+  // Check if the partial token in the tokenizer needs copying to the token_buffer
+  if(tokenizer->token.value.ptr >= tokenizer->buffer &&
+     tokenizer->token.value.ptr < tokenizer->buffer_end) {
+    void *token_start = tokenizer->token.value.ptr;
+
+    // Find the length of the partial token
+    unsigned int token_length = tokenizer->token.value.len;
+    if(!token_length)
+      token_length = tokenizer->position - tokenizer->token.value.ptr;
+
+    // Re-position the token positions to point into the token_buffer
+    FAXPP_reset_buffer(&tokenizer->token_buffer);
+    tokenizer->token_position1 += tokenizer->token_buffer.cursor - token_start;
+    tokenizer->token_position2 += tokenizer->token_buffer.cursor - token_start;
+    tokenizer->token.value.ptr = tokenizer->token_buffer.cursor;
+    tokenizer->token.value.len = token_length;
+
+    return FAXPP_buffer_append(&tokenizer->token_buffer, token_start, token_length,
+                               change_token_buffer, tokenizer);
+  }
+
+  return NO_ERROR;
+}
+
+FAXPP_Error
 FAXPP_continue_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length)
 {
   if(env->token.value.ptr == env->buffer_end)
@@ -375,17 +404,22 @@ FAXPP_continue_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length)
 }
 
 FAXPP_Error
-FAXPP_next_token(FAXPP_Tokenizer *env, FAXPP_Token *token)
+FAXPP_next_token(FAXPP_Tokenizer *env)
 {
-  token->token = NO_TOKEN;
-  env->result_token = token;
+  env->result_token.type = NO_TOKEN;
 
   FAXPP_Error err = 0;
-  while(err == NO_ERROR && token->token == NO_TOKEN) {
+  while(err == NO_ERROR && env->result_token.type == NO_TOKEN) {
     err = env->state(env);
   }
 
   return err;
+}
+
+const FAXPP_Token *
+FAXPP_get_current_token(const FAXPP_Tokenizer *tokenizer)
+{
+  return &tokenizer->result_token;
 }
 
 unsigned int

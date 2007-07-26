@@ -17,9 +17,9 @@
 #include <faxpp/token.h>
 
 const char *
-FAXPP_token_to_string(FAXPP_Token *token)
+FAXPP_token_to_string(const FAXPP_TokenType type)
 {
-  switch(token->token) {
+  switch(type) {
   case START_ELEMENT_NAME_TOKEN:
     return "START_ELEMENT_NAME_TOKEN";
   case START_ELEMENT_END_TOKEN:

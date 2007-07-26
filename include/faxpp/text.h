@@ -17,9 +17,10 @@
 #ifndef __FAXPP__TEXT_H
 #define __FAXPP__TEXT_H
 
-typedef struct FAXPP_Text_s {
-  void *ptr;
-  unsigned int len;
+/// The basic string type in faxpp
+typedef struct {
+  void *ptr;        ///< A pointer to the memory for the string
+  unsigned int len; ///< The length of the string in bytes
 } FAXPP_Text;
 
 #endif

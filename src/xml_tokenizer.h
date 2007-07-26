@@ -47,7 +47,7 @@ struct FAXPP_TokenizerEnv_s {
   FAXPP_DecodeFunction decode;
   FAXPP_EncodeFunction encode;
 
-  FAXPP_Token *result_token;
+  FAXPP_Token result_token;
   FAXPP_Token token;
 
   FAXPP_Buffer token_buffer;

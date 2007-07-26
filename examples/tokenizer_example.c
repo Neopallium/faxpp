@@ -16,11 +16,8 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <unistd.h>
-#include <sys/mman.h>
 #include <sys/time.h>
 
 #include <faxpp/tokenizer.h>
@@ -35,25 +32,25 @@ unsigned long getTime()
   return (timev.tv_sec * MSECS_IN_SECS) + timev.tv_usec;
 }
 
-#define BUF_SIZE 50
+#define OUTPUT_BUFFER_SIZE 50
+#define INPUT_BUFFER_SIZE 4 * 1024
 
 int
 main(int argc, char **argv)
 {
   FAXPP_Error err;
-  int fd;
-  long length;
-  void *xml;
+  const FAXPP_Token *token;
   int i;
-  char buf[BUF_SIZE + 1];
+  char buf[OUTPUT_BUFFER_SIZE + 1];
   unsigned long startTime;
+  FILE *file;
+  char xml[INPUT_BUFFER_SIZE];
+  long length;
 
   if(argc < 2) {
     printf("Too few arguments\n");
     exit(-1);
   }
-
-  FAXPP_Token token;
 
   FAXPP_Tokenizer *tokenizer = FAXPP_create_tokenizer();
   if(tokenizer == 0) {
@@ -65,19 +62,13 @@ main(int argc, char **argv)
 
     startTime = getTime();
 
-    fd = open(argv[i], O_RDONLY);
-    if(fd == -1) {
+    file = fopen(argv[i], "r");
+    if(file == 0) {
       printf("Open failed: %s\n", strerror(errno));
       exit(1);
     }
 
-    length = lseek(fd, 0, SEEK_END);
-
-    xml = mmap(0, length, PROT_READ, MAP_SHARED, fd, 0);
-    if(xml == MAP_FAILED) {
-      printf("Mmap failed: %s\n", strerror(errno));
-      exit(1);
-    }
+    length = fread(xml, 1, sizeof(xml), file);
 
     err = FAXPP_init_tokenize(tokenizer, xml, length, FAXPP_utf8_encode);
     if(err != NO_ERROR) {
@@ -85,33 +76,49 @@ main(int argc, char **argv)
       exit(1);
     }
 
-    err = FAXPP_next_token(tokenizer, &token);
-    while(token.token != END_OF_BUFFER_TOKEN) {
-      if(err != NO_ERROR) {
+    err = FAXPP_next_token(tokenizer);
+    token = FAXPP_get_current_token(tokenizer);
+    while(token->type != END_OF_BUFFER_TOKEN) {
+      if(err == PREMATURE_END_OF_BUFFER && length == sizeof(xml)) {
+        // Repopulate the buffer
+        void *buffer_position;
+        FAXPP_tokenizer_release_buffer(tokenizer, &buffer_position);
+
+        if(buffer_position < (void*)xml + sizeof(xml)) {
+          length = (void*)(xml + sizeof(xml)) - buffer_position;
+          memmove(xml, buffer_position, length);
+        }
+        else length = 0;
+
+        length += fread(xml, 1, sizeof(xml) - length, file);
+
+        FAXPP_continue_tokenize(tokenizer, xml, length);
+      }
+      else if(err != NO_ERROR) {
         printf("%03d:%03d ERROR: %s\n", FAXPP_get_tokenizer_error_line(tokenizer),
                FAXPP_get_tokenizer_error_column(tokenizer), FAXPP_err_to_string(err));
         if(err == PREMATURE_END_OF_BUFFER ||
            err == BAD_ENCODING ||
            err == OUT_OF_MEMORY) break;
       }
-      else if(token.value.len != 0) {
-        if(token.value.len > BUF_SIZE) {
-          strncpy(buf, token.value.ptr, BUF_SIZE - 3);
-          buf[BUF_SIZE - 3] = '.';
-          buf[BUF_SIZE - 2] = '.';
-          buf[BUF_SIZE - 1] = '.';
-          buf[BUF_SIZE] = 0;
+      else if(token->value.len != 0) {
+        if(token->value.len > OUTPUT_BUFFER_SIZE) {
+          strncpy(buf, token->value.ptr, OUTPUT_BUFFER_SIZE - 3);
+          buf[OUTPUT_BUFFER_SIZE - 3] = '.';
+          buf[OUTPUT_BUFFER_SIZE - 2] = '.';
+          buf[OUTPUT_BUFFER_SIZE - 1] = '.';
+          buf[OUTPUT_BUFFER_SIZE] = 0;
         }
         else {
-          strncpy(buf, token.value.ptr, token.value.len);
-          buf[token.value.len] = 0;
+          strncpy(buf, token->value.ptr, token->value.len);
+          buf[token->value.len] = 0;
         }
-        printf("%03d:%03d Token ID: %s, Token: \"%s\"\n", token.line, token.column, FAXPP_token_to_string(&token), buf);
+        printf("%03d:%03d Token ID: %s, Token: \"%s\"\n", token->line, token->column, FAXPP_token_to_string(token->type), buf);
       }
       else
-        printf("%03d:%03d Token ID: %s\n", token.line, token.column, FAXPP_token_to_string(&token));
+        printf("%03d:%03d Token ID: %s\n", token->line, token->column, FAXPP_token_to_string(token->type));
 
-      err = FAXPP_next_token(tokenizer, &token);
+      err = FAXPP_next_token(tokenizer);
     }
 
     printf("Time taken: %gms\n", ((double)(getTime() - startTime) / MSECS_IN_SECS * 1000));

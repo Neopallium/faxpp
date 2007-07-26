@@ -248,6 +248,7 @@ parser_example_SOURCES = examples/parser_example.c
 parser_example_LDADD = libfaxpp.la
 EXTRA_DIST = \
 docs/Doxyfile.api \
+docs/header.html \
 docs/api \
 LICENSE
 
@@ -922,8 +923,6 @@ uninstall-info: uninstall-info-recursive
 
 docs:
 	$(MAKE) -C include docs
-
-$(top_srcdir)/docs/api: docs
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

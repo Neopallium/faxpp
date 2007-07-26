@@ -401,7 +401,7 @@ uninstall-am: uninstall-info-am uninstall-nobase_includeHEADERS
 
 docs: $(top_srcdir)/docs/.api-timestamp
 
-$(top_srcdir)/docs/.api-timestamp: $(nobase_include_HEADERS) $(top_srcdir)/docs/Doxyfile.api
+$(top_srcdir)/docs/.api-timestamp: $(nobase_include_HEADERS) $(top_srcdir)/docs/Doxyfile.api $(top_srcdir)/docs/header.html
 	cd $(top_srcdir)/docs && \
 		doxygen Doxyfile.api && \
 		touch .api-timestamp

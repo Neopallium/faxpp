@@ -19,6 +19,7 @@
 
 #include "text.h"
 
+/// An enumeration of the token types returned by the tokenizer
 typedef enum {
   NO_TOKEN  = 0,
 
@@ -57,13 +58,21 @@ typedef enum {
   END_OF_BUFFER_TOKEN = 99
 } FAXPP_TokenType;
 
-typedef struct FAXPP_Token_s {
-  FAXPP_TokenType token;
-  FAXPP_Text value;
-  unsigned int line;
-  unsigned int column;
+/// A structure containing token information, returned by the tokenizer
+typedef struct {
+  FAXPP_TokenType type; ///< The type of the token
+  FAXPP_Text value;     ///< The string value of the token (might be zero length)
+  unsigned int line;    ///< The line number of the start of the token
+  unsigned int column;  ///< The column number of the start of the token
 } FAXPP_Token;
 
-const char *FAXPP_token_to_string(FAXPP_Token *token);
+/**
+ * Returns a string describing the given token type
+ * \param type The token type
+ * \return a string
+ *
+ * \relatesalso FAXPP_Token
+ */
+const char *FAXPP_token_to_string(const FAXPP_TokenType type);
 
 #endif

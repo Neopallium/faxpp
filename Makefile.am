@@ -41,6 +41,7 @@ parser_example_LDADD = libfaxpp.la
 
 EXTRA_DIST = \
 docs/Doxyfile.api \
+docs/header.html \
 docs/api \
 LICENSE
 
@@ -48,5 +49,3 @@ LICENSE
 
 docs:
 	$(MAKE) -C include docs
-
-$(top_srcdir)/docs/api: docs

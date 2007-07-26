@@ -303,8 +303,8 @@ void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Bu
 #define report_token(token_int, env) \
 { \
   if((env)->token.value.len != 0) { \
-    memcpy((env)->result_token, &(env)->token, sizeof(FAXPP_Token)); \
-    (env)->result_token->token = (token_int); \
+    memcpy(&(env)->result_token, &(env)->token, sizeof(FAXPP_Token)); \
+    (env)->result_token.type = (token_int); \
     (env)->token.value.ptr = 0; \
     (env)->token.value.len = 0; \
   } \
@@ -312,11 +312,11 @@ void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Bu
 
 #define report_empty_token(token_int, env) \
 { \
-  (env)->result_token->token = (token_int); \
-  (env)->result_token->value.ptr = 0; \
-  (env)->result_token->value.len = 0; \
-  (env)->result_token->line = (env)->line; \
-  (env)->result_token->column = (env)->column; \
+  (env)->result_token.type = (token_int); \
+  (env)->result_token.value.ptr = 0; \
+  (env)->result_token.value.len = 0; \
+  (env)->result_token.line = (env)->line; \
+  (env)->result_token.column = (env)->column; \
 }
 
 #define store_state(env) (env)->stored_state = (env)->state
