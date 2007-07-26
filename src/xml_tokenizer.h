@@ -17,10 +17,8 @@
 #ifndef __FAXPP__XML_TOKENIZER_H
 #define __FAXPP__XML_TOKENIZER_H
 
-#include "token.h"
-#include "transcode.h"
-#include "error.h"
 #include "buffer.h"
+#include <faxpp/tokenizer.h>
 
 /*********************
  *
@@ -28,10 +26,10 @@
  *
  *********************/
 
-typedef struct TokenizerEnv_s TokenizerEnv;
-typedef TokenizerError (*StateFunction)(TokenizerEnv *env);
+typedef struct FAXPP_TokenizerEnv_s FAXPP_TokenizerEnv;
+typedef FAXPP_Error (*FAXPP_StateFunction)(FAXPP_TokenizerEnv *env);
 
-struct TokenizerEnv_s {
+struct FAXPP_TokenizerEnv_s {
   // TBD Mark end of buffer with EOF instead of using buffer_end - jpcs
   void *buffer;
   void *buffer_end;
@@ -46,36 +44,21 @@ struct TokenizerEnv_s {
   unsigned int nesting_level;
   unsigned int seen_doc_element:1;
 
-  DecodeFunction decode;
-  EncodeFunction encode;
+  FAXPP_DecodeFunction decode;
+  FAXPP_EncodeFunction encode;
 
-  Token *result_token;
-  Token token;
+  FAXPP_Token *result_token;
+  FAXPP_Token token;
 
-  Buffer token_buffer;
+  FAXPP_Buffer token_buffer;
   void *token_position1;
   void *token_position2;
 
-  StateFunction state;
-  StateFunction stored_state;
+  FAXPP_StateFunction state;
+  FAXPP_StateFunction stored_state;
 
-  StateFunction start_element_name_state;
-  StateFunction element_content_state;
+  FAXPP_StateFunction start_element_name_state;
+  FAXPP_StateFunction element_content_state;
 };
-
-/*********************
- *
- *  Tokenizer Functions
- *
- *********************/
-
-TokenizerError init_tokenizer(TokenizerEnv *env);
-TokenizerError free_tokenizer(TokenizerEnv *env);
-
-TokenizerError init_tokenize(TokenizerEnv *env, void *buffer,
-                             unsigned int length, EncodeFunction encode);
-TokenizerError continue_tokenize(TokenizerEnv *env, void *buffer,
-                                 unsigned int length);
-TokenizerError next_token(TokenizerEnv *env, Token *token);
 
 #endif

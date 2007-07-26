@@ -19,10 +19,11 @@
 #include <fcntl.h>
 #include <errno.h>
 #include <string.h>
+#include <unistd.h>
 #include <sys/mman.h>
 #include <sys/time.h>
 
-#include <faxpp/xml_tokenizer.h>
+#include <faxpp/tokenizer.h>
 
 #define MSECS_IN_SECS 1000000
 
@@ -39,6 +40,7 @@ unsigned long getTime()
 int
 main(int argc, char **argv)
 {
+  FAXPP_Error err;
   int fd;
   long length;
   void *xml;
@@ -51,12 +53,11 @@ main(int argc, char **argv)
     exit(-1);
   }
 
-  TokenizerEnv env;
-  Token token;
+  FAXPP_Token token;
 
-  TokenizerError err = init_tokenizer(&env);
-  if(err != NO_ERROR) {
-    printf("ERROR: %s\n", err_to_string(err));
+  FAXPP_Tokenizer *tokenizer = FAXPP_create_tokenizer();
+  if(tokenizer == 0) {
+    printf("ERROR: out of memory\n");
     exit(1);
   }
 
@@ -66,57 +67,57 @@ main(int argc, char **argv)
 
     fd = open(argv[i], O_RDONLY);
     if(fd == -1) {
-      printf("Open failed: %d\n", errno);
+      printf("Open failed: %s\n", strerror(errno));
       exit(1);
     }
 
     length = lseek(fd, 0, SEEK_END);
-/*     printf("Arg: %s\nLength: %d\n", argv[1], length); */
 
     xml = mmap(0, length, PROT_READ, MAP_SHARED, fd, 0);
     if(xml == MAP_FAILED) {
-      printf("Mmap failed: %d\n", errno);
+      printf("Mmap failed: %s\n", strerror(errno));
       exit(1);
     }
 
-    err = init_tokenize(&env, xml, length, utf8_encode);
+    err = FAXPP_init_tokenize(tokenizer, xml, length, FAXPP_utf8_encode);
     if(err != NO_ERROR) {
-      printf("ERROR: %s\n", err_to_string(err));
+      printf("ERROR: %s\n", FAXPP_err_to_string(err));
       exit(1);
     }
 
-/*     printf("Char set: %s\n", transcode_to_string(env.transcode)); */
-
-    err = next_token(&env, &token);
+    err = FAXPP_next_token(tokenizer, &token);
     while(token.token != END_OF_BUFFER_TOKEN) {
       if(err != NO_ERROR) {
-        printf("%03d:%03d ERROR: %s\n", env.line, env.column, err_to_string(err));
+        printf("%03d:%03d ERROR: %s\n", FAXPP_get_tokenizer_error_line(tokenizer),
+               FAXPP_get_tokenizer_error_column(tokenizer), FAXPP_err_to_string(err));
         if(err == PREMATURE_END_OF_BUFFER ||
-           err == BAD_ENCODING) break;
+           err == BAD_ENCODING ||
+           err == OUT_OF_MEMORY) break;
       }
-/*       else if(token.value != 0) { */
-/*         if(token.length > BUF_SIZE) { */
-/*           strncpy(buf, token.value, BUF_SIZE - 3); */
-/*           buf[BUF_SIZE - 3] = '.'; */
-/*           buf[BUF_SIZE - 2] = '.'; */
-/*           buf[BUF_SIZE - 1] = '.'; */
-/*           buf[BUF_SIZE] = 0; */
-/*         } */
-/*         else { */
-/*           strncpy(buf, token.value, token.length); */
-/*           buf[token.length] = 0; */
-/*         } */
-/*         printf("%03d:%03d Token ID: %s, Token: \"%s\"\n", token.line, token.column, token_to_string(&token), buf); */
-/*       } */
-/*       else */
-/*         printf("%03d:%03d Token ID: %s\n", token.line, token.column, token_to_string(&token)); */
-      err = next_token(&env, &token);
+      else if(token.value.len != 0) {
+        if(token.value.len > BUF_SIZE) {
+          strncpy(buf, token.value.ptr, BUF_SIZE - 3);
+          buf[BUF_SIZE - 3] = '.';
+          buf[BUF_SIZE - 2] = '.';
+          buf[BUF_SIZE - 1] = '.';
+          buf[BUF_SIZE] = 0;
+        }
+        else {
+          strncpy(buf, token.value.ptr, token.value.len);
+          buf[token.value.len] = 0;
+        }
+        printf("%03d:%03d Token ID: %s, Token: \"%s\"\n", token.line, token.column, FAXPP_token_to_string(&token), buf);
+      }
+      else
+        printf("%03d:%03d Token ID: %s\n", token.line, token.column, FAXPP_token_to_string(&token));
+
+      err = FAXPP_next_token(tokenizer, &token);
     }
 
     printf("Time taken: %gms\n", ((double)(getTime() - startTime) / MSECS_IN_SECS * 1000));
   }
 
-  free_tokenizer(&env);
+  FAXPP_free_tokenizer(tokenizer);
 
   return 0;
 }

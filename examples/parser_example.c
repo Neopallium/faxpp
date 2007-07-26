@@ -16,13 +16,11 @@
 
 #include <stdio.h>
 #include <stdlib.h>
-#include <fcntl.h>
 #include <errno.h>
 #include <string.h>
-#include <sys/mman.h>
 #include <sys/time.h>
 
-#include <faxpp/xml_parser.h>
+#include <faxpp/parser.h>
 
 #define BUFFER_SIZE 10
 #define MSECS_IN_SECS 1000000
@@ -36,7 +34,7 @@ unsigned long getTime()
 }
 
 void
-output_text(Text *text, FILE *stream)
+output_text(const FAXPP_Text *text, FILE *stream)
 {
   char *buffer = (char*)text->ptr;
   char *buffer_end = buffer + text->len;
@@ -46,13 +44,13 @@ output_text(Text *text, FILE *stream)
   }
 }
 
-#define SHOW_URIS 1
+#define SHOW_URIS 0
 
 void
-output_event(Event *event, FILE *stream)
+output_event(const FAXPP_Event *event, FILE *stream)
 {
   int i;
-  AttrValue *atval;
+  FAXPP_AttrValue *atval;
 
   switch(event->type) {
   case START_DOCUMENT_EVENT:
@@ -125,6 +123,8 @@ output_event(Event *event, FILE *stream)
           output_text(&atval->value, stream);
           fprintf(stream, ";");
           break;
+        default:
+          break;
         }
         atval = atval->next;
       }
@@ -193,12 +193,15 @@ output_event(Event *event, FILE *stream)
     output_text(&event->name, stream);
     fprintf(stream, ";");
     break;
+  case NO_EVENT:
+    break;
   }
 }
 
 int
 main(int argc, char **argv)
 {
+  FAXPP_Error err;
   int i;
   unsigned long startTime;
   FILE *file;
@@ -208,11 +211,9 @@ main(int argc, char **argv)
     exit(-1);
   }
 
-  ParserEnv env;
-
-  TokenizerError err = init_parser(&env, WELL_FORMED_PARSE_MODE, utf8_encode);
-  if(err != NO_ERROR) {
-    printf("ERROR: %s\n", err_to_string(err));
+  FAXPP_Parser *parser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_encode);
+  if(parser == 0) {
+    printf("ERROR: out of memory\n");
     exit(1);
   }
 
@@ -222,39 +223,34 @@ main(int argc, char **argv)
 
     file = fopen(argv[i], "r");
     if(file == 0) {
-      printf("Open failed: %d\n", errno);
+      printf("Open failed: %s\n", strerror(errno));
       exit(1);
     }
 
-    err = init_parse_file(&env, file);
+    err = FAXPP_init_parse_file(parser, file);
     if(err != NO_ERROR) {
-      printf("ERROR: %s\n", err_to_string(err));
+      printf("ERROR: %s\n", FAXPP_err_to_string(err));
       exit(1);
     }
 
-/*     env.tenv.encode = utf8_encode; */
+    while((err = FAXPP_next_event(parser)) == 0) {
+      output_event(FAXPP_get_current_event(parser), stdout);
 
-    err = next_event(&env);
-    while(env.event.type != END_DOCUMENT_EVENT) {
-      if(err != NO_ERROR) {
-        printf("%03d:%03d ERROR: %s\n", env.err_line, env.err_column, err_to_string(err));
-        if(err == PREMATURE_END_OF_BUFFER ||
-           err == BAD_ENCODING ||
-           err == OUT_OF_MEMORY) break;
-      }
-/*       if(env.event.type != NO_EVENT) */
-/*         output_event(&env.event, stdout); */
-
-      err = next_event(&env);
+      if(FAXPP_get_current_event(parser)->type == END_DOCUMENT_EVENT)
+        break;
     }
-/*     output_event(&env.event, stdout); */
+
+    if(err != NO_ERROR) {
+      printf("%03d:%03d ERROR: %s\n", FAXPP_get_error_line(parser),
+             FAXPP_get_error_column(parser), FAXPP_err_to_string(err));
+    }
 
     fclose(file);
 
     printf("Time taken: %gms\n", ((double)(getTime() - startTime) / MSECS_IN_SECS * 1000));
   }
 
-  free_parser(&env);
+  FAXPP_free_parser(parser);
 
   return 0;
 }

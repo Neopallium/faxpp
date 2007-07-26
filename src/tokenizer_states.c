@@ -15,9 +15,10 @@
  */
 
 #include "tokenizer_states.h"
+#include "char_classes.h"
 
 #ifdef DEBUG
-const char *state_to_string(StateFunction state)
+const char *FAXPP_state_to_string(FAXPP_StateFunction state)
 {
   if(state == initial_state)
     return "initial_state";
@@ -290,14 +291,14 @@ const char *state_to_string(StateFunction state)
 }
 #endif
 
-void change_token_buffer(void *userData, Buffer *buffer, void *newBuffer)
+void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Buffer)
 {
-  TokenizerEnv *env = (TokenizerEnv*)userData;
+  FAXPP_TokenizerEnv *env = (FAXPP_TokenizerEnv*)userData;
 
-  env->token_position1 += newBuffer - buffer->buffer;
-  env->token_position2 += newBuffer - buffer->buffer;
+  env->token_position1 += newFAXPP_Buffer - buffer->buffer;
+  env->token_position2 += newFAXPP_Buffer - buffer->buffer;
 
-  env->token.value.ptr = newBuffer;
+  env->token.value.ptr = newFAXPP_Buffer;
 }
 
 /*********************
@@ -306,8 +307,8 @@ void change_token_buffer(void *userData, Buffer *buffer, void *newBuffer)
  *
  *********************/
 
-TokenizerError
-ws_plus_state(TokenizerEnv *env)
+FAXPP_Error
+ws_plus_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -325,8 +326,8 @@ ws_plus_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-ws_state(TokenizerEnv *env)
+FAXPP_Error
+ws_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -343,8 +344,8 @@ ws_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-equals_state(TokenizerEnv *env)
+FAXPP_Error
+equals_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -362,8 +363,8 @@ equals_state(TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-TokenizerError
-initial_state(TokenizerEnv *env)
+FAXPP_Error
+initial_state(FAXPP_TokenizerEnv *env)
 {
   if(env->position >= env->buffer_end) {
     if(env->token.value.ptr) {
@@ -398,8 +399,8 @@ initial_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-initial_misc_state(TokenizerEnv *env)
+FAXPP_Error
+initial_misc_state(FAXPP_TokenizerEnv *env)
 {
   if(env->position >= env->buffer_end) {
     if(env->token.value.ptr) {
@@ -432,8 +433,8 @@ initial_misc_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-initial_markup_state(TokenizerEnv *env)
+FAXPP_Error
+initial_markup_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -454,15 +455,15 @@ initial_markup_state(TokenizerEnv *env)
     env->seen_doc_element = 1;
     token_start_position(env);
     next_char(env);
-    if((char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
     break;
   }
   return NO_ERROR;
 }
 
-TokenizerError
-final_state(TokenizerEnv *env)
+FAXPP_Error
+final_state(FAXPP_TokenizerEnv *env)
 {
   if(env->position >= env->buffer_end) {
     env->state = end_of_buffer_state;
@@ -490,8 +491,8 @@ final_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-final_markup_state(TokenizerEnv *env)
+FAXPP_Error
+final_markup_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -516,8 +517,8 @@ final_markup_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-end_of_buffer_state(TokenizerEnv *env)
+FAXPP_Error
+end_of_buffer_state(FAXPP_TokenizerEnv *env)
 {
     report_empty_token(END_OF_BUFFER_TOKEN, env);
     return 0;
@@ -555,7 +556,7 @@ end_of_buffer_state(TokenizerEnv *env)
   /* Check if it really was a one byte char */ \
   if(env->current_char >= 0x80) { \
     /* Decode properly */ \
-    env->char_len = utf8_decode(env->position, env->buffer_end, &env->current_char); \
+    env->char_len = FAXPP_utf8_decode(env->position, env->buffer_end, &env->current_char); \
     switch((env)->char_len) { \
     case TRANSCODE_PREMATURE_END_OF_BUFFER: \
       return PREMATURE_END_OF_BUFFER; \
@@ -588,7 +589,7 @@ end_of_buffer_state(TokenizerEnv *env)
   /* Check if it was actually a surrogate pair */ \
   if(env->current_char >= 0xD800 && env->current_char <= 0xDF00) { \
     /* Decode properly */ \
-    env->char_len = utf16_native_decode(env->position, env->buffer_end, &env->current_char); \
+    env->char_len = FAXPP_utf16_native_decode(env->position, env->buffer_end, &env->current_char); \
     switch((env)->char_len) { \
     case TRANSCODE_PREMATURE_END_OF_BUFFER: \
       return PREMATURE_END_OF_BUFFER; \

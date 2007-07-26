@@ -17,7 +17,7 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <faxpp/xml_tokenizer.h>
+#include "xml_tokenizer.h"
 #include "tokenizer_states.h"
 #include <faxpp/token.h>
 
@@ -38,11 +38,11 @@ static unsigned int native_little_endian()
   return (unsigned int)*ptr;
 }
 
-TokenizerError
-sniff_encoding(TokenizerEnv *env)
+FAXPP_Error
+sniff_encoding(FAXPP_TokenizerEnv *env)
 {
   // Default encoding is UTF-8
-  env->decode = utf8_decode;
+  env->decode = FAXPP_utf8_decode;
 
   // Make initial judgement on the encoding
   unsigned char *buf = (unsigned char*)env->position;
@@ -59,8 +59,8 @@ sniff_encoding(TokenizerEnv *env)
         switch(*buf) {
         case 0x3C:
           /* 00 00 00 3C  UCS-4, big-endian machine (1234 order) */
-          if(native_little_endian()) env->decode = ucs4_be_decode;
-          else env->decode = ucs4_native_decode;
+          if(native_little_endian()) env->decode = FAXPP_ucs4_be_decode;
+          else env->decode = FAXPP_ucs4_native_decode;
           break;
         }
         break;
@@ -75,8 +75,8 @@ sniff_encoding(TokenizerEnv *env)
         switch(*buf) {
         case 0xFF:
           /* 00 00 FE FF  UCS-4, big-endian machine (1234 order) */
-          if(native_little_endian()) env->decode = ucs4_be_decode;
-          else env->decode = ucs4_native_decode;
+          if(native_little_endian()) env->decode = FAXPP_ucs4_be_decode;
+          else env->decode = FAXPP_ucs4_native_decode;
           // Skip BOM
           env->position += 4;
           break;
@@ -100,12 +100,12 @@ sniff_encoding(TokenizerEnv *env)
           return UNSUPPORTED_ENCODING;
         case 0x3F:
           /* 00 3C 00 3F  UTF-16, big-endian */
-          if(native_little_endian()) env->decode = utf16_be_decode;
+          if(native_little_endian()) env->decode = FAXPP_utf16_be_decode;
           else {
-            env->decode = utf16_native_decode;
+            env->decode = FAXPP_utf16_native_decode;
             env->start_element_name_state = utf16_start_element_name_state;
             env->element_content_state = utf16_element_content_state;
-            if(env->encode == utf16_native_encode)
+            if(env->encode == FAXPP_utf16_native_encode)
               env->encode = 0;
           }
           break;
@@ -123,8 +123,8 @@ sniff_encoding(TokenizerEnv *env)
         switch(*buf) {
         case 0x00:
           /* 3C 00 00 00  UCS-4, little-endian machine (4321 order) */
-          if(native_little_endian()) env->decode = ucs4_native_decode;
-          else env->decode = ucs4_le_decode;
+          if(native_little_endian()) env->decode = FAXPP_ucs4_native_decode;
+          else env->decode = FAXPP_ucs4_le_decode;
           break;
         }
         break;
@@ -133,13 +133,13 @@ sniff_encoding(TokenizerEnv *env)
         case 0x00:
           /* 3C 00 3F 00  UTF-16, little-endian */
           if(native_little_endian()) {
-            env->decode = utf16_native_decode;
+            env->decode = FAXPP_utf16_native_decode;
             env->start_element_name_state = utf16_start_element_name_state;
             env->element_content_state = utf16_element_content_state;
-            if(env->encode == utf16_native_encode)
+            if(env->encode == FAXPP_utf16_native_encode)
               env->encode = 0;
           }
-          else env->decode = utf16_le_decode;
+          else env->decode = FAXPP_utf16_le_decode;
           break;
         }
         break;
@@ -151,8 +151,8 @@ sniff_encoding(TokenizerEnv *env)
         switch(*buf) {
         case 0x6D:
           /* 3C 3F 78 6D  UTF-8, ISO 646, ASCII, some part of ISO 8859, Shift-JIS, EUC, etc. */
-          env->decode = utf8_decode;
-          if(env->encode == utf8_encode)
+          env->decode = FAXPP_utf8_decode;
+          if(env->encode == FAXPP_utf8_encode)
             env->encode = 0;
           break;
         }
@@ -182,8 +182,8 @@ sniff_encoding(TokenizerEnv *env)
       switch(*buf++) {
       case 0xBF:
         /* EF BB BF  UTF-8 with byte order mark */
-        env->decode = utf8_decode;
-        if(env->encode == utf8_encode)
+        env->decode = FAXPP_utf8_decode;
+        if(env->encode == FAXPP_utf8_encode)
           env->encode = 0;
         // Skip BOM
         env->position += 3;
@@ -202,12 +202,12 @@ sniff_encoding(TokenizerEnv *env)
           return UNSUPPORTED_ENCODING;
         default:
           /* FE FF ## ##  UTF-16, big-endian */
-          if(native_little_endian()) env->decode = utf16_be_decode;
+          if(native_little_endian()) env->decode = FAXPP_utf16_be_decode;
           else {
-            env->decode = utf16_native_decode;
+            env->decode = FAXPP_utf16_native_decode;
             env->start_element_name_state = utf16_start_element_name_state;
             env->element_content_state = utf16_element_content_state;
-            if(env->encode == utf16_native_encode)
+            if(env->encode == FAXPP_utf16_native_encode)
               env->encode = 0;
           }
           // Skip BOM
@@ -217,12 +217,12 @@ sniff_encoding(TokenizerEnv *env)
         break;
       default:
         /* FE FF ## ##  UTF-16, big-endian */
-        if(native_little_endian()) env->decode = utf16_be_decode;
+        if(native_little_endian()) env->decode = FAXPP_utf16_be_decode;
         else {
-          env->decode = utf16_native_decode;
+          env->decode = FAXPP_utf16_native_decode;
           env->start_element_name_state = utf16_start_element_name_state;
           env->element_content_state = utf16_element_content_state;
-          if(env->encode == utf16_native_encode)
+          if(env->encode == FAXPP_utf16_native_encode)
             env->encode = 0;
         }
         // Skip BOM
@@ -240,21 +240,21 @@ sniff_encoding(TokenizerEnv *env)
         switch(*buf) {
         case 0x00:
           /* FF FE 00 00  UCS-4, little-endian machine (4321 order) */
-          if(native_little_endian()) env->decode = ucs4_native_decode;
-          else env->decode = ucs4_le_decode;
+          if(native_little_endian()) env->decode = FAXPP_ucs4_native_decode;
+          else env->decode = FAXPP_ucs4_le_decode;
           // Skip BOM
           env->position += 4;
           break;
         default:
           /* FF FE ## ##  UTF-16, little-endian */
           if(native_little_endian()) {
-            env->decode = utf16_native_decode;
+            env->decode = FAXPP_utf16_native_decode;
             env->start_element_name_state = utf16_start_element_name_state;
             env->element_content_state = utf16_element_content_state;
-            if(env->encode == utf16_native_encode)
+            if(env->encode == FAXPP_utf16_native_encode)
               env->encode = 0;
           }
-          else env->decode = utf16_le_decode;
+          else env->decode = FAXPP_utf16_le_decode;
           // Skip BOM
           env->position += 2;
           break;
@@ -263,13 +263,13 @@ sniff_encoding(TokenizerEnv *env)
       default:
         /* FF FE ## ##  UTF-16, little-endian */
         if(native_little_endian()) {
-          env->decode = utf16_native_decode;
+          env->decode = FAXPP_utf16_native_decode;
           env->start_element_name_state = utf16_start_element_name_state;
           env->element_content_state = utf16_element_content_state;
-          if(env->encode == utf16_native_encode)
+          if(env->encode == FAXPP_utf16_native_encode)
             env->encode = 0;
         }
-        else env->decode = utf16_le_decode;
+        else env->decode = FAXPP_utf16_le_decode;
         // Skip BOM
         env->position += 2;
         break;
@@ -279,8 +279,8 @@ sniff_encoding(TokenizerEnv *env)
     break;
   }
 
-  if(env->decode == utf8_decode) {
-    if(env->encode == utf8_encode)
+  if(env->decode == FAXPP_utf8_decode) {
+    if(env->encode == FAXPP_utf8_encode)
       env->encode = 0;
     env->start_element_name_state = utf8_start_element_name_state;
     env->element_content_state = utf8_element_content_state;
@@ -289,22 +289,42 @@ sniff_encoding(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-init_tokenizer(TokenizerEnv *env)
+FAXPP_Error
+init_tokenizer_internal(FAXPP_TokenizerEnv *env)
 {
-  memset(env, 0, sizeof(TokenizerEnv));
-  return init_buffer(&env->token_buffer, INITIAL_TOKEN_BUFFER_SIZE);
+  memset(env, 0, sizeof(FAXPP_TokenizerEnv));
+  return FAXPP_init_buffer(&env->token_buffer, INITIAL_TOKEN_BUFFER_SIZE);
 }
 
-TokenizerError
-free_tokenizer(TokenizerEnv *env)
+void
+free_tokenizer_internal(FAXPP_TokenizerEnv *env)
 {
-  free_buffer(&env->token_buffer);
-  return NO_ERROR;
+  FAXPP_free_buffer(&env->token_buffer);
 }
 
-TokenizerError
-init_tokenize(TokenizerEnv *env, void *buffer, unsigned int length, EncodeFunction encode)
+FAXPP_Tokenizer *
+FAXPP_create_tokenizer()
+{
+  FAXPP_TokenizerEnv *result = malloc(sizeof(FAXPP_TokenizerEnv));
+  if(result == 0) return 0;
+
+  if(init_tokenizer_internal(result) == OUT_OF_MEMORY) {
+    free(result);
+    return 0;
+  }
+
+  return result;
+}
+
+void
+FAXPP_free_tokenizer(FAXPP_Tokenizer *tokenizer)
+{
+  FAXPP_free_buffer(&tokenizer->token_buffer);
+  free(tokenizer);
+}
+
+FAXPP_Error
+FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, FAXPP_EncodeFunction encode)
 {
   env->buffer = buffer;
   env->buffer_end = buffer + length;
@@ -332,7 +352,7 @@ init_tokenize(TokenizerEnv *env, void *buffer, unsigned int length, EncodeFuncti
   env->start_element_name_state = default_start_element_name_state;
   env->element_content_state = default_element_content_state;
 
-  TokenizerError err = sniff_encoding(env);
+  FAXPP_Error err = sniff_encoding(env);
   if(err) return err;
 
   token_start_position(env);
@@ -340,8 +360,8 @@ init_tokenize(TokenizerEnv *env, void *buffer, unsigned int length, EncodeFuncti
   return NO_ERROR;
 }
 
-TokenizerError
-continue_tokenize(TokenizerEnv *env, void *buffer, unsigned int length)
+FAXPP_Error
+FAXPP_continue_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length)
 {
   if(env->token.value.ptr == env->buffer_end)
     env->token.value.ptr = buffer;
@@ -354,16 +374,34 @@ continue_tokenize(TokenizerEnv *env, void *buffer, unsigned int length)
   return NO_ERROR;
 }
 
-TokenizerError
-next_token(TokenizerEnv *env, Token *token)
+FAXPP_Error
+FAXPP_next_token(FAXPP_Tokenizer *env, FAXPP_Token *token)
 {
   token->token = NO_TOKEN;
   env->result_token = token;
 
-  TokenizerError err = 0;
+  FAXPP_Error err = 0;
   while(err == NO_ERROR && token->token == NO_TOKEN) {
     err = env->state(env);
   }
 
   return err;
+}
+
+unsigned int
+FAXPP_get_tokenizer_nesting_level(const FAXPP_Tokenizer *tokenizer)
+{
+  return tokenizer->nesting_level;
+}
+
+unsigned int
+FAXPP_get_tokenizer_error_line(const FAXPP_Tokenizer *tokenizer)
+{
+  return tokenizer->line;
+}
+
+unsigned int
+FAXPP_get_tokenizer_error_column(const FAXPP_Tokenizer *tokenizer)
+{
+  return tokenizer->column;
 }

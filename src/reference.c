@@ -15,9 +15,10 @@
  */
 
 #include "tokenizer_states.h"
+#include "char_classes.h"
 
-TokenizerError
-reference_state(TokenizerEnv *env)
+FAXPP_Error
+reference_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -32,15 +33,15 @@ reference_state(TokenizerEnv *env)
     env->state = entity_reference_state;
     token_start_position(env);
     next_char(env);
-    if((char_flags(env->current_char) & NAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NAME_START_CHAR) == 0)
       return INVALID_CHAR_IN_ENTITY_REFERENCE;
     break;
   }
   return NO_ERROR;
 }
 
-TokenizerError
-entity_reference_state(TokenizerEnv *env)
+FAXPP_Error
+entity_reference_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     read_char(env);
@@ -58,7 +59,7 @@ entity_reference_state(TokenizerEnv *env)
     }
 
     next_char(env);
-    if((char_flags(env->current_char) & NAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NAME_CHAR) == 0)
       return INVALID_CHAR_IN_ENTITY_REFERENCE;
   }
 
@@ -66,8 +67,8 @@ entity_reference_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-char_reference_state(TokenizerEnv *env)
+FAXPP_Error
+char_reference_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -99,8 +100,8 @@ char_reference_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-dec_char_reference_state(TokenizerEnv *env)
+FAXPP_Error
+dec_char_reference_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     read_char(env);
@@ -136,8 +137,8 @@ dec_char_reference_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-hex_char_reference_state1(TokenizerEnv *env)
+FAXPP_Error
+hex_char_reference_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -176,8 +177,8 @@ hex_char_reference_state1(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-hex_char_reference_state2(TokenizerEnv *env)
+FAXPP_Error
+hex_char_reference_state2(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     read_char(env);

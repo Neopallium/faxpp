@@ -17,9 +17,9 @@
 #include <string.h>
 #include <stdlib.h>
 
-#include <faxpp/buffer.h>
+#include "buffer.h"
 
-TokenizerError init_buffer(Buffer *buffer, unsigned int initialSize)
+FAXPP_Error FAXPP_init_buffer(FAXPP_Buffer *buffer, unsigned int initialSize)
 {
   buffer->buffer = malloc(initialSize);
   if(!buffer->buffer) return OUT_OF_MEMORY;
@@ -28,26 +28,25 @@ TokenizerError init_buffer(Buffer *buffer, unsigned int initialSize)
   return NO_ERROR;
 }
 
-TokenizerError free_buffer(Buffer *buffer)
+void FAXPP_free_buffer(FAXPP_Buffer *buffer)
 {
   if(buffer->buffer) free(buffer->buffer);
-  return NO_ERROR;
 }
 
-TokenizerError resize_buffer(Buffer *buffer, unsigned int minSize, BufferResizeCallback callback, void *userData)
+FAXPP_Error FAXPP_resize_buffer(FAXPP_Buffer *buffer, unsigned int minSize, FAXPP_BufferResizeCallback callback, void *userData)
 {
   unsigned int newLength = buffer->length << 1;
   while(newLength < minSize) {
     newLength = newLength << 1;
   }
 
-  void *newBuffer = realloc(buffer->buffer, newLength);
-  if(!newBuffer) return OUT_OF_MEMORY;
+  void *newFAXPP_Buffer = realloc(buffer->buffer, newLength);
+  if(!newFAXPP_Buffer) return OUT_OF_MEMORY;
 
-  if(newBuffer != buffer->buffer) {
-    if(callback) callback(userData, buffer, newBuffer);
-    buffer->cursor += newBuffer - buffer->buffer;
-    buffer->buffer = newBuffer;
+  if(newFAXPP_Buffer != buffer->buffer) {
+    if(callback) callback(userData, buffer, newFAXPP_Buffer);
+    buffer->cursor += newFAXPP_Buffer - buffer->buffer;
+    buffer->buffer = newFAXPP_Buffer;
   }
 
   buffer->length = newLength;
@@ -55,12 +54,12 @@ TokenizerError resize_buffer(Buffer *buffer, unsigned int minSize, BufferResizeC
   return NO_ERROR;
 }
 
-TokenizerError buffer_append(Buffer *buffer, void *ptr, unsigned int len,
-                             BufferResizeCallback callback, void *userData)
+FAXPP_Error FAXPP_buffer_append(FAXPP_Buffer *buffer, void *ptr, unsigned int len,
+                             FAXPP_BufferResizeCallback callback, void *userData)
 {
-  TokenizerError err;
+  FAXPP_Error err;
   if(buffer->cursor + len > buffer->buffer + buffer->length) {
-    err = resize_buffer(buffer, (buffer->cursor + len) - buffer->buffer, callback, userData);
+    err = FAXPP_resize_buffer(buffer, (buffer->cursor + len) - buffer->buffer, callback, userData);
     if(err != 0) return err;
   }
 
@@ -70,14 +69,14 @@ TokenizerError buffer_append(Buffer *buffer, void *ptr, unsigned int len,
   return NO_ERROR;
 }
 
-TokenizerError buffer_append_ch(Buffer *buffer, EncodeFunction encode, Char32 ch,
-                                BufferResizeCallback callback, void *userData)
+FAXPP_Error FAXPP_buffer_append_ch(FAXPP_Buffer *buffer, FAXPP_EncodeFunction encode, Char32 ch,
+                                FAXPP_BufferResizeCallback callback, void *userData)
 {
-  TokenizerError err;
+  FAXPP_Error err;
   unsigned int len;
   while((len = encode(buffer->cursor, buffer->buffer + buffer->length, ch))
         == TRANSCODE_PREMATURE_END_OF_BUFFER) {
-    err = resize_buffer(buffer, 0, callback, userData);
+    err = FAXPP_resize_buffer(buffer, 0, callback, userData);
     if(err != 0) return err;
   }
 

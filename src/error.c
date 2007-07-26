@@ -24,7 +24,7 @@
 #include <faxpp/error.h>
 
 const char *
-err_to_string(TokenizerError err)
+FAXPP_err_to_string(FAXPP_Error err)
 {
   switch(err) {
   case DOUBLE_DASH_IN_COMMENT:
@@ -77,6 +77,8 @@ err_to_string(TokenizerError err)
     return "NO_URI_FOR_PREFIX";
   case DUPLICATE_ATTRIBUTES:
     return "DUPLICATE_ATTRIBUTES";
+  case NO_ERROR:
+    break;
   }
 
   return "NO_ERROR";

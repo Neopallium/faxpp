@@ -1,41 +1,52 @@
 AUTOMAKE_OPTIONS = foreign dist-zip
 SUBDIRS = include
-EXTRA_DIST = 
 
 INCLUDES = -I$(top_srcdir)/include/ 
 
-bin_PROGRAMS = test test2 test3
+noinst_PROGRAMS = tokenizer_example parser_example
 lib_LTLIBRARIES = libfaxpp.la
 
 # Library version, see http://sourceware.org/autobook/autobook/autobook_91.html
 libfaxpp_la_LDFLAGS = -version-info 0:0:0 -no-undefined
 
 libfaxpp_la_SOURCES = \
-src/xml_parser.c \
-src/xml_tokenizer.c \
-src/token.c \
-src/transcode.c \
-src/error.c \
-src/char_classes.c \
-src/tokenizer_states.h \
-src/tokenizer_states.c \
+src/attr_states.h \
+src/buffer.c \
+src/buffer.h \
 src/cdata.c \
+src/char_classes.c \
+src/char_classes.h \
 src/comment.c \
 src/element.c \
+src/element_states.h \
+src/error.c \
+src/event.c \
 src/pi.c \
 src/reference.c \
+src/token.c \
+src/tokenizer_states.c \
+src/tokenizer_states.h \
+src/transcode.c \
 src/xmldecl.c \
-src/event.c \
-src/buffer.c \
-src/attr_states.h \
-src/element_states.h
+src/xml_parser.c \
+src/xml_parser.h \
+src/xml_tokenizer.c \
+src/xml_tokenizer.h
 
-test_SOURCES = src/test.c
-test_LDADD = libfaxpp.la
+tokenizer_example_SOURCES = examples/tokenizer_example.c
+tokenizer_example_LDADD = libfaxpp.la
 
-test2_SOURCES = src/test2.c
-test2_LDADD = libfaxpp.la
+parser_example_SOURCES = examples/parser_example.c
+parser_example_LDADD = libfaxpp.la
 
-test3_SOURCES = src/test3.c
-test3_LDADD = libfaxpp.la
+EXTRA_DIST = \
+docs/Doxyfile.api \
+docs/api \
+LICENSE
 
+.PHONY: docs
+
+docs:
+	$(MAKE) -C include docs
+
+$(top_srcdir)/docs/api: docs

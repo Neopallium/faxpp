@@ -16,9 +16,8 @@
 
 #include <faxpp/token.h>
 
-#ifdef DEBUG
 const char *
-token_to_string(Token *token)
+FAXPP_token_to_string(FAXPP_Token *token)
 {
   switch(token->token) {
   case START_ELEMENT_NAME_TOKEN:
@@ -69,8 +68,9 @@ token_to_string(Token *token)
     return "XMLNS_PREFIX_TOKEN";
   case XMLNS_NAME_TOKEN:
     return "XMLNS_NAME_TOKEN";
+  case NO_TOKEN:
+    break;
   }
 
   return "NO_TOKEN";
 }
-#endif

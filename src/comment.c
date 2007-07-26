@@ -1,7 +1,7 @@
 #include "tokenizer_states.h"
 
-TokenizerError
-comment_start_state1(TokenizerEnv *env)
+FAXPP_Error
+comment_start_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -20,8 +20,8 @@ comment_start_state1(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-comment_start_state2(TokenizerEnv *env)
+FAXPP_Error
+comment_start_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -41,8 +41,8 @@ comment_start_state2(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-comment_content_state(TokenizerEnv *env)
+FAXPP_Error
+comment_content_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     read_char(env);
@@ -64,8 +64,8 @@ comment_content_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-comment_content_seen_dash_state(TokenizerEnv *env)
+FAXPP_Error
+comment_content_seen_dash_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -85,8 +85,8 @@ comment_content_seen_dash_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-comment_content_seen_dash_twice_state(TokenizerEnv *env)
+FAXPP_Error
+comment_content_seen_dash_twice_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 

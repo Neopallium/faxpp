@@ -15,9 +15,10 @@
  */
 
 #include "tokenizer_states.h"
+#include "char_classes.h"
 
-TokenizerError
-xml_decl_or_markup_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -38,15 +39,15 @@ xml_decl_or_markup_state(TokenizerEnv *env)
     env->seen_doc_element = 1;
     token_start_position(env);
     next_char(env);
-    if((char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
     break;
   }
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_or_pi_state1(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_or_pi_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -59,15 +60,15 @@ xml_decl_or_pi_state1(TokenizerEnv *env)
   default:
     env->state = pi_name_state;
     next_char(env);
-    if((char_flags(env->current_char) & NAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NAME_START_CHAR) == 0)
       return INVALID_CHAR_IN_PI_NAME;
     break;
   }
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_or_pi_state2(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_or_pi_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -92,15 +93,15 @@ xml_decl_or_pi_state2(TokenizerEnv *env)
   default:
     env->state = pi_name_state;
     next_char(env);
-    if((char_flags(env->current_char) & NAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NAME_CHAR) == 0)
       return INVALID_CHAR_IN_PI_NAME;
     break;
   }
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_or_pi_state3(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_or_pi_state3(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -125,15 +126,15 @@ xml_decl_or_pi_state3(TokenizerEnv *env)
   default:
     env->state = pi_name_state;
     next_char(env);
-    if((char_flags(env->current_char) & NAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NAME_CHAR) == 0)
       return INVALID_CHAR_IN_PI_NAME;
     break;
   }
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_or_pi_state4(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_or_pi_state4(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -152,7 +153,7 @@ xml_decl_or_pi_state4(TokenizerEnv *env)
   default:
     env->state = pi_name_state;
     next_char(env);
-    if((char_flags(env->current_char) & NAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NAME_CHAR) == 0)
       return INVALID_CHAR_IN_PI_NAME;
     break;
   }
@@ -160,8 +161,8 @@ xml_decl_or_pi_state4(TokenizerEnv *env)
 }
 
 #define SINGLE_CHAR_STATE(name, ch, next_stored_state, next_state, error) \
-TokenizerError \
-name(TokenizerEnv *env) \
+FAXPP_Error \
+name(FAXPP_TokenizerEnv *env) \
 { \
   read_char(env); \
 \
@@ -187,8 +188,8 @@ SINGLE_CHAR_STATE(xml_decl_version_state5, 'i', 0, xml_decl_version_state6, INVA
 SINGLE_CHAR_STATE(xml_decl_version_state6, 'o', 0, xml_decl_version_state7, INVALID_CHAR_IN_XML_DECL)
 SINGLE_CHAR_STATE(xml_decl_version_state7, 'n', xml_decl_version_value_state1, equals_state, INVALID_CHAR_IN_XML_DECL)
 
-TokenizerError
-xml_decl_version_value_state1(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_version_value_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -216,8 +217,8 @@ xml_decl_version_value_state1(TokenizerEnv *env)
 SINGLE_CHAR_STATE(xml_decl_version_value_state2, '1', 0, xml_decl_version_value_state3, UNKNOWN_XML_VERSION)
 SINGLE_CHAR_STATE(xml_decl_version_value_state3, '.', 0, xml_decl_version_value_state4, UNKNOWN_XML_VERSION)
 
-TokenizerError
-xml_decl_version_value_state4(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_version_value_state4(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -234,8 +235,8 @@ xml_decl_version_value_state4(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_version_value_quot_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_version_value_quot_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -254,8 +255,8 @@ xml_decl_version_value_quot_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_version_value_apos_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_version_value_apos_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -274,8 +275,8 @@ xml_decl_version_value_apos_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_encoding_ws_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_encoding_ws_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -297,8 +298,8 @@ xml_decl_encoding_ws_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_encoding_state1(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_encoding_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -334,8 +335,8 @@ SINGLE_CHAR_STATE(xml_decl_encoding_state6, 'i', 0, xml_decl_encoding_state7, IN
 SINGLE_CHAR_STATE(xml_decl_encoding_state7, 'n', 0, xml_decl_encoding_state8, INVALID_CHAR_IN_XML_DECL)
 SINGLE_CHAR_STATE(xml_decl_encoding_state8, 'g', xml_decl_encoding_value_state, equals_state, INVALID_CHAR_IN_XML_DECL)
 
-TokenizerError
-xml_decl_encoding_value_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_encoding_value_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -358,8 +359,8 @@ xml_decl_encoding_value_state(TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-TokenizerError
-xml_decl_encoding_value_quot_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_encoding_value_quot_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -376,8 +377,8 @@ xml_decl_encoding_value_quot_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_encoding_value_apos_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_encoding_value_apos_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -394,8 +395,8 @@ xml_decl_encoding_value_apos_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_standalone_ws_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_standalone_ws_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -416,8 +417,8 @@ xml_decl_standalone_ws_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_standalone_state1(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_standalone_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -451,8 +452,8 @@ SINGLE_CHAR_STATE(xml_decl_standalone_state8, 'o', 0, xml_decl_standalone_state9
 SINGLE_CHAR_STATE(xml_decl_standalone_state9, 'n', 0, xml_decl_standalone_state10, INVALID_CHAR_IN_XML_DECL)
 SINGLE_CHAR_STATE(xml_decl_standalone_state10, 'e', xml_decl_standalone_value_state1, equals_state, INVALID_CHAR_IN_XML_DECL)
 
-TokenizerError
-xml_decl_standalone_value_state1(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_standalone_value_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -477,8 +478,8 @@ xml_decl_standalone_value_state1(TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-TokenizerError
-xml_decl_standalone_value_state2(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_standalone_value_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -501,8 +502,8 @@ xml_decl_standalone_value_state2(TokenizerEnv *env)
 
 SINGLE_CHAR_STATE(xml_decl_standalone_yes_state1, 'e', 0, xml_decl_standalone_yes_state2, INVALID_CHAR_IN_XML_DECL)
 
-TokenizerError
-xml_decl_standalone_yes_state2(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_standalone_yes_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -520,8 +521,8 @@ xml_decl_standalone_yes_state2(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_standalone_no_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_standalone_no_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -539,8 +540,8 @@ xml_decl_standalone_no_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_standalone_value_quot_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_standalone_value_quot_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -560,8 +561,8 @@ xml_decl_standalone_value_quot_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_standalone_value_apos_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_standalone_value_apos_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -581,8 +582,8 @@ xml_decl_standalone_value_apos_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_question_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_question_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -602,8 +603,8 @@ xml_decl_question_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-xml_decl_seen_question_state(TokenizerEnv *env)
+FAXPP_Error
+xml_decl_seen_question_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 

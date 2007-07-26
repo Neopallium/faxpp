@@ -17,8 +17,8 @@
 // This file needs to have a number of macros defined before it is included
 
 #define NS_CHAR_STATE(name, ch, next_state, fallback_state) \
-TokenizerError \
-name(TokenizerEnv *env) \
+FAXPP_Error \
+name(FAXPP_TokenizerEnv *env) \
 { \
   read_char(env); \
 \
@@ -41,8 +41,8 @@ NS_CHAR_STATE(PREFIX(ns_name_state4), 's', PREFIX(ns_name_state5), PREFIX(attr_n
 
 #undef NS_CHAR_STATE
 
-TokenizerError
-PREFIX(ns_name_state5)(TokenizerEnv *env)
+FAXPP_Error
+PREFIX(ns_name_state5)(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -69,15 +69,15 @@ PREFIX(ns_name_state5)(TokenizerEnv *env)
   default:
     env->state = PREFIX(attr_name_state);
     next_char(env);
-    if((char_flags(env->current_char) & NCNAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0)
       return INVALID_CHAR_IN_ATTRIBUTE_NAME;
     break;
   }
   return NO_ERROR;  
 }
 
-TokenizerError
-PREFIX(attr_name_state)(TokenizerEnv *env)
+FAXPP_Error
+PREFIX(attr_name_state)(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     END_CHECK;
@@ -110,7 +110,7 @@ PREFIX(attr_name_state)(TokenizerEnv *env)
     }
 
     next_char(env);
-    if((char_flags(env->current_char) & NCNAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0)
       return INVALID_CHAR_IN_ATTRIBUTE_NAME;
   }
 
@@ -118,8 +118,8 @@ PREFIX(attr_name_state)(TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-TokenizerError
-PREFIX(attr_name_seen_colon_state)(TokenizerEnv *env)
+FAXPP_Error
+PREFIX(attr_name_seen_colon_state)(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -128,7 +128,7 @@ PREFIX(attr_name_seen_colon_state)(TokenizerEnv *env)
   default:
     env->state = PREFIX(attr_name_seen_colon_state2);
     next_char(env);
-    if((char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
       return INVALID_CHAR_IN_ATTRIBUTE_NAME;
     break;
   }
@@ -136,8 +136,8 @@ PREFIX(attr_name_seen_colon_state)(TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-TokenizerError
-PREFIX(attr_name_seen_colon_state2)(TokenizerEnv *env)
+FAXPP_Error
+PREFIX(attr_name_seen_colon_state2)(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     END_CHECK;
@@ -163,7 +163,7 @@ PREFIX(attr_name_seen_colon_state2)(TokenizerEnv *env)
     }
 
     next_char(env);
-    if((char_flags(env->current_char) & NCNAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0)
       return INVALID_CHAR_IN_ATTRIBUTE_NAME;
   }
 
@@ -171,8 +171,8 @@ PREFIX(attr_name_seen_colon_state2)(TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-TokenizerError
-PREFIX(attr_equals_state)(TokenizerEnv *env)
+FAXPP_Error
+PREFIX(attr_equals_state)(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -190,8 +190,8 @@ PREFIX(attr_equals_state)(TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-TokenizerError
-PREFIX(attr_value_start_state)(TokenizerEnv *env)
+FAXPP_Error
+PREFIX(attr_value_start_state)(FAXPP_TokenizerEnv *env)
 {
   END_CHECK;
 
@@ -220,8 +220,8 @@ PREFIX(attr_value_start_state)(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-PREFIX(attr_value_apos_state)(TokenizerEnv *env)
+FAXPP_Error
+PREFIX(attr_value_apos_state)(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     if(env->position >= env->buffer_end) {
@@ -270,8 +270,8 @@ PREFIX(attr_value_apos_state)(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-PREFIX(attr_value_quot_state)(TokenizerEnv *env)
+FAXPP_Error
+PREFIX(attr_value_quot_state)(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     if(env->position >= env->buffer_end) {

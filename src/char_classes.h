@@ -17,7 +17,7 @@
 #ifndef __FAXPP__CHAR_CLASSES_H
 #define __FAXPP__CHAR_CLASSES_H
 
-#include <stdint.h>
+#include <faxpp/transcode.h>
 
 #define NCNAME_START_CHAR   0x01
 #define NCNAME_CHAR         0x02
@@ -26,13 +26,11 @@
 #define WHITESPACE_CHAR     0x10
 #define NON_RESTRICTED_CHAR 0x20
 
-typedef uint32_t Char32;
+const char *FAXPP_char_flags_to_string(unsigned int flags);
 
-const char *char_flags_to_string(unsigned int flags);
+#define FAXPP_char_flags(ch) ((ch) < 256) ? FAXPP_char_flags_256[(ch)] : FAXPP_char_flags_impl((ch))
 
-#define char_flags(ch) ((ch) < 256) ? char_flags_256[(ch)] : char_flags_impl((ch))
-
-unsigned int char_flags_impl(Char32 c);
-const uint8_t char_flags_256[256];
+unsigned int FAXPP_char_flags_impl(Char32 c);
+const uint8_t FAXPP_char_flags_256[256];
 
 #endif

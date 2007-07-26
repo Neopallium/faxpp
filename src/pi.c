@@ -15,9 +15,10 @@
  */
 
 #include "tokenizer_states.h"
+#include "char_classes.h"
 
-TokenizerError
-pi_name_start_state(TokenizerEnv *env)
+FAXPP_Error
+pi_name_start_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -31,7 +32,7 @@ pi_name_start_state(TokenizerEnv *env)
   default:
     env->state = pi_name_state;
     next_char(env);
-    if((char_flags(env->current_char) & NAME_START_CHAR) == 0) {
+    if((FAXPP_char_flags(env->current_char) & NAME_START_CHAR) == 0) {
       return INVALID_CHAR_IN_PI_NAME;
     }
     break;
@@ -39,8 +40,8 @@ pi_name_start_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-pi_name_x_state(TokenizerEnv *env)
+FAXPP_Error
+pi_name_x_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -57,8 +58,8 @@ pi_name_x_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-pi_name_m_state(TokenizerEnv *env)
+FAXPP_Error
+pi_name_m_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -75,8 +76,8 @@ pi_name_m_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-pi_name_l_state(TokenizerEnv *env)
+FAXPP_Error
+pi_name_l_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -92,8 +93,8 @@ pi_name_l_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-pi_name_state(TokenizerEnv *env)
+FAXPP_Error
+pi_name_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     read_char(env);
@@ -112,7 +113,7 @@ pi_name_state(TokenizerEnv *env)
       token_start_position(env);
       return NO_ERROR;
     default:
-      if((char_flags(env->current_char) & NAME_CHAR) == 0) {
+      if((FAXPP_char_flags(env->current_char) & NAME_CHAR) == 0) {
         next_char(env);
         return INVALID_CHAR_IN_PI_NAME;
       }
@@ -125,8 +126,8 @@ pi_name_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-pi_ws_state(TokenizerEnv *env)
+FAXPP_Error
+pi_ws_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -138,15 +139,15 @@ pi_ws_state(TokenizerEnv *env)
     env->state = pi_content_state;
     token_start_position(env);
     next_char(env);
-    if((char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
       return RESTRICTED_CHAR;
     break;
   }
   return NO_ERROR;
 }
 
-TokenizerError
-pi_content_state(TokenizerEnv *env)
+FAXPP_Error
+pi_content_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     read_char(env);
@@ -160,7 +161,7 @@ pi_content_state(TokenizerEnv *env)
     LINE_ENDINGS
     default:
       next_char(env);
-      if((char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
+      if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
         return RESTRICTED_CHAR;
       break;
     }
@@ -170,8 +171,8 @@ pi_content_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-pi_content_seen_question_state(TokenizerEnv *env)
+FAXPP_Error
+pi_content_seen_question_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -192,7 +193,7 @@ pi_content_seen_question_state(TokenizerEnv *env)
   default:
     env->state = pi_content_state;
     next_char(env);
-    if((char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
       return RESTRICTED_CHAR;
     break;
   }

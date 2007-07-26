@@ -16,8 +16,8 @@
 
 #include "tokenizer_states.h"
 
-TokenizerError
-cdata_or_comment_state(TokenizerEnv *env)
+FAXPP_Error
+cdata_or_comment_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -41,8 +41,8 @@ cdata_or_comment_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_start_state1(TokenizerEnv *env)
+FAXPP_Error
+cdata_start_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -60,8 +60,8 @@ cdata_start_state1(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_start_state2(TokenizerEnv *env)
+FAXPP_Error
+cdata_start_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -79,8 +79,8 @@ cdata_start_state2(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_start_state3(TokenizerEnv *env)
+FAXPP_Error
+cdata_start_state3(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -98,8 +98,8 @@ cdata_start_state3(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_start_state4(TokenizerEnv *env)
+FAXPP_Error
+cdata_start_state4(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -117,8 +117,8 @@ cdata_start_state4(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_start_state5(TokenizerEnv *env)
+FAXPP_Error
+cdata_start_state5(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -136,8 +136,8 @@ cdata_start_state5(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_start_state6(TokenizerEnv *env)
+FAXPP_Error
+cdata_start_state6(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -156,8 +156,8 @@ cdata_start_state6(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_content_state(TokenizerEnv *env)
+FAXPP_Error
+cdata_content_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     read_char(env);
@@ -179,8 +179,8 @@ cdata_content_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_end_state1(TokenizerEnv *env)
+FAXPP_Error
+cdata_end_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -200,8 +200,8 @@ cdata_end_state1(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-cdata_end_state2(TokenizerEnv *env)
+FAXPP_Error
+cdata_end_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 

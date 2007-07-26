@@ -5,7 +5,7 @@ AC_PREREQ(2.59)
 AC_INIT(faxpp, 0.1, john@snelson.org.uk)
 AC_CONFIG_AUX_DIR(autotools)
 AM_INIT_AUTOMAKE(faxpp, 0.1, john@snelson.org.uk)
-AC_CONFIG_SRCDIR([include/faxpp/xml_parser.h])
+AC_CONFIG_SRCDIR([include/faxpp/parser.h])
 AM_CONFIG_HEADER([src/config.h])
 
 # Check debug option
@@ -23,15 +23,15 @@ AC_ARG_ENABLE(profile,
 AC_MSG_RESULT($sp_profile)
 
 if test "$sp_profile" = "yes"; then
-        CFLAGS="$CFLAGS -g -pg -DDEBUG"
-        CXXFLAGS="$CXXFLAGS -g -pg -DDEBUG"
+        CFLAGS="$CFLAGS -g -pg -DDEBUG -Wall -Werror"
+        CXXFLAGS="$CXXFLAGS -g -pg -DDEBUG -Wall -Werror"
 else
 if test "$sp_debug" = "yes"; then
-        CFLAGS="$CFLAGS -g -DDEBUG"
-        CXXFLAGS="$CXXFLAGS -g -DDEBUG"
+        CFLAGS="$CFLAGS -g -DDEBUG -Wall -Werror"
+        CXXFLAGS="$CXXFLAGS -g -DDEBUG -Wall -Werror"
 else
-        CFLAGS="$CFLAGS -O2"
-        CXXFLAGS="$CXXFLAGS -O2"
+        CFLAGS="$CFLAGS -O2 -Wall"
+        CXXFLAGS="$CXXFLAGS -O2 -Wall"
 fi
 fi
 
@@ -50,18 +50,20 @@ AC_PROG_RANLIB
 
 # Checks for header files.
 AC_HEADER_STDC
-AC_CHECK_HEADERS([stdint.h stdlib.h])
+AC_CHECK_HEADERS([fcntl.h stdint.h stdlib.h string.h sys/time.h unistd.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
+AC_HEADER_TIME
 AC_TYPE_UINT16_T
 AC_TYPE_UINT32_T
 AC_TYPE_UINT8_T
 
 # Checks for library functions.
 AC_FUNC_MALLOC
+AC_FUNC_MMAP
 AC_FUNC_REALLOC
-AC_CHECK_FUNCS([memset])
+AC_CHECK_FUNCS([gettimeofday memmove memset strerror])
 
 AC_CONFIG_FILES([Makefile include/Makefile])
 AC_OUTPUT

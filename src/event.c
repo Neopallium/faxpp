@@ -18,7 +18,7 @@
 
 #ifdef DEBUG
 const char *
-event_to_string(EventType type)
+event_to_string(FAXPP_EventType type)
 {
   switch(type) {
   case START_DOCUMENT_EVENT:

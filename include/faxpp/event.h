@@ -17,8 +17,7 @@
 #ifndef __FAXPP__EVENT_H
 #define __FAXPP__EVENT_H
 
-
-#include "token.h"
+#include "text.h"
 
 typedef enum {
   NO_EVENT,
@@ -35,51 +34,51 @@ typedef enum {
   ENTITY_REFERENCE_EVENT,    ///< name
   DEC_CHAR_REFERENCE_EVENT,  ///< name
   HEX_CHAR_REFERENCE_EVENT   ///< name
-} EventType;
+} FAXPP_EventType;
 
-typedef struct AttrValue_s {
-  EventType type;
-  Text value;
+typedef struct FAXPP_AttrValue_s {
+  FAXPP_EventType type;
+  FAXPP_Text value;
 
-  struct AttrValue_s *next;
-  struct AttrValue_s *dealloc_next;
-} AttrValue;
+  struct FAXPP_AttrValue_s *next;
 
-typedef struct Attribute_s {
-  Text prefix;
-  Text uri;
-  Text name;
+  /// private
+  struct FAXPP_AttrValue_s *dealloc_next;
+} FAXPP_AttrValue;
 
-  AttrValue value;
+typedef struct FAXPP_Attribute_s {
+  FAXPP_Text prefix;
+  FAXPP_Text uri;
+  FAXPP_Text name;
+
+  FAXPP_AttrValue value;
 
   unsigned int xmlns_attr:1;
 
   unsigned int line;
   unsigned int column;
-} Attribute;
+} FAXPP_Attribute;
 
-typedef struct Event_s {
-  EventType type;
+typedef struct FAXPP_Event_s {
+  FAXPP_EventType type;
 
-  Text prefix;
-  Text uri;
-  Text name;
+  FAXPP_Text prefix;
+  FAXPP_Text uri;
+  FAXPP_Text name;
 
-  Text value;
+  FAXPP_Text value;
 
   unsigned int attr_count;
-  Attribute *attrs; ///< Array of attributes
+  FAXPP_Attribute *attrs; ///< Array of attributes
 
-  Text version;
-  Text encoding;
-  Text standalone;
+  FAXPP_Text version;
+  FAXPP_Text encoding;
+  FAXPP_Text standalone;
 
   unsigned int line;
   unsigned int column;
-} Event;
+} FAXPP_Event;
 
-#ifdef DEBUG
-const char *event_to_string(EventType type);
-#endif
+const char *FAXPP_event_to_string(FAXPP_EventType type);
 
 #endif

@@ -6,7 +6,7 @@
  *
  */
 
-#include <faxpp/char_classes.h>
+#include "char_classes.h"
 
 typedef struct CharClass_s {
 
@@ -97,7 +97,7 @@ static const CharClass char_classes[CHAR_CLASSES_SIZE] = {
   { 0x110000, 0 }
 };
 
-const uint8_t char_flags_256[256] = {
+const uint8_t FAXPP_char_flags_256[256] = {
   /* 0x00 */ 0,
   /* 0x01 */ 0,
   /* 0x02 */ 0,
@@ -356,7 +356,7 @@ const uint8_t char_flags_256[256] = {
   /* 0xFF */ NON_RESTRICTED_CHAR | NAME_START_CHAR | NCNAME_START_CHAR | NAME_CHAR | NCNAME_CHAR
 };
 
-const char *char_flags_to_string(unsigned int flags)
+const char *FAXPP_char_flags_to_string(unsigned int flags)
 {
   switch(flags) {
   case 0:
@@ -388,12 +388,12 @@ const char *char_flags_to_string(unsigned int flags)
   return "UNKNOWN";
 }
 
-unsigned int char_flags_impl(Char32 c)
+unsigned int FAXPP_char_flags_impl(Char32 c)
 {
   unsigned int min, max, middle, result;
   int cmp;
 
-  if(c < 256) return char_flags_256[c];
+  if(c < 256) return FAXPP_char_flags_256[c];
 
   // Binary search in the char_classes table
   min = 0;

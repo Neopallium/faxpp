@@ -1,9 +1,15 @@
 nobase_include_HEADERS = \
-faxpp/char_classes.h \
 faxpp/error.h \
 faxpp/event.h \
+faxpp/parser.h \
+faxpp/text.h \
 faxpp/token.h \
-faxpp/buffer.h \
-faxpp/transcode.h \
-faxpp/xml_parser.h \
-faxpp/xml_tokenizer.h
+faxpp/tokenizer.h \
+faxpp/transcode.h
+
+docs: $(top_srcdir)/docs/.api-timestamp
+
+$(top_srcdir)/docs/.api-timestamp: $(nobase_include_HEADERS) $(top_srcdir)/docs/Doxyfile.api
+	cd $(top_srcdir)/docs && \
+		doxygen Doxyfile.api && \
+		touch .api-timestamp

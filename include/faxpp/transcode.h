@@ -17,35 +17,38 @@
 #ifndef __FAXPP__TRANSCODE_H
 #define __FAXPP__TRANSCODE_H
 
-#include "char_classes.h"
+#include <stdint.h>
+
+typedef uint32_t Char32;
 
 #define TRANSCODE_ERROR 1000
 #define TRANSCODE_PREMATURE_END_OF_BUFFER 1001
 #define TRANSCODE_BAD_ENCODING 1002
 
-// Returns the length of the char, unless it is
-// bigger than TRANSCODE_ERROR, in which case it is
-// an error code
-typedef unsigned int (*DecodeFunction)
+/// Returns the length of the char, unless it is
+/// bigger than TRANSCODE_ERROR, in which case it is
+/// an error code
+typedef unsigned int (*FAXPP_DecodeFunction)
      (void *buffer, void *buffer_end, Char32 *ch);
 
-typedef unsigned int (*EncodeFunction)
+/// Returns the length of the char, unless it is
+/// bigger than TRANSCODE_ERROR, in which case it is
+/// an error code
+typedef unsigned int (*FAXPP_EncodeFunction)
      (void *buffer, void *buffer_end, Char32 ch);
 
-const char *decode_to_string(DecodeFunction t);
-const char *encode_to_string(EncodeFunction t);
+const char *FAXPP_decode_to_string(FAXPP_DecodeFunction t);
+const char *FAXPP_encode_to_string(FAXPP_EncodeFunction t);
 
-unsigned int utf8_decode(void *buffer, void *buffer_end, Char32 *ch);
-unsigned int utf16_le_decode(void *buffer, void *buffer_end, Char32 *ch);
-unsigned int utf16_be_decode(void *buffer, void *buffer_end, Char32 *ch);
-unsigned int utf16_native_decode(void *buffer, void *buffer_end, Char32 *ch);
-unsigned int ucs4_le_decode(void *buffer, void *buffer_end, Char32 *ch);
-unsigned int ucs4_be_decode(void *buffer, void *buffer_end, Char32 *ch);
-unsigned int ucs4_native_decode(void *buffer, void *buffer_end, Char32 *ch);
+unsigned int FAXPP_utf8_decode(void *buffer, void *buffer_end, Char32 *ch);
+unsigned int FAXPP_utf16_le_decode(void *buffer, void *buffer_end, Char32 *ch);
+unsigned int FAXPP_utf16_be_decode(void *buffer, void *buffer_end, Char32 *ch);
+unsigned int FAXPP_utf16_native_decode(void *buffer, void *buffer_end, Char32 *ch);
+unsigned int FAXPP_ucs4_le_decode(void *buffer, void *buffer_end, Char32 *ch);
+unsigned int FAXPP_ucs4_be_decode(void *buffer, void *buffer_end, Char32 *ch);
+unsigned int FAXPP_ucs4_native_decode(void *buffer, void *buffer_end, Char32 *ch);
 
-unsigned int utf8_encode(void *buffer, void *buffer_end, Char32 ch);
-unsigned int utf16_native_encode(void *buffer, void *buffer_end, Char32 ch);
-
-uint8_t utf_8_bytes[256];
+unsigned int FAXPP_utf8_encode(void *buffer, void *buffer_end, Char32 ch);
+unsigned int FAXPP_utf16_native_encode(void *buffer, void *buffer_end, Char32 ch);
 
 #endif

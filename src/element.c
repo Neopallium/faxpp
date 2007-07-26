@@ -16,8 +16,10 @@
 
 #include "tokenizer_states.h"
 
-TokenizerError
-start_element_end_state(TokenizerEnv *env)
+extern uint8_t FAXPP_utf_8_bytes[256];
+
+FAXPP_Error
+start_element_end_state(FAXPP_TokenizerEnv *env)
 {
   env->state = (env)->element_content_state;
   env->nesting_level += 1;
@@ -26,8 +28,8 @@ start_element_end_state(TokenizerEnv *env)
   return 0;
 }
 
-TokenizerError
-self_closing_element_state(TokenizerEnv *env)
+FAXPP_Error
+self_closing_element_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -47,8 +49,8 @@ self_closing_element_state(TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-TokenizerError
-default_element_content_state(TokenizerEnv *env)
+FAXPP_Error
+default_element_content_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     if(env->position >= env->buffer_end) {
@@ -91,8 +93,8 @@ default_element_content_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-utf8_element_content_state(TokenizerEnv *env)
+FAXPP_Error
+utf8_element_content_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     if(env->position >= env->buffer_end) {
@@ -153,7 +155,7 @@ utf8_element_content_state(TokenizerEnv *env)
       // Check if we are encoding in another char-set
       if((env)->encode) {
         // Decode properly
-        env->char_len = utf8_decode(env->position, env->buffer_end, &env->current_char);
+        env->char_len = FAXPP_utf8_decode(env->position, env->buffer_end, &env->current_char);
         switch((env)->char_len) {
         case TRANSCODE_PREMATURE_END_OF_BUFFER:
           return PREMATURE_END_OF_BUFFER;
@@ -163,7 +165,7 @@ utf8_element_content_state(TokenizerEnv *env)
       }
       else {
         // We just need to calculate the real char length
-        env->char_len = utf_8_bytes[env->current_char];
+        env->char_len = FAXPP_utf_8_bytes[env->current_char];
         if(env->char_len == 9) return BAD_ENCODING;
         if(env->position + env->char_len > env->buffer_end)
           return PREMATURE_END_OF_BUFFER;
@@ -178,8 +180,8 @@ utf8_element_content_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-utf16_element_content_state(TokenizerEnv *env)
+FAXPP_Error
+utf16_element_content_state(FAXPP_TokenizerEnv *env)
 {
   while(1) {
     if(env->position + 1 >= env->buffer_end) {
@@ -219,7 +221,7 @@ utf16_element_content_state(TokenizerEnv *env)
       // Check if it was actually a surrogate pair
       if(env->current_char >= 0xD800 && env->current_char <= 0xDF00) {
         // Decode properly
-        env->char_len = utf16_native_decode(env->position, env->buffer_end, &env->current_char);
+        env->char_len = FAXPP_utf16_native_decode(env->position, env->buffer_end, &env->current_char);
         switch((env)->char_len) {
         case TRANSCODE_PREMATURE_END_OF_BUFFER:
           return PREMATURE_END_OF_BUFFER;
@@ -237,8 +239,8 @@ utf16_element_content_state(TokenizerEnv *env)
   return NO_ERROR;
 }
 
-TokenizerError
-end_element_ws_state(TokenizerEnv *env)
+FAXPP_Error
+end_element_ws_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 

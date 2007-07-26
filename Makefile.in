@@ -37,7 +37,7 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-bin_PROGRAMS = test$(EXEEXT) test2$(EXEEXT) test3$(EXEEXT)
+noinst_PROGRAMS = tokenizer_example$(EXEEXT) parser_example$(EXEEXT)
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure \
 	$(top_srcdir)/src/config.h.in autotools/config.guess \
@@ -59,26 +59,22 @@ am__vpath_adj = case $$p in \
     *) f=$$p;; \
   esac;
 am__strip_dir = `echo $$p | sed -e 's|^.*/||'`;
-am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)"
+am__installdirs = "$(DESTDIR)$(libdir)"
 libLTLIBRARIES_INSTALL = $(INSTALL)
 LTLIBRARIES = $(lib_LTLIBRARIES)
 libfaxpp_la_LIBADD =
-am_libfaxpp_la_OBJECTS = xml_parser.lo xml_tokenizer.lo token.lo \
-	transcode.lo error.lo char_classes.lo tokenizer_states.lo \
-	cdata.lo comment.lo element.lo pi.lo reference.lo xmldecl.lo \
-	event.lo buffer.lo
+am_libfaxpp_la_OBJECTS = buffer.lo cdata.lo char_classes.lo comment.lo \
+	element.lo error.lo event.lo pi.lo reference.lo token.lo \
+	tokenizer_states.lo transcode.lo xmldecl.lo xml_parser.lo \
+	xml_tokenizer.lo
 libfaxpp_la_OBJECTS = $(am_libfaxpp_la_OBJECTS)
-binPROGRAMS_INSTALL = $(INSTALL_PROGRAM)
-PROGRAMS = $(bin_PROGRAMS)
-am_test_OBJECTS = test.$(OBJEXT)
-test_OBJECTS = $(am_test_OBJECTS)
-test_DEPENDENCIES = libfaxpp.la
-am_test2_OBJECTS = test2.$(OBJEXT)
-test2_OBJECTS = $(am_test2_OBJECTS)
-test2_DEPENDENCIES = libfaxpp.la
-am_test3_OBJECTS = test3.$(OBJEXT)
-test3_OBJECTS = $(am_test3_OBJECTS)
-test3_DEPENDENCIES = libfaxpp.la
+PROGRAMS = $(noinst_PROGRAMS)
+am_parser_example_OBJECTS = parser_example.$(OBJEXT)
+parser_example_OBJECTS = $(am_parser_example_OBJECTS)
+parser_example_DEPENDENCIES = libfaxpp.la
+am_tokenizer_example_OBJECTS = tokenizer_example.$(OBJEXT)
+tokenizer_example_OBJECTS = $(am_tokenizer_example_OBJECTS)
+tokenizer_example_DEPENDENCIES = libfaxpp.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
@@ -90,10 +86,10 @@ LTCOMPILE = $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) \
 CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
-SOURCES = $(libfaxpp_la_SOURCES) $(test_SOURCES) $(test2_SOURCES) \
-	$(test3_SOURCES)
-DIST_SOURCES = $(libfaxpp_la_SOURCES) $(test_SOURCES) $(test2_SOURCES) \
-	$(test3_SOURCES)
+SOURCES = $(libfaxpp_la_SOURCES) $(parser_example_SOURCES) \
+	$(tokenizer_example_SOURCES)
+DIST_SOURCES = $(libfaxpp_la_SOURCES) $(parser_example_SOURCES) \
+	$(tokenizer_example_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -217,38 +213,44 @@ sysconfdir = @sysconfdir@
 target_alias = @target_alias@
 AUTOMAKE_OPTIONS = foreign dist-zip
 SUBDIRS = include
-EXTRA_DIST = 
 INCLUDES = -I$(top_srcdir)/include/ 
 lib_LTLIBRARIES = libfaxpp.la
 
 # Library version, see http://sourceware.org/autobook/autobook/autobook_91.html
 libfaxpp_la_LDFLAGS = -version-info 0:0:0 -no-undefined
 libfaxpp_la_SOURCES = \
-src/xml_parser.c \
-src/xml_tokenizer.c \
-src/token.c \
-src/transcode.c \
-src/error.c \
-src/char_classes.c \
-src/tokenizer_states.h \
-src/tokenizer_states.c \
+src/attr_states.h \
+src/buffer.c \
+src/buffer.h \
 src/cdata.c \
+src/char_classes.c \
+src/char_classes.h \
 src/comment.c \
 src/element.c \
+src/element_states.h \
+src/error.c \
+src/event.c \
 src/pi.c \
 src/reference.c \
+src/token.c \
+src/tokenizer_states.c \
+src/tokenizer_states.h \
+src/transcode.c \
 src/xmldecl.c \
-src/event.c \
-src/buffer.c \
-src/attr_states.h \
-src/element_states.h
+src/xml_parser.c \
+src/xml_parser.h \
+src/xml_tokenizer.c \
+src/xml_tokenizer.h
 
-test_SOURCES = src/test.c
-test_LDADD = libfaxpp.la
-test2_SOURCES = src/test2.c
-test2_LDADD = libfaxpp.la
-test3_SOURCES = src/test3.c
-test3_LDADD = libfaxpp.la
+tokenizer_example_SOURCES = examples/tokenizer_example.c
+tokenizer_example_LDADD = libfaxpp.la
+parser_example_SOURCES = examples/parser_example.c
+parser_example_LDADD = libfaxpp.la
+EXTRA_DIST = \
+docs/Doxyfile.api \
+docs/api \
+LICENSE
+
 all: all-recursive
 
 .SUFFIXES:
@@ -332,43 +334,19 @@ clean-libLTLIBRARIES:
 	done
 libfaxpp.la: $(libfaxpp_la_OBJECTS) $(libfaxpp_la_DEPENDENCIES) 
 	$(LINK) -rpath $(libdir) $(libfaxpp_la_LDFLAGS) $(libfaxpp_la_OBJECTS) $(libfaxpp_la_LIBADD) $(LIBS)
-install-binPROGRAMS: $(bin_PROGRAMS)
-	@$(NORMAL_INSTALL)
-	test -z "$(bindir)" || $(mkdir_p) "$(DESTDIR)$(bindir)"
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  p1=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
-	  if test -f $$p \
-	     || test -f $$p1 \
-	  ; then \
-	    f=`echo "$$p1" | sed 's,^.*/,,;$(transform);s/$$/$(EXEEXT)/'`; \
-	   echo " $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) '$$p' '$(DESTDIR)$(bindir)/$$f'"; \
-	   $(INSTALL_PROGRAM_ENV) $(LIBTOOL) --mode=install $(binPROGRAMS_INSTALL) "$$p" "$(DESTDIR)$(bindir)/$$f" || exit 1; \
-	  else :; fi; \
-	done
 
-uninstall-binPROGRAMS:
-	@$(NORMAL_UNINSTALL)
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
-	  f=`echo "$$p" | sed 's,^.*/,,;s/$(EXEEXT)$$//;$(transform);s/$$/$(EXEEXT)/'`; \
-	  echo " rm -f '$(DESTDIR)$(bindir)/$$f'"; \
-	  rm -f "$(DESTDIR)$(bindir)/$$f"; \
-	done
-
-clean-binPROGRAMS:
-	@list='$(bin_PROGRAMS)'; for p in $$list; do \
+clean-noinstPROGRAMS:
+	@list='$(noinst_PROGRAMS)'; for p in $$list; do \
 	  f=`echo $$p|sed 's/$(EXEEXT)$$//'`; \
 	  echo " rm -f $$p $$f"; \
 	  rm -f $$p $$f ; \
 	done
-test$(EXEEXT): $(test_OBJECTS) $(test_DEPENDENCIES) 
-	@rm -f test$(EXEEXT)
-	$(LINK) $(test_LDFLAGS) $(test_OBJECTS) $(test_LDADD) $(LIBS)
-test2$(EXEEXT): $(test2_OBJECTS) $(test2_DEPENDENCIES) 
-	@rm -f test2$(EXEEXT)
-	$(LINK) $(test2_LDFLAGS) $(test2_OBJECTS) $(test2_LDADD) $(LIBS)
-test3$(EXEEXT): $(test3_OBJECTS) $(test3_DEPENDENCIES) 
-	@rm -f test3$(EXEEXT)
-	$(LINK) $(test3_LDFLAGS) $(test3_OBJECTS) $(test3_LDADD) $(LIBS)
+parser_example$(EXEEXT): $(parser_example_OBJECTS) $(parser_example_DEPENDENCIES) 
+	@rm -f parser_example$(EXEEXT)
+	$(LINK) $(parser_example_LDFLAGS) $(parser_example_OBJECTS) $(parser_example_LDADD) $(LIBS)
+tokenizer_example$(EXEEXT): $(tokenizer_example_OBJECTS) $(tokenizer_example_DEPENDENCIES) 
+	@rm -f tokenizer_example$(EXEEXT)
+	$(LINK) $(tokenizer_example_LDFLAGS) $(tokenizer_example_OBJECTS) $(tokenizer_example_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -383,12 +361,11 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/element.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/error.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser_example.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reference.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test2.Po@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/test3.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/token.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tokenizer_example.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/tokenizer_states.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/transcode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml_parser.Plo@am__quote@
@@ -416,54 +393,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LTCOMPILE) -c -o $@ $<
 
-xml_parser.lo: src/xml_parser.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xml_parser.lo -MD -MP -MF "$(DEPDIR)/xml_parser.Tpo" -c -o xml_parser.lo `test -f 'src/xml_parser.c' || echo '$(srcdir)/'`src/xml_parser.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xml_parser.Tpo" "$(DEPDIR)/xml_parser.Plo"; else rm -f "$(DEPDIR)/xml_parser.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/xml_parser.c' object='xml_parser.lo' libtool=yes @AMDEPBACKSLASH@
+buffer.lo: src/buffer.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT buffer.lo -MD -MP -MF "$(DEPDIR)/buffer.Tpo" -c -o buffer.lo `test -f 'src/buffer.c' || echo '$(srcdir)/'`src/buffer.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/buffer.Tpo" "$(DEPDIR)/buffer.Plo"; else rm -f "$(DEPDIR)/buffer.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/buffer.c' object='buffer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xml_parser.lo `test -f 'src/xml_parser.c' || echo '$(srcdir)/'`src/xml_parser.c
-
-xml_tokenizer.lo: src/xml_tokenizer.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xml_tokenizer.lo -MD -MP -MF "$(DEPDIR)/xml_tokenizer.Tpo" -c -o xml_tokenizer.lo `test -f 'src/xml_tokenizer.c' || echo '$(srcdir)/'`src/xml_tokenizer.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xml_tokenizer.Tpo" "$(DEPDIR)/xml_tokenizer.Plo"; else rm -f "$(DEPDIR)/xml_tokenizer.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/xml_tokenizer.c' object='xml_tokenizer.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xml_tokenizer.lo `test -f 'src/xml_tokenizer.c' || echo '$(srcdir)/'`src/xml_tokenizer.c
-
-token.lo: src/token.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT token.lo -MD -MP -MF "$(DEPDIR)/token.Tpo" -c -o token.lo `test -f 'src/token.c' || echo '$(srcdir)/'`src/token.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/token.Tpo" "$(DEPDIR)/token.Plo"; else rm -f "$(DEPDIR)/token.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/token.c' object='token.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o token.lo `test -f 'src/token.c' || echo '$(srcdir)/'`src/token.c
-
-transcode.lo: src/transcode.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT transcode.lo -MD -MP -MF "$(DEPDIR)/transcode.Tpo" -c -o transcode.lo `test -f 'src/transcode.c' || echo '$(srcdir)/'`src/transcode.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/transcode.Tpo" "$(DEPDIR)/transcode.Plo"; else rm -f "$(DEPDIR)/transcode.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/transcode.c' object='transcode.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o transcode.lo `test -f 'src/transcode.c' || echo '$(srcdir)/'`src/transcode.c
-
-error.lo: src/error.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT error.lo -MD -MP -MF "$(DEPDIR)/error.Tpo" -c -o error.lo `test -f 'src/error.c' || echo '$(srcdir)/'`src/error.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/error.Tpo" "$(DEPDIR)/error.Plo"; else rm -f "$(DEPDIR)/error.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/error.c' object='error.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o error.lo `test -f 'src/error.c' || echo '$(srcdir)/'`src/error.c
-
-char_classes.lo: src/char_classes.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT char_classes.lo -MD -MP -MF "$(DEPDIR)/char_classes.Tpo" -c -o char_classes.lo `test -f 'src/char_classes.c' || echo '$(srcdir)/'`src/char_classes.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/char_classes.Tpo" "$(DEPDIR)/char_classes.Plo"; else rm -f "$(DEPDIR)/char_classes.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/char_classes.c' object='char_classes.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o char_classes.lo `test -f 'src/char_classes.c' || echo '$(srcdir)/'`src/char_classes.c
-
-tokenizer_states.lo: src/tokenizer_states.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tokenizer_states.lo -MD -MP -MF "$(DEPDIR)/tokenizer_states.Tpo" -c -o tokenizer_states.lo `test -f 'src/tokenizer_states.c' || echo '$(srcdir)/'`src/tokenizer_states.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/tokenizer_states.Tpo" "$(DEPDIR)/tokenizer_states.Plo"; else rm -f "$(DEPDIR)/tokenizer_states.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tokenizer_states.c' object='tokenizer_states.lo' libtool=yes @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tokenizer_states.lo `test -f 'src/tokenizer_states.c' || echo '$(srcdir)/'`src/tokenizer_states.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o buffer.lo `test -f 'src/buffer.c' || echo '$(srcdir)/'`src/buffer.c
 
 cdata.lo: src/cdata.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT cdata.lo -MD -MP -MF "$(DEPDIR)/cdata.Tpo" -c -o cdata.lo `test -f 'src/cdata.c' || echo '$(srcdir)/'`src/cdata.c; \
@@ -471,6 +406,13 @@ cdata.lo: src/cdata.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/cdata.c' object='cdata.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o cdata.lo `test -f 'src/cdata.c' || echo '$(srcdir)/'`src/cdata.c
+
+char_classes.lo: src/char_classes.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT char_classes.lo -MD -MP -MF "$(DEPDIR)/char_classes.Tpo" -c -o char_classes.lo `test -f 'src/char_classes.c' || echo '$(srcdir)/'`src/char_classes.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/char_classes.Tpo" "$(DEPDIR)/char_classes.Plo"; else rm -f "$(DEPDIR)/char_classes.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/char_classes.c' object='char_classes.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o char_classes.lo `test -f 'src/char_classes.c' || echo '$(srcdir)/'`src/char_classes.c
 
 comment.lo: src/comment.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT comment.lo -MD -MP -MF "$(DEPDIR)/comment.Tpo" -c -o comment.lo `test -f 'src/comment.c' || echo '$(srcdir)/'`src/comment.c; \
@@ -486,6 +428,20 @@ element.lo: src/element.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o element.lo `test -f 'src/element.c' || echo '$(srcdir)/'`src/element.c
 
+error.lo: src/error.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT error.lo -MD -MP -MF "$(DEPDIR)/error.Tpo" -c -o error.lo `test -f 'src/error.c' || echo '$(srcdir)/'`src/error.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/error.Tpo" "$(DEPDIR)/error.Plo"; else rm -f "$(DEPDIR)/error.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/error.c' object='error.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o error.lo `test -f 'src/error.c' || echo '$(srcdir)/'`src/error.c
+
+event.lo: src/event.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT event.lo -MD -MP -MF "$(DEPDIR)/event.Tpo" -c -o event.lo `test -f 'src/event.c' || echo '$(srcdir)/'`src/event.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/event.Tpo" "$(DEPDIR)/event.Plo"; else rm -f "$(DEPDIR)/event.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/event.c' object='event.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o event.lo `test -f 'src/event.c' || echo '$(srcdir)/'`src/event.c
+
 pi.lo: src/pi.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT pi.lo -MD -MP -MF "$(DEPDIR)/pi.Tpo" -c -o pi.lo `test -f 'src/pi.c' || echo '$(srcdir)/'`src/pi.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/pi.Tpo" "$(DEPDIR)/pi.Plo"; else rm -f "$(DEPDIR)/pi.Tpo"; exit 1; fi
@@ -500,6 +456,27 @@ reference.lo: src/reference.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o reference.lo `test -f 'src/reference.c' || echo '$(srcdir)/'`src/reference.c
 
+token.lo: src/token.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT token.lo -MD -MP -MF "$(DEPDIR)/token.Tpo" -c -o token.lo `test -f 'src/token.c' || echo '$(srcdir)/'`src/token.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/token.Tpo" "$(DEPDIR)/token.Plo"; else rm -f "$(DEPDIR)/token.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/token.c' object='token.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o token.lo `test -f 'src/token.c' || echo '$(srcdir)/'`src/token.c
+
+tokenizer_states.lo: src/tokenizer_states.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tokenizer_states.lo -MD -MP -MF "$(DEPDIR)/tokenizer_states.Tpo" -c -o tokenizer_states.lo `test -f 'src/tokenizer_states.c' || echo '$(srcdir)/'`src/tokenizer_states.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/tokenizer_states.Tpo" "$(DEPDIR)/tokenizer_states.Plo"; else rm -f "$(DEPDIR)/tokenizer_states.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/tokenizer_states.c' object='tokenizer_states.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tokenizer_states.lo `test -f 'src/tokenizer_states.c' || echo '$(srcdir)/'`src/tokenizer_states.c
+
+transcode.lo: src/transcode.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT transcode.lo -MD -MP -MF "$(DEPDIR)/transcode.Tpo" -c -o transcode.lo `test -f 'src/transcode.c' || echo '$(srcdir)/'`src/transcode.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/transcode.Tpo" "$(DEPDIR)/transcode.Plo"; else rm -f "$(DEPDIR)/transcode.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/transcode.c' object='transcode.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o transcode.lo `test -f 'src/transcode.c' || echo '$(srcdir)/'`src/transcode.c
+
 xmldecl.lo: src/xmldecl.c
 @am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xmldecl.lo -MD -MP -MF "$(DEPDIR)/xmldecl.Tpo" -c -o xmldecl.lo `test -f 'src/xmldecl.c' || echo '$(srcdir)/'`src/xmldecl.c; \
 @am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmldecl.Tpo" "$(DEPDIR)/xmldecl.Plo"; else rm -f "$(DEPDIR)/xmldecl.Tpo"; exit 1; fi
@@ -507,61 +484,47 @@ xmldecl.lo: src/xmldecl.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xmldecl.lo `test -f 'src/xmldecl.c' || echo '$(srcdir)/'`src/xmldecl.c
 
-event.lo: src/event.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT event.lo -MD -MP -MF "$(DEPDIR)/event.Tpo" -c -o event.lo `test -f 'src/event.c' || echo '$(srcdir)/'`src/event.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/event.Tpo" "$(DEPDIR)/event.Plo"; else rm -f "$(DEPDIR)/event.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/event.c' object='event.lo' libtool=yes @AMDEPBACKSLASH@
+xml_parser.lo: src/xml_parser.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xml_parser.lo -MD -MP -MF "$(DEPDIR)/xml_parser.Tpo" -c -o xml_parser.lo `test -f 'src/xml_parser.c' || echo '$(srcdir)/'`src/xml_parser.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xml_parser.Tpo" "$(DEPDIR)/xml_parser.Plo"; else rm -f "$(DEPDIR)/xml_parser.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/xml_parser.c' object='xml_parser.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o event.lo `test -f 'src/event.c' || echo '$(srcdir)/'`src/event.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xml_parser.lo `test -f 'src/xml_parser.c' || echo '$(srcdir)/'`src/xml_parser.c
 
-buffer.lo: src/buffer.c
-@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT buffer.lo -MD -MP -MF "$(DEPDIR)/buffer.Tpo" -c -o buffer.lo `test -f 'src/buffer.c' || echo '$(srcdir)/'`src/buffer.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/buffer.Tpo" "$(DEPDIR)/buffer.Plo"; else rm -f "$(DEPDIR)/buffer.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/buffer.c' object='buffer.lo' libtool=yes @AMDEPBACKSLASH@
+xml_tokenizer.lo: src/xml_tokenizer.c
+@am__fastdepCC_TRUE@	if $(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xml_tokenizer.lo -MD -MP -MF "$(DEPDIR)/xml_tokenizer.Tpo" -c -o xml_tokenizer.lo `test -f 'src/xml_tokenizer.c' || echo '$(srcdir)/'`src/xml_tokenizer.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xml_tokenizer.Tpo" "$(DEPDIR)/xml_tokenizer.Plo"; else rm -f "$(DEPDIR)/xml_tokenizer.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/xml_tokenizer.c' object='xml_tokenizer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o buffer.lo `test -f 'src/buffer.c' || echo '$(srcdir)/'`src/buffer.c
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xml_tokenizer.lo `test -f 'src/xml_tokenizer.c' || echo '$(srcdir)/'`src/xml_tokenizer.c
 
-test.o: src/test.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test.o -MD -MP -MF "$(DEPDIR)/test.Tpo" -c -o test.o `test -f 'src/test.c' || echo '$(srcdir)/'`src/test.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test.Tpo" "$(DEPDIR)/test.Po"; else rm -f "$(DEPDIR)/test.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/test.c' object='test.o' libtool=no @AMDEPBACKSLASH@
+parser_example.o: examples/parser_example.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT parser_example.o -MD -MP -MF "$(DEPDIR)/parser_example.Tpo" -c -o parser_example.o `test -f 'examples/parser_example.c' || echo '$(srcdir)/'`examples/parser_example.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/parser_example.Tpo" "$(DEPDIR)/parser_example.Po"; else rm -f "$(DEPDIR)/parser_example.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/parser_example.c' object='parser_example.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test.o `test -f 'src/test.c' || echo '$(srcdir)/'`src/test.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o parser_example.o `test -f 'examples/parser_example.c' || echo '$(srcdir)/'`examples/parser_example.c
 
-test.obj: src/test.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test.obj -MD -MP -MF "$(DEPDIR)/test.Tpo" -c -o test.obj `if test -f 'src/test.c'; then $(CYGPATH_W) 'src/test.c'; else $(CYGPATH_W) '$(srcdir)/src/test.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test.Tpo" "$(DEPDIR)/test.Po"; else rm -f "$(DEPDIR)/test.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/test.c' object='test.obj' libtool=no @AMDEPBACKSLASH@
+parser_example.obj: examples/parser_example.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT parser_example.obj -MD -MP -MF "$(DEPDIR)/parser_example.Tpo" -c -o parser_example.obj `if test -f 'examples/parser_example.c'; then $(CYGPATH_W) 'examples/parser_example.c'; else $(CYGPATH_W) '$(srcdir)/examples/parser_example.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/parser_example.Tpo" "$(DEPDIR)/parser_example.Po"; else rm -f "$(DEPDIR)/parser_example.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/parser_example.c' object='parser_example.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test.obj `if test -f 'src/test.c'; then $(CYGPATH_W) 'src/test.c'; else $(CYGPATH_W) '$(srcdir)/src/test.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o parser_example.obj `if test -f 'examples/parser_example.c'; then $(CYGPATH_W) 'examples/parser_example.c'; else $(CYGPATH_W) '$(srcdir)/examples/parser_example.c'; fi`
 
-test2.o: src/test2.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test2.o -MD -MP -MF "$(DEPDIR)/test2.Tpo" -c -o test2.o `test -f 'src/test2.c' || echo '$(srcdir)/'`src/test2.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test2.Tpo" "$(DEPDIR)/test2.Po"; else rm -f "$(DEPDIR)/test2.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/test2.c' object='test2.o' libtool=no @AMDEPBACKSLASH@
+tokenizer_example.o: examples/tokenizer_example.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tokenizer_example.o -MD -MP -MF "$(DEPDIR)/tokenizer_example.Tpo" -c -o tokenizer_example.o `test -f 'examples/tokenizer_example.c' || echo '$(srcdir)/'`examples/tokenizer_example.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/tokenizer_example.Tpo" "$(DEPDIR)/tokenizer_example.Po"; else rm -f "$(DEPDIR)/tokenizer_example.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/tokenizer_example.c' object='tokenizer_example.o' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test2.o `test -f 'src/test2.c' || echo '$(srcdir)/'`src/test2.c
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tokenizer_example.o `test -f 'examples/tokenizer_example.c' || echo '$(srcdir)/'`examples/tokenizer_example.c
 
-test2.obj: src/test2.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test2.obj -MD -MP -MF "$(DEPDIR)/test2.Tpo" -c -o test2.obj `if test -f 'src/test2.c'; then $(CYGPATH_W) 'src/test2.c'; else $(CYGPATH_W) '$(srcdir)/src/test2.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test2.Tpo" "$(DEPDIR)/test2.Po"; else rm -f "$(DEPDIR)/test2.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/test2.c' object='test2.obj' libtool=no @AMDEPBACKSLASH@
+tokenizer_example.obj: examples/tokenizer_example.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tokenizer_example.obj -MD -MP -MF "$(DEPDIR)/tokenizer_example.Tpo" -c -o tokenizer_example.obj `if test -f 'examples/tokenizer_example.c'; then $(CYGPATH_W) 'examples/tokenizer_example.c'; else $(CYGPATH_W) '$(srcdir)/examples/tokenizer_example.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/tokenizer_example.Tpo" "$(DEPDIR)/tokenizer_example.Po"; else rm -f "$(DEPDIR)/tokenizer_example.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/tokenizer_example.c' object='tokenizer_example.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test2.obj `if test -f 'src/test2.c'; then $(CYGPATH_W) 'src/test2.c'; else $(CYGPATH_W) '$(srcdir)/src/test2.c'; fi`
-
-test3.o: src/test3.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test3.o -MD -MP -MF "$(DEPDIR)/test3.Tpo" -c -o test3.o `test -f 'src/test3.c' || echo '$(srcdir)/'`src/test3.c; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test3.Tpo" "$(DEPDIR)/test3.Po"; else rm -f "$(DEPDIR)/test3.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/test3.c' object='test3.o' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test3.o `test -f 'src/test3.c' || echo '$(srcdir)/'`src/test3.c
-
-test3.obj: src/test3.c
-@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT test3.obj -MD -MP -MF "$(DEPDIR)/test3.Tpo" -c -o test3.obj `if test -f 'src/test3.c'; then $(CYGPATH_W) 'src/test3.c'; else $(CYGPATH_W) '$(srcdir)/src/test3.c'; fi`; \
-@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/test3.Tpo" "$(DEPDIR)/test3.Po"; else rm -f "$(DEPDIR)/test3.Tpo"; exit 1; fi
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/test3.c' object='test3.obj' libtool=no @AMDEPBACKSLASH@
-@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
-@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o test3.obj `if test -f 'src/test3.c'; then $(CYGPATH_W) 'src/test3.c'; else $(CYGPATH_W) '$(srcdir)/src/test3.c'; fi`
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tokenizer_example.obj `if test -f 'examples/tokenizer_example.c'; then $(CYGPATH_W) 'examples/tokenizer_example.c'; else $(CYGPATH_W) '$(srcdir)/examples/tokenizer_example.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo
@@ -708,7 +671,7 @@ distclean-tags:
 distdir: $(DISTFILES)
 	$(am__remove_distdir)
 	mkdir $(distdir)
-	$(mkdir_p) $(distdir)/autotools $(distdir)/src
+	$(mkdir_p) $(distdir)/autotools $(distdir)/docs $(distdir)/src
 	@srcdirstrip=`echo "$(srcdir)" | sed 's|.|.|g'`; \
 	topsrcdirstrip=`echo "$(top_srcdir)" | sed 's|.|.|g'`; \
 	list='$(DISTFILES)'; for file in $$list; do \
@@ -851,11 +814,9 @@ distcleancheck: distclean
 check-am: all-am
 check: check-recursive
 all-am: Makefile $(LTLIBRARIES) $(PROGRAMS)
-install-binPROGRAMS: install-libLTLIBRARIES
-
 installdirs: installdirs-recursive
 installdirs-am:
-	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(bindir)"; do \
+	for dir in "$(DESTDIR)$(libdir)"; do \
 	  test -z "$$dir" || $(mkdir_p) "$$dir"; \
 	done
 install: install-recursive
@@ -884,8 +845,8 @@ maintainer-clean-generic:
 	@echo "it deletes files that may require special tools to rebuild."
 clean: clean-recursive
 
-clean-am: clean-binPROGRAMS clean-generic clean-libLTLIBRARIES \
-	clean-libtool mostlyclean-am
+clean-am: clean-generic clean-libLTLIBRARIES clean-libtool \
+	clean-noinstPROGRAMS mostlyclean-am
 
 distclean: distclean-recursive
 	-rm -f $(am__CONFIG_DISTCLEAN_FILES)
@@ -906,7 +867,7 @@ info-am:
 
 install-data-am:
 
-install-exec-am: install-binPROGRAMS install-libLTLIBRARIES
+install-exec-am: install-libLTLIBRARIES
 
 install-info: install-info-recursive
 
@@ -934,30 +895,35 @@ ps: ps-recursive
 
 ps-am:
 
-uninstall-am: uninstall-binPROGRAMS uninstall-info-am \
-	uninstall-libLTLIBRARIES
+uninstall-am: uninstall-info-am uninstall-libLTLIBRARIES
 
 uninstall-info: uninstall-info-recursive
 
 .PHONY: $(RECURSIVE_TARGETS) CTAGS GTAGS all all-am am--refresh check \
-	check-am clean clean-binPROGRAMS clean-generic \
-	clean-libLTLIBRARIES clean-libtool clean-recursive ctags \
+	check-am clean clean-generic clean-libLTLIBRARIES \
+	clean-libtool clean-noinstPROGRAMS clean-recursive ctags \
 	ctags-recursive dist dist-all dist-bzip2 dist-gzip dist-shar \
 	dist-tarZ dist-zip distcheck distclean distclean-compile \
 	distclean-generic distclean-hdr distclean-libtool \
 	distclean-recursive distclean-tags distcleancheck distdir \
 	distuninstallcheck dvi dvi-am html html-am info info-am \
-	install install-am install-binPROGRAMS install-data \
-	install-data-am install-exec install-exec-am install-info \
-	install-info-am install-libLTLIBRARIES install-man \
-	install-strip installcheck installcheck-am installdirs \
-	installdirs-am maintainer-clean maintainer-clean-generic \
-	maintainer-clean-recursive mostlyclean mostlyclean-compile \
-	mostlyclean-generic mostlyclean-libtool mostlyclean-recursive \
-	pdf pdf-am ps ps-am tags tags-recursive uninstall uninstall-am \
-	uninstall-binPROGRAMS uninstall-info-am \
+	install install-am install-data install-data-am install-exec \
+	install-exec-am install-info install-info-am \
+	install-libLTLIBRARIES install-man install-strip installcheck \
+	installcheck-am installdirs installdirs-am maintainer-clean \
+	maintainer-clean-generic maintainer-clean-recursive \
+	mostlyclean mostlyclean-compile mostlyclean-generic \
+	mostlyclean-libtool mostlyclean-recursive pdf pdf-am ps ps-am \
+	tags tags-recursive uninstall uninstall-am uninstall-info-am \
 	uninstall-libLTLIBRARIES
 
+
+.PHONY: docs
+
+docs:
+	$(MAKE) -C include docs
+
+$(top_srcdir)/docs/api: docs
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
 .NOEXPORT:

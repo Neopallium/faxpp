@@ -16,36 +16,36 @@
 
 #include <faxpp/transcode.h>
 
-const char *decode_to_string(DecodeFunction t)
+const char *decode_to_string(FAXPP_DecodeFunction t)
 {
-  if(t == utf8_decode)
+  if(t == FAXPP_utf8_decode)
     return "UTF-8";
-  else if (t == utf16_le_decode)
+  else if (t == FAXPP_utf16_le_decode)
     return "UTF-16LE";
-  else if (t == utf16_be_decode)
+  else if (t == FAXPP_utf16_be_decode)
     return "UTF-16BE";
-  else if (t == utf16_native_decode)
+  else if (t == FAXPP_utf16_native_decode)
     return "UTF-16 (native)";
-  else if (t == ucs4_le_decode)
+  else if (t == FAXPP_ucs4_le_decode)
     return "ISO-10646-UCS-4 (LE)";
-  else if (t == ucs4_be_decode)
+  else if (t == FAXPP_ucs4_be_decode)
     return "ISO-10646-UCS-4 (BE)";
-  else if (t == ucs4_native_decode)
+  else if (t == FAXPP_ucs4_native_decode)
     return "ISO-10646-UCS-4 (native)";
   return "Unknown";
 }
 
-const char *encode_to_string(EncodeFunction t)
+const char *encode_to_string(FAXPP_EncodeFunction t)
 {
-  if(t == utf8_encode)
+  if(t == FAXPP_utf8_encode)
     return "UTF-8";
-  else if (t == utf16_native_encode)
+  else if (t == FAXPP_utf16_native_encode)
     return "UTF-16";
   return "Unknown";
 }
 
 // 9 is the code for an illegal first byte
-uint8_t utf_8_bytes[256] =
+uint8_t FAXPP_utf_8_bytes[256] =
 {
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
   1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1,
@@ -74,8 +74,8 @@ uint8_t utf_8_bytes[256] =
  * 010000-10FFFF | 11110xxx 10xxxxxx 10xxxxxx 10xxxxxx
  */
 unsigned int
-utf8_decode(void *buffer, void *buffer_end,
-            Char32 *ch)
+FAXPP_utf8_decode(void *buffer, void *buffer_end,
+                  Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
   if(*buf < 0x80) {
@@ -85,9 +85,9 @@ utf8_decode(void *buffer, void *buffer_end,
     return 1;
   }
 
-  unsigned int len = utf_8_bytes[*buf];
+  unsigned int len = FAXPP_utf_8_bytes[*buf];
 
-  Char32 c;
+  Char32 c = 0;
   switch(len) {
   case 1:
     // Handled above
@@ -156,8 +156,8 @@ utf8_decode(void *buffer, void *buffer_end,
  * 010000-10FFFF | 110110xx xxxxxxxx 110111xx xxxxxxxx
  */
 unsigned int
-utf16_be_decode(void *buffer, void *buffer_end,
-                   Char32 *ch)
+FAXPP_utf16_be_decode(void *buffer, void *buffer_end,
+                      Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
   unsigned int len;
@@ -168,7 +168,7 @@ utf16_be_decode(void *buffer, void *buffer_end,
   if(buf + len > (uint8_t*)buffer_end)
     return TRANSCODE_PREMATURE_END_OF_BUFFER;
 
-  Char32 c;
+  Char32 c = 0;
   switch(len) {
   case 2:
     /* aaaa aaaa bbbb bbbb
@@ -195,8 +195,8 @@ utf16_be_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-utf16_le_decode(void *buffer, void *buffer_end,
-                   Char32 *ch)
+FAXPP_utf16_le_decode(void *buffer, void *buffer_end,
+                      Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
   unsigned int len;
@@ -207,7 +207,7 @@ utf16_le_decode(void *buffer, void *buffer_end,
   if(buf + len > (uint8_t*)buffer_end)
     return TRANSCODE_PREMATURE_END_OF_BUFFER;
 
-  Char32 c;
+  Char32 c = 0;
   switch(len) {
   case 2:
     /* bbbb bbbb aaaa aaaa
@@ -234,8 +234,8 @@ utf16_le_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-utf16_native_decode(void *buffer, void *buffer_end,
-                    Char32 *ch)
+FAXPP_utf16_native_decode(void *buffer, void *buffer_end,
+                          Char32 *ch)
 {
   uint16_t *buf = (uint16_t*)buffer;
   unsigned int len;
@@ -246,7 +246,7 @@ utf16_native_decode(void *buffer, void *buffer_end,
   if(buf + len > (uint16_t*)buffer_end)
     return TRANSCODE_PREMATURE_END_OF_BUFFER;
 
-  Char32 c;
+  Char32 c = 0;
   switch(len) {
   case 1:
     /* aaaa aaaa bbbb bbbb
@@ -270,8 +270,8 @@ utf16_native_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-ucs4_be_decode(void *buffer, void *buffer_end,
-                  Char32 *ch)
+FAXPP_ucs4_be_decode(void *buffer, void *buffer_end,
+                     Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
 
@@ -292,8 +292,8 @@ ucs4_be_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-ucs4_le_decode(void *buffer, void *buffer_end,
-               Char32 *ch)
+FAXPP_ucs4_le_decode(void *buffer, void *buffer_end,
+                     Char32 *ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
 
@@ -314,8 +314,8 @@ ucs4_le_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-ucs4_native_decode(void *buffer, void *buffer_end,
-                   Char32 *ch)
+FAXPP_ucs4_native_decode(void *buffer, void *buffer_end,
+                         Char32 *ch)
 {
   uint32_t *buf = (uint32_t*)buffer;
 
@@ -330,7 +330,7 @@ ucs4_native_decode(void *buffer, void *buffer_end,
 }
 
 unsigned int
-utf8_encode(void *buffer, void *buffer_end, Char32 ch)
+FAXPP_utf8_encode(void *buffer, void *buffer_end, Char32 ch)
 {
   uint8_t *buf = (uint8_t*)buffer;
 
@@ -376,7 +376,7 @@ utf8_encode(void *buffer, void *buffer_end, Char32 ch)
 }
 
 unsigned int
-utf16_native_encode(void *buffer, void *buffer_end, Char32 ch)
+FAXPP_utf16_native_encode(void *buffer, void *buffer_end, Char32 ch)
 {
   uint16_t *buf = (uint16_t*)buffer;
 
