@@ -70,7 +70,7 @@ main(int argc, char **argv)
 
     length = fread(xml, 1, sizeof(xml), file);
 
-    err = FAXPP_init_tokenize(tokenizer, xml, length, FAXPP_utf8_encode);
+    err = FAXPP_init_tokenize(tokenizer, xml, length, length != sizeof(xml), FAXPP_utf8_encode);
     if(err != NO_ERROR) {
       printf("ERROR: %s\n", FAXPP_err_to_string(err));
       exit(1);
@@ -92,7 +92,7 @@ main(int argc, char **argv)
 
         length += fread(xml, 1, sizeof(xml) - length, file);
 
-        FAXPP_continue_tokenize(tokenizer, xml, length);
+        FAXPP_continue_tokenize(tokenizer, xml, length, length != sizeof(xml));
       }
       else if(err != NO_ERROR) {
         printf("%03d:%03d ERROR: %s\n", FAXPP_get_tokenizer_error_line(tokenizer),

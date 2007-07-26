@@ -55,6 +55,7 @@ void FAXPP_free_tokenizer(FAXPP_Tokenizer *tokenizer);
  * \param tokenizer The tokenizer to initialize
  * \param buffer A pointer to the start of the buffer to tokenize
  * \param length The length of the given buffer
+ * \param done Set to non-zero if this is the last buffer from the input
  * \param encode The encoding function to use when encoding token values
  *
  * \retval UNSUPPORTED_ENCODING If the encoding sniffing algorithm cannot recognize
@@ -64,7 +65,8 @@ void FAXPP_free_tokenizer(FAXPP_Tokenizer *tokenizer);
  * \relatesalso FAXPP_Tokenizer
  */
 FAXPP_Error FAXPP_init_tokenize(FAXPP_Tokenizer *tokenizer, void *buffer,
-                                unsigned int length, FAXPP_EncodeFunction encode);
+                                unsigned int length, unsigned int done,
+                                FAXPP_EncodeFunction encode);
 
 /**
  * Instructs the tokenizer to release any dependencies it has on it's current buffer.
@@ -94,13 +96,14 @@ FAXPP_Error FAXPP_tokenizer_release_buffer(FAXPP_Tokenizer *tokenizer, void **bu
  * \param tokenizer The tokenizer to initialize
  * \param buffer A pointer to the start of the buffer to tokenize
  * \param length The length of the given buffer
+ * \param done Set to non-zero if this is the last buffer from the input
  *
  * \retval NO_ERROR
  *
  * \relatesalso FAXPP_Tokenizer
  */
 FAXPP_Error FAXPP_continue_tokenize(FAXPP_Tokenizer *tokenizer, void *buffer,
-                                    unsigned int length);
+                                    unsigned int length, unsigned int done);
 
 /**
  * Reads the next token from the buffer, placing the information for it

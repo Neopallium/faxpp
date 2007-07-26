@@ -155,7 +155,7 @@ FAXPP_Error FAXPP_init_parse(FAXPP_Parser *env, void *buffer, unsigned int lengt
   env->read = 0;
   env->read_user_data = 0;
 
-  return FAXPP_init_tokenize(&env->tenv, buffer, length, env->encode);
+  return FAXPP_init_tokenize(&env->tenv, buffer, length, /*done*/1, env->encode);
 }
 
 static unsigned int p_file_read_callback(void *userData, void *buffer, unsigned int length)
@@ -179,7 +179,7 @@ FAXPP_Error FAXPP_init_parse_callback(FAXPP_Parser *env, FAXPP_ReadCallback call
   unsigned int len = env->read(env->read_user_data, env->read_buffer, env->read_buffer_length);
 
   // TBD boolean for indicating this is the last buffer - jpcs
-  return FAXPP_init_tokenize(&env->tenv, env->read_buffer, len, env->encode);
+  return FAXPP_init_tokenize(&env->tenv, env->read_buffer, len, /*done*/len != env->read_buffer_length, env->encode);
 }
 
 FAXPP_Error FAXPP_next_event(FAXPP_Parser *env)
@@ -331,7 +331,7 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
 
   len += env->read(env->read_user_data, env->read_buffer, env->read_buffer_length - len);
 
-  return FAXPP_continue_tokenize(&env->tenv, env->read_buffer, len);
+  return FAXPP_continue_tokenize(&env->tenv, env->read_buffer, len, /*done*/len != env->read_buffer_length);
 }
 
 #define p_check_err(err, env) \

@@ -466,10 +466,21 @@ FAXPP_Error
 final_state(FAXPP_TokenizerEnv *env)
 {
   if(env->position >= env->buffer_end) {
-    env->state = end_of_buffer_state;
-    token_end_position(env);
-    report_token(IGNORABLE_WHITESPACE_TOKEN, env);
-    return NO_ERROR;
+    if(env->token.value.ptr) {
+      token_end_position(env);
+      if(env->token.value.len != 0) {
+        report_token(IGNORABLE_WHITESPACE_TOKEN, env);
+        if(env->buffer_done)
+          env->state = end_of_buffer_state;
+        return NO_ERROR;
+      }
+    }
+    if(env->buffer_done) {
+      report_empty_token(END_OF_BUFFER_TOKEN, env);
+      return NO_ERROR;
+    }
+    token_start_position(env);
+    return PREMATURE_END_OF_BUFFER;
   }
 
   read_char_no_check(env);
@@ -521,7 +532,7 @@ FAXPP_Error
 end_of_buffer_state(FAXPP_TokenizerEnv *env)
 {
     report_empty_token(END_OF_BUFFER_TOKEN, env);
-    return 0;
+    return NO_ERROR;
 }
 
 // Include the default states

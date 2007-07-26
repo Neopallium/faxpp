@@ -324,7 +324,7 @@ FAXPP_free_tokenizer(FAXPP_Tokenizer *tokenizer)
 }
 
 FAXPP_Error
-FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, FAXPP_EncodeFunction encode)
+FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, unsigned int done, FAXPP_EncodeFunction encode)
 {
   env->buffer = buffer;
   env->buffer_end = buffer + length;
@@ -338,6 +338,7 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, FAX
 
   env->nesting_level = 0;
   env->seen_doc_element = 0;
+  env->buffer_done = done;
 
   env->encode = encode;
 
@@ -390,13 +391,14 @@ FAXPP_tokenizer_release_buffer(FAXPP_Tokenizer *tokenizer, void **buffer_positio
 }
 
 FAXPP_Error
-FAXPP_continue_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length)
+FAXPP_continue_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, unsigned int done)
 {
   if(env->token.value.ptr == env->buffer_end)
     env->token.value.ptr = buffer;
 
   env->buffer = buffer;
   env->buffer_end = buffer + length;
+  env->buffer_done = done;
 
   env->position = buffer;
 
