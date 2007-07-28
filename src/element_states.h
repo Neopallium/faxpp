@@ -204,6 +204,69 @@ PREFIX(element_content_markup_state)(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Error
+PREFIX(element_content_rsquare_state1)(FAXPP_TokenizerEnv *env)
+{
+  if(env->position >= env->buffer_end) {
+    if(env->token.value.ptr) {
+      token_end_position(env);
+      if(env->token.value.len != 0) {
+        report_token(CHARACTERS_TOKEN, env);
+        return NO_ERROR;
+      }
+    }
+    token_start_position(env);
+    return PREMATURE_END_OF_BUFFER;
+  }
+
+  READ_CHAR;
+
+  switch(env->current_char) {
+  case ']':
+    env->state = PREFIX(element_content_rsquare_state2);
+    next_char(env);
+    break;
+  default:
+    env->state = PREFIX(element_content_state);
+    break;
+  }
+
+  return NO_ERROR;
+}
+
+FAXPP_Error
+PREFIX(element_content_rsquare_state2)(FAXPP_TokenizerEnv *env)
+{
+  if(env->position >= env->buffer_end) {
+    if(env->token.value.ptr) {
+      token_end_position(env);
+      if(env->token.value.len != 0) {
+        report_token(CHARACTERS_TOKEN, env);
+        return NO_ERROR;
+      }
+    }
+    token_start_position(env);
+    return PREMATURE_END_OF_BUFFER;
+  }
+
+  READ_CHAR;
+
+  switch(env->current_char) {
+  case '>':
+    env->state = PREFIX(element_content_state);
+    next_char(env);
+    return CDATA_END_IN_ELEMENT_CONTENT;;
+  case ']':
+    next_char(env);
+    break;
+  default:
+    env->state = PREFIX(element_content_state);
+    break;;
+  }
+
+  return NO_ERROR;
+}
+
+FAXPP_Error
 PREFIX(end_element_name_state)(FAXPP_TokenizerEnv *env)
 {
   read_char(env);

@@ -37,7 +37,8 @@ PRE_UNINSTALL = :
 POST_UNINSTALL = :
 build_triplet = @build@
 host_triplet = @host@
-noinst_PROGRAMS = tokenizer_example$(EXEEXT) parser_example$(EXEEXT)
+noinst_PROGRAMS = tokenizer_example$(EXEEXT) parser_example$(EXEEXT) \
+	xmlconf_runner$(EXEEXT)
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure \
 	$(top_srcdir)/src/config.h.in autotools/config.guess \
@@ -75,6 +76,9 @@ parser_example_DEPENDENCIES = libfaxpp.la
 am_tokenizer_example_OBJECTS = tokenizer_example.$(OBJEXT)
 tokenizer_example_OBJECTS = $(am_tokenizer_example_OBJECTS)
 tokenizer_example_DEPENDENCIES = libfaxpp.la
+am_xmlconf_runner_OBJECTS = xmlconf_runner.$(OBJEXT)
+xmlconf_runner_OBJECTS = $(am_xmlconf_runner_OBJECTS)
+xmlconf_runner_DEPENDENCIES = libfaxpp.la
 DEFAULT_INCLUDES = -I. -I$(srcdir) -I$(top_builddir)/src
 depcomp = $(SHELL) $(top_srcdir)/autotools/depcomp
 am__depfiles_maybe = depfiles
@@ -87,9 +91,9 @@ CCLD = $(CC)
 LINK = $(LIBTOOL) --tag=CC --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(AM_LDFLAGS) $(LDFLAGS) -o $@
 SOURCES = $(libfaxpp_la_SOURCES) $(parser_example_SOURCES) \
-	$(tokenizer_example_SOURCES)
+	$(tokenizer_example_SOURCES) $(xmlconf_runner_SOURCES)
 DIST_SOURCES = $(libfaxpp_la_SOURCES) $(parser_example_SOURCES) \
-	$(tokenizer_example_SOURCES)
+	$(tokenizer_example_SOURCES) $(xmlconf_runner_SOURCES)
 RECURSIVE_TARGETS = all-recursive check-recursive dvi-recursive \
 	html-recursive info-recursive install-data-recursive \
 	install-exec-recursive install-info-recursive \
@@ -246,6 +250,8 @@ tokenizer_example_SOURCES = examples/tokenizer_example.c
 tokenizer_example_LDADD = libfaxpp.la
 parser_example_SOURCES = examples/parser_example.c
 parser_example_LDADD = libfaxpp.la
+xmlconf_runner_SOURCES = tests/xmlconf_runner.c
+xmlconf_runner_LDADD = libfaxpp.la
 EXTRA_DIST = \
 docs/Doxyfile.api \
 docs/header.html \
@@ -348,6 +354,9 @@ parser_example$(EXEEXT): $(parser_example_OBJECTS) $(parser_example_DEPENDENCIES
 tokenizer_example$(EXEEXT): $(tokenizer_example_OBJECTS) $(tokenizer_example_DEPENDENCIES) 
 	@rm -f tokenizer_example$(EXEEXT)
 	$(LINK) $(tokenizer_example_LDFLAGS) $(tokenizer_example_OBJECTS) $(tokenizer_example_LDADD) $(LIBS)
+xmlconf_runner$(EXEEXT): $(xmlconf_runner_OBJECTS) $(xmlconf_runner_DEPENDENCIES) 
+	@rm -f xmlconf_runner$(EXEEXT)
+	$(LINK) $(xmlconf_runner_LDFLAGS) $(xmlconf_runner_OBJECTS) $(xmlconf_runner_LDADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -371,6 +380,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/transcode.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml_parser.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xml_tokenizer.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmlconf_runner.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/xmldecl.Plo@am__quote@
 
 .c.o:
@@ -526,6 +536,20 @@ tokenizer_example.obj: examples/tokenizer_example.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/tokenizer_example.c' object='tokenizer_example.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o tokenizer_example.obj `if test -f 'examples/tokenizer_example.c'; then $(CYGPATH_W) 'examples/tokenizer_example.c'; else $(CYGPATH_W) '$(srcdir)/examples/tokenizer_example.c'; fi`
+
+xmlconf_runner.o: tests/xmlconf_runner.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xmlconf_runner.o -MD -MP -MF "$(DEPDIR)/xmlconf_runner.Tpo" -c -o xmlconf_runner.o `test -f 'tests/xmlconf_runner.c' || echo '$(srcdir)/'`tests/xmlconf_runner.c; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmlconf_runner.Tpo" "$(DEPDIR)/xmlconf_runner.Po"; else rm -f "$(DEPDIR)/xmlconf_runner.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tests/xmlconf_runner.c' object='xmlconf_runner.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xmlconf_runner.o `test -f 'tests/xmlconf_runner.c' || echo '$(srcdir)/'`tests/xmlconf_runner.c
+
+xmlconf_runner.obj: tests/xmlconf_runner.c
+@am__fastdepCC_TRUE@	if $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT xmlconf_runner.obj -MD -MP -MF "$(DEPDIR)/xmlconf_runner.Tpo" -c -o xmlconf_runner.obj `if test -f 'tests/xmlconf_runner.c'; then $(CYGPATH_W) 'tests/xmlconf_runner.c'; else $(CYGPATH_W) '$(srcdir)/tests/xmlconf_runner.c'; fi`; \
+@am__fastdepCC_TRUE@	then mv -f "$(DEPDIR)/xmlconf_runner.Tpo" "$(DEPDIR)/xmlconf_runner.Po"; else rm -f "$(DEPDIR)/xmlconf_runner.Tpo"; exit 1; fi
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='tests/xmlconf_runner.c' object='xmlconf_runner.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xmlconf_runner.obj `if test -f 'tests/xmlconf_runner.c'; then $(CYGPATH_W) 'tests/xmlconf_runner.c'; else $(CYGPATH_W) '$(srcdir)/tests/xmlconf_runner.c'; fi`
 
 mostlyclean-libtool:
 	-rm -f *.lo

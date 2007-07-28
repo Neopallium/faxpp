@@ -132,6 +132,7 @@ FAXPP_Error FAXPP_continue_tokenize(FAXPP_Tokenizer *tokenizer, void *buffer,
  * \retval EXPECTING_EQUALS
  * \retval EXPECTING_WHITESPACE
  * \retval UNKNOWN_XML_VERSION
+ * \retval INVALID_ENCODING_VALUE
  * \retval OUT_OF_MEMORY
  * \retval NO_ERROR
  *

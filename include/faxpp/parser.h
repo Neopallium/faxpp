@@ -240,6 +240,7 @@ FAXPP_Error FAXPP_init_parse_callback(FAXPP_Parser *parser, FAXPP_ReadCallback c
  * \retval EXPECTING_EQUALS
  * \retval EXPECTING_WHITESPACE
  * \retval UNKNOWN_XML_VERSION
+ * \retval INVALID_ENCODING_VALUE
  * \retval OUT_OF_MEMORY
  * \retval NO_ERROR
  *

@@ -54,26 +54,17 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "pi_content_state";
   else if(state == pi_content_seen_question_state)
     return "pi_content_seen_question_state";
+
   else if(state == default_start_element_name_state)
     return "default_start_element_name_state";
   else if(state == default_start_element_name_seen_colon_state)
     return "default_start_element_name_seen_colon_state";
   else if(state == default_start_element_name_seen_colon_state2)
     return "default_start_element_name_seen_colon_state2";
-  else if(state == utf8_start_element_name_state)
-    return "utf8_start_element_name_state";
-  else if(state == utf8_start_element_name_seen_colon_state)
-    return "utf8_start_element_name_seen_colon_state";
-  else if(state == utf8_start_element_name_seen_colon_state2)
-    return "utf8_start_element_name_seen_colon_state2";
   else if(state == default_start_element_ws_state)
     return "default_start_element_ws_state";
-  else if(state == utf8_start_element_ws_state)
-    return "utf8_start_element_ws_state";
-  else if(state == start_element_end_state)
-    return "start_element_end_state";
-  else if(state == self_closing_element_state)
-    return "self_closing_element_state";
+  else if(state == default_element_content_markup_state)
+    return "default_element_content_markup_state";
   else if(state == default_attr_name_state)
     return "default_attr_name_state";
   else if(state == default_attr_name_seen_colon_state)
@@ -88,6 +79,39 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "default_attr_value_apos_state";
   else if(state == default_attr_value_quot_state)
     return "default_attr_value_quot_state";
+  else if(state == default_element_content_state)
+    return "default_element_content_state";
+  else if(state == default_element_content_rsquare_state1)
+    return "default_element_content_rsquare_state1";
+  else if(state == default_element_content_rsquare_state2)
+    return "default_element_content_rsquare_state2";
+  else if(state == default_end_element_name_state)
+    return "default_end_element_name_state";
+  else if(state == default_end_element_name_state2)
+    return "default_end_element_name_state2";
+  else if(state == default_end_element_name_seen_colon_state)
+    return "default_end_element_name_seen_colon_state";
+  else if(state == default_end_element_name_seen_colon_state2)
+    return "default_end_element_name_seen_colon_state2";
+  else if(state == default_ns_name_state1)
+    return "default_ns_name_state1";
+  else if(state == default_ns_name_state2)
+    return "default_ns_name_state2";
+  else if(state == default_ns_name_state3)
+    return "default_ns_name_state3";
+  else if(state == default_ns_name_state4)
+    return "default_ns_name_state4";
+  else if(state == default_ns_name_state5)
+    return "default_ns_name_state5";
+
+  else if(state == utf8_start_element_name_state)
+    return "utf8_start_element_name_state";
+  else if(state == utf8_start_element_name_seen_colon_state)
+    return "utf8_start_element_name_seen_colon_state";
+  else if(state == utf8_start_element_name_seen_colon_state2)
+    return "utf8_start_element_name_seen_colon_state2";
+  else if(state == utf8_start_element_ws_state)
+    return "utf8_start_element_ws_state";
   else if(state == utf8_attr_name_state)
     return "utf8_attr_name_state";
   else if(state == utf8_attr_name_seen_colon_state)
@@ -102,22 +126,14 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "utf8_attr_value_apos_state";
   else if(state == utf8_attr_value_quot_state)
     return "utf8_attr_value_quot_state";
-  else if(state == default_element_content_state)
-    return "default_element_content_state";
   else if(state == utf8_element_content_state)
     return "utf8_element_content_state";
-  else if(state == default_element_content_markup_state)
-    return "default_element_content_markup_state";
+  else if(state == utf8_element_content_rsquare_state1)
+    return "utf8_element_content_rsquare_state1";
+  else if(state == utf8_element_content_rsquare_state2)
+    return "utf8_element_content_rsquare_state2";
   else if(state == utf8_element_content_markup_state)
     return "utf8_element_content_markup_state";
-  else if(state == default_end_element_name_state)
-    return "default_end_element_name_state";
-  else if(state == default_end_element_name_state2)
-    return "default_end_element_name_state2";
-  else if(state == default_end_element_name_seen_colon_state)
-    return "default_end_element_name_seen_colon_state";
-  else if(state == default_end_element_name_seen_colon_state2)
-    return "default_end_element_name_seen_colon_state2";
   else if(state == utf8_end_element_name_state)
     return "utf8_end_element_name_state";
   else if(state == utf8_end_element_name_state2)
@@ -126,10 +142,102 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "utf8_end_element_name_seen_colon_state";
   else if(state == utf8_end_element_name_seen_colon_state2)
     return "utf8_end_element_name_seen_colon_state2";
+  else if(state == utf8_ns_name_state1)
+    return "utf8_ns_name_state1";
+  else if(state == utf8_ns_name_state2)
+    return "utf8_ns_name_state2";
+  else if(state == utf8_ns_name_state3)
+    return "utf8_ns_name_state3";
+  else if(state == utf8_ns_name_state4)
+    return "utf8_ns_name_state4";
+  else if(state == utf8_ns_name_state5)
+    return "utf8_ns_name_state5";
+
+  else if(state == utf16_start_element_name_state)
+    return "utf16_start_element_name_state";
+  else if(state == utf16_start_element_name_seen_colon_state)
+    return "utf16_start_element_name_seen_colon_state";
+  else if(state == utf16_start_element_name_seen_colon_state2)
+    return "utf16_start_element_name_seen_colon_state2";
+  else if(state == utf16_start_element_ws_state)
+    return "utf16_start_element_ws_state";
+  else if(state == utf16_attr_name_state)
+    return "utf16_attr_name_state";
+  else if(state == utf16_attr_name_seen_colon_state)
+    return "utf16_attr_name_seen_colon_state";
+  else if(state == utf16_attr_name_seen_colon_state2)
+    return "utf16_attr_name_seen_colon_state2";
+  else if(state == utf16_attr_equals_state)
+    return "utf16_attr_equals_state";
+  else if(state == utf16_attr_value_start_state)
+    return "utf16_attr_value_start_state";
+  else if(state == utf16_attr_value_apos_state)
+    return "utf16_attr_value_apos_state";
+  else if(state == utf16_attr_value_quot_state)
+    return "utf16_attr_value_quot_state";
+  else if(state == utf16_element_content_state)
+    return "utf16_element_content_state";
+  else if(state == utf16_element_content_rsquare_state1)
+    return "utf16_element_content_rsquare_state1";
+  else if(state == utf16_element_content_rsquare_state2)
+    return "utf16_element_content_rsquare_state2";
+  else if(state == utf16_element_content_markup_state)
+    return "utf16_element_content_markup_state";
+  else if(state == utf16_end_element_name_state)
+    return "utf16_end_element_name_state";
+  else if(state == utf16_end_element_name_state2)
+    return "utf16_end_element_name_state2";
+  else if(state == utf16_end_element_name_seen_colon_state)
+    return "utf16_end_element_name_seen_colon_state";
+  else if(state == utf16_end_element_name_seen_colon_state2)
+    return "utf16_end_element_name_seen_colon_state2";
+  else if(state == utf16_ns_name_state1)
+    return "utf16_ns_name_state1";
+  else if(state == utf16_ns_name_state2)
+    return "utf16_ns_name_state2";
+  else if(state == utf16_ns_name_state3)
+    return "utf16_ns_name_state3";
+  else if(state == utf16_ns_name_state4)
+    return "utf16_ns_name_state4";
+  else if(state == utf16_ns_name_state5)
+    return "utf16_ns_name_state5";
+
+  else if(state == start_element_end_state)
+    return "start_element_end_state";
+  else if(state == self_closing_element_state)
+    return "self_closing_element_state";
   else if(state == end_element_ws_state)
     return "end_element_ws_state";
   else if(state == reference_state)
     return "reference_state";
+  else if(state == a_entity_reference_state)
+    return "a_entity_reference_state";
+  else if(state == amp_entity_reference_state1)
+    return "amp_entity_reference_state1";
+  else if(state == amp_entity_reference_state2)
+    return "amp_entity_reference_state2";
+  else if(state == apos_entity_reference_state1)
+    return "apos_entity_reference_state1";
+  else if(state == apos_entity_reference_state2)
+    return "apos_entity_reference_state2";
+  else if(state == apos_entity_reference_state3)
+    return "apos_entity_reference_state3";
+  else if(state == gt_entity_reference_state1)
+    return "gt_entity_reference_state1";
+  else if(state == gt_entity_reference_state2)
+    return "gt_entity_reference_state2";
+  else if(state == lt_entity_reference_state1)
+    return "lt_entity_reference_state1";
+  else if(state == lt_entity_reference_state2)
+    return "lt_entity_reference_state2";
+  else if(state == quot_entity_reference_state1)
+    return "quot_entity_reference_state1";
+  else if(state == quot_entity_reference_state2)
+    return "quot_entity_reference_state2";
+  else if(state == quot_entity_reference_state3)
+    return "quot_entity_reference_state3";
+  else if(state == quot_entity_reference_state4)
+    return "quot_entity_reference_state4";
   else if(state == entity_reference_state)
     return "entity_reference_state";
   else if(state == char_reference_state)
@@ -222,10 +330,14 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "xml_decl_encoding_state8";
   else if(state == xml_decl_encoding_value_state)
     return "xml_decl_encoding_value_state";
-  else if(state == xml_decl_encoding_value_quot_state)
-    return "xml_decl_encoding_value_quot_state";
-  else if(state == xml_decl_encoding_value_apos_state)
-    return "xml_decl_encoding_value_apos_state";
+  else if(state == xml_decl_encoding_value_quot_state1)
+    return "xml_decl_encoding_value_quot_state1";
+  else if(state == xml_decl_encoding_value_quot_state2)
+    return "xml_decl_encoding_value_quot_state2";
+  else if(state == xml_decl_encoding_value_apos_state1)
+    return "xml_decl_encoding_value_apos_state1";
+  else if(state == xml_decl_encoding_value_apos_state2)
+    return "xml_decl_encoding_value_apos_state2";
   else if(state == xml_decl_standalone_ws_state)
     return "xml_decl_standalone_ws_state";
   else if(state == xml_decl_seen_question_state)
@@ -266,26 +378,6 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "xml_decl_standalone_value_apos_state";
   else if(state == xml_decl_question_state)
     return "xml_decl_question_state";
-  else if(state == default_ns_name_state1)
-    return "default_ns_name_state1";
-  else if(state == default_ns_name_state2)
-    return "default_ns_name_state2";
-  else if(state == default_ns_name_state3)
-    return "default_ns_name_state3";
-  else if(state == default_ns_name_state4)
-    return "default_ns_name_state4";
-  else if(state == default_ns_name_state5)
-    return "default_ns_name_state5";
-  else if(state == utf8_ns_name_state1)
-    return "utf8_ns_name_state1";
-  else if(state == utf8_ns_name_state2)
-    return "utf8_ns_name_state2";
-  else if(state == utf8_ns_name_state3)
-    return "utf8_ns_name_state3";
-  else if(state == utf8_ns_name_state4)
-    return "utf8_ns_name_state4";
-  else if(state == utf8_ns_name_state5)
-    return "utf8_ns_name_state5";
 
   return "unknown";
 }

@@ -28,6 +28,26 @@ reference_state(FAXPP_TokenizerEnv *env)
     next_char(env);
     token_start_position(env);
     break;
+  case 'a':
+    env->state = a_entity_reference_state;
+    token_start_position(env);
+    next_char(env);
+    break;
+  case 'g':
+    env->state = gt_entity_reference_state1;
+    token_start_position(env);
+    next_char(env);
+    break;
+  case 'l':
+    env->state = lt_entity_reference_state1;
+    token_start_position(env);
+    next_char(env);
+    break;
+  case 'q':
+    env->state = quot_entity_reference_state1;
+    token_start_position(env);
+    next_char(env);
+    break;
   LINE_ENDINGS
   default:
     env->state = entity_reference_state;
@@ -37,6 +57,250 @@ reference_state(FAXPP_TokenizerEnv *env)
       return INVALID_CHAR_IN_ENTITY_REFERENCE;
     break;
   }
+  return NO_ERROR;
+}
+
+FAXPP_Error
+a_entity_reference_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 'm':
+    env->state = amp_entity_reference_state1;
+    break;
+  case 'p':
+    env->state = apos_entity_reference_state1;
+    break;
+  default:
+    env->state = entity_reference_state;
+    return NO_ERROR;
+  }
+
+  next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+amp_entity_reference_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 'p':
+    env->state = amp_entity_reference_state2;
+    next_char(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+amp_entity_reference_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case ';':
+    retrieve_state(env);
+    token_end_position(env);
+    report_token(AMP_ENTITY_REFERENCE_TOKEN, env);
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+apos_entity_reference_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 'o':
+    env->state = apos_entity_reference_state2;
+    next_char(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+apos_entity_reference_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 's':
+    env->state = apos_entity_reference_state3;
+    next_char(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+apos_entity_reference_state3(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case ';':
+    retrieve_state(env);
+    token_end_position(env);
+    report_token(APOS_ENTITY_REFERENCE_TOKEN, env);
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+gt_entity_reference_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 't':
+    env->state = gt_entity_reference_state2;
+    next_char(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+gt_entity_reference_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case ';':
+    retrieve_state(env);
+    token_end_position(env);
+    report_token(GT_ENTITY_REFERENCE_TOKEN, env);
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+lt_entity_reference_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 't':
+    env->state = lt_entity_reference_state2;
+    next_char(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+lt_entity_reference_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case ';':
+    retrieve_state(env);
+    token_end_position(env);
+    report_token(LT_ENTITY_REFERENCE_TOKEN, env);
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+quot_entity_reference_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 'u':
+    env->state = quot_entity_reference_state2;
+    next_char(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+quot_entity_reference_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 'o':
+    env->state = quot_entity_reference_state3;
+    next_char(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+quot_entity_reference_state3(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 't':
+    env->state = quot_entity_reference_state4;
+    next_char(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
+  return NO_ERROR;
+}
+
+FAXPP_Error
+quot_entity_reference_state4(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case ';':
+    retrieve_state(env);
+    token_end_position(env);
+    report_token(QUOT_ENTITY_REFERENCE_TOKEN, env);
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  }
+
+  env->state = entity_reference_state;
   return NO_ERROR;
 }
 

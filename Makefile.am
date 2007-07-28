@@ -3,7 +3,7 @@ SUBDIRS = include
 
 INCLUDES = -I$(top_srcdir)/include/ 
 
-noinst_PROGRAMS = tokenizer_example parser_example
+noinst_PROGRAMS = tokenizer_example parser_example xmlconf_runner
 lib_LTLIBRARIES = libfaxpp.la
 
 # Library version, see http://sourceware.org/autobook/autobook/autobook_91.html
@@ -38,6 +38,9 @@ tokenizer_example_LDADD = libfaxpp.la
 
 parser_example_SOURCES = examples/parser_example.c
 parser_example_LDADD = libfaxpp.la
+
+xmlconf_runner_SOURCES = tests/xmlconf_runner.c
+xmlconf_runner_LDADD = libfaxpp.la
 
 EXTRA_DIST = \
 docs/Doxyfile.api \

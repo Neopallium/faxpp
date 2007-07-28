@@ -58,10 +58,7 @@ xml_decl_or_pi_state1(FAXPP_TokenizerEnv *env)
     break;
   LINE_ENDINGS
   default:
-    env->state = pi_name_state;
-    next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NAME_START_CHAR) == 0)
-      return INVALID_CHAR_IN_PI_NAME;
+    env->state = pi_name_start_state;
     break;
   }
   return NO_ERROR;
@@ -91,10 +88,7 @@ xml_decl_or_pi_state2(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   default:
-    env->state = pi_name_state;
-    next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NAME_CHAR) == 0)
-      return INVALID_CHAR_IN_PI_NAME;
+    env->state = pi_name_x_state;
     break;
   }
   return NO_ERROR;
@@ -124,10 +118,7 @@ xml_decl_or_pi_state3(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   default:
-    env->state = pi_name_state;
-    next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NAME_CHAR) == 0)
-      return INVALID_CHAR_IN_PI_NAME;
+    env->state = pi_name_m_state;
     break;
   }
   return NO_ERROR;
@@ -342,12 +333,12 @@ xml_decl_encoding_value_state(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case '"':
-    env->state = xml_decl_encoding_value_quot_state;
+    env->state = xml_decl_encoding_value_quot_state1;
     next_char(env);
     token_start_position(env);
     break;
   case '\'':
-    env->state = xml_decl_encoding_value_apos_state;
+    env->state = xml_decl_encoding_value_apos_state1;
     next_char(env);
     token_start_position(env);
     break;
@@ -360,7 +351,32 @@ xml_decl_encoding_value_state(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Error
-xml_decl_encoding_value_quot_state(FAXPP_TokenizerEnv *env)
+xml_decl_encoding_value_quot_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case '"':
+    env->state = xml_decl_standalone_ws_state;
+    next_char(env);
+    return INVALID_ENCODING_VALUE;
+  case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+  case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+  case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+  case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+    env->state = xml_decl_encoding_value_quot_state2;
+    break;
+  LINE_ENDINGS
+  default:
+    next_char(env);
+    return INVALID_ENCODING_VALUE;
+  }
+  next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+xml_decl_encoding_value_quot_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -370,15 +386,48 @@ xml_decl_encoding_value_quot_state(FAXPP_TokenizerEnv *env)
     token_end_position(env);
     report_token(XML_DECL_ENCODING_TOKEN, env);
     break;
-  LINE_ENDINGS
+  case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+  case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+  case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+  case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+  case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '.': case '_': case '-':
     break;
+  LINE_ENDINGS
+  default:
+    next_char(env);
+    return INVALID_ENCODING_VALUE;
   }
   next_char(env);
   return NO_ERROR;
 }
 
 FAXPP_Error
-xml_decl_encoding_value_apos_state(FAXPP_TokenizerEnv *env)
+xml_decl_encoding_value_apos_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case '\'':
+    env->state = xml_decl_standalone_ws_state;
+    next_char(env);
+    return INVALID_ENCODING_VALUE;
+  case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+  case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+  case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+  case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+    env->state = xml_decl_encoding_value_apos_state2;
+    break;
+  LINE_ENDINGS
+  default:
+    next_char(env);
+    return INVALID_ENCODING_VALUE;
+  }
+  next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+xml_decl_encoding_value_apos_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -388,8 +437,16 @@ xml_decl_encoding_value_apos_state(FAXPP_TokenizerEnv *env)
     token_end_position(env);
     report_token(XML_DECL_ENCODING_TOKEN, env);
     break;
-  LINE_ENDINGS
+  case 'A': case 'B': case 'C': case 'D': case 'E': case 'F': case 'G': case 'H': case 'I': case 'J': case 'K': case 'L': case 'M':
+  case 'N': case 'O': case 'P': case 'Q': case 'R': case 'S': case 'T': case 'U': case 'V': case 'W': case 'X': case 'Y': case 'Z':
+  case 'a': case 'b': case 'c': case 'd': case 'e': case 'f': case 'g': case 'h': case 'i': case 'j': case 'k': case 'l': case 'm':
+  case 'n': case 'o': case 'p': case 'q': case 'r': case 's': case 't': case 'u': case 'v': case 'w': case 'x': case 'y': case 'z':
+  case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8': case '9': case '.': case '_': case '-':
     break;
+  LINE_ENDINGS
+  default:
+    next_char(env);
+    return INVALID_ENCODING_VALUE;
   }
   next_char(env);
   return NO_ERROR;

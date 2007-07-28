@@ -59,6 +59,7 @@ typedef struct {
   FAXPP_AttrValue value; ///< A linked list of the attribute value
 
   unsigned int xmlns_attr:1; ///< Set to 1 if the attribute is a namespace declaration
+  unsigned int xml_attr:1;   ///< Set to 1 if the attribute has a prefix of "xml"
 
   unsigned int line;   ///< The line the attribute started on
   unsigned int column; ///< The column the attribute started on

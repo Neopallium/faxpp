@@ -28,7 +28,7 @@
 
 const char *FAXPP_char_flags_to_string(unsigned int flags);
 
-#define FAXPP_char_flags(ch) ((ch) < 256) ? FAXPP_char_flags_256[(ch)] : FAXPP_char_flags_impl((ch))
+#define FAXPP_char_flags(ch) (((ch) < 256) ? FAXPP_char_flags_256[(ch)] : FAXPP_char_flags_impl((ch)))
 
 unsigned int FAXPP_char_flags_impl(Char32 c);
 const uint8_t FAXPP_char_flags_256[256];

@@ -36,10 +36,34 @@ name(FAXPP_TokenizerEnv *env) \
 
 NS_CHAR_STATE(PREFIX(ns_name_state1), 'm', PREFIX(ns_name_state2), PREFIX(attr_name_state))
 NS_CHAR_STATE(PREFIX(ns_name_state2), 'l', PREFIX(ns_name_state3), PREFIX(attr_name_state))
-NS_CHAR_STATE(PREFIX(ns_name_state3), 'n', PREFIX(ns_name_state4), PREFIX(attr_name_state))
+
 NS_CHAR_STATE(PREFIX(ns_name_state4), 's', PREFIX(ns_name_state5), PREFIX(attr_name_state))
 
 #undef NS_CHAR_STATE
+
+FAXPP_Error
+PREFIX(ns_name_state3)(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 'n':
+    env->state = PREFIX(ns_name_state4);
+    next_char(env);
+    break;
+  case ':':
+    env->state = PREFIX(attr_name_seen_colon_state);
+    token_end_position(env);
+    report_token(XML_PREFIX_TOKEN, env);
+    next_char(env);
+    token_start_position(env);
+    break;
+  default:
+    env->state = PREFIX(attr_name_state);
+    break;
+  }
+  return NO_ERROR;
+}
 
 FAXPP_Error
 PREFIX(ns_name_state5)(FAXPP_TokenizerEnv *env)
@@ -261,6 +285,11 @@ PREFIX(attr_value_apos_state)(FAXPP_TokenizerEnv *env)
       break;
     default:
       DEFAULT_CASE;
+
+      if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0) {
+        next_char(env);
+        return RESTRICTED_CHAR;
+      }
       break;
     }
     next_char(env);
@@ -311,6 +340,11 @@ PREFIX(attr_value_quot_state)(FAXPP_TokenizerEnv *env)
       break;
     default:
       DEFAULT_CASE;
+
+      if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0) {
+        next_char(env);
+        return RESTRICTED_CHAR;
+      }
       break;
     }
     next_char(env);
