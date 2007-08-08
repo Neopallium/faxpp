@@ -19,6 +19,7 @@
 
 #include "xml_tokenizer.h"
 #include "tokenizer_states.h"
+#include "config.h"
 #include <faxpp/token.h>
 
 /*********************
@@ -29,20 +30,11 @@
 
 #define INITIAL_TOKEN_BUFFER_SIZE 64
 
-static unsigned int native_little_endian()
-{
-  // A test to see if the machine is natively little endian
-  // TBD Use configure to figure this out? - jpcs
-  uint32_t num = 0x00000001;
-  uint8_t *ptr = (uint8_t*)&num;
-  return (unsigned int)*ptr;
-}
-
 FAXPP_Error
 sniff_encoding(FAXPP_TokenizerEnv *env)
 {
   // Default encoding is UTF-8
-  env->decode = FAXPP_utf8_decode;
+  FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
 
   // Make initial judgement on the encoding
   unsigned char *buf = (unsigned char*)env->position;
@@ -59,8 +51,11 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
         switch(*buf) {
         case 0x3C:
           /* 00 00 00 3C  UCS-4, big-endian machine (1234 order) */
-          if(native_little_endian()) env->decode = FAXPP_ucs4_be_decode;
-          else env->decode = FAXPP_ucs4_native_decode;
+#ifdef WORDS_BIGENDIAN
+          FAXPP_set_tokenizer_decode(env, FAXPP_ucs4_native_decode);
+#else
+          FAXPP_set_tokenizer_decode(env, FAXPP_ucs4_be_decode);
+#endif
           break;
         }
         break;
@@ -75,8 +70,11 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
         switch(*buf) {
         case 0xFF:
           /* 00 00 FE FF  UCS-4, big-endian machine (1234 order) */
-          if(native_little_endian()) env->decode = FAXPP_ucs4_be_decode;
-          else env->decode = FAXPP_ucs4_native_decode;
+#ifdef WORDS_BIGENDIAN
+          FAXPP_set_tokenizer_decode(env, FAXPP_ucs4_native_decode);
+#else
+          FAXPP_set_tokenizer_decode(env, FAXPP_ucs4_be_decode);
+#endif
           // Skip BOM
           env->position += 4;
           break;
@@ -100,14 +98,11 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
           return UNSUPPORTED_ENCODING;
         case 0x3F:
           /* 00 3C 00 3F  UTF-16, big-endian */
-          if(native_little_endian()) env->decode = FAXPP_utf16_be_decode;
-          else {
-            env->decode = FAXPP_utf16_native_decode;
-            env->start_element_name_state = utf16_start_element_name_state;
-            env->element_content_state = utf16_element_content_state;
-            if(env->encode == FAXPP_utf16_native_encode)
-              env->encode = 0;
-          }
+#ifdef WORDS_BIGENDIAN
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf16_native_decode);
+#else
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf16_be_decode);
+#endif
           break;
         }
         break;
@@ -123,8 +118,11 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
         switch(*buf) {
         case 0x00:
           /* 3C 00 00 00  UCS-4, little-endian machine (4321 order) */
-          if(native_little_endian()) env->decode = FAXPP_ucs4_native_decode;
-          else env->decode = FAXPP_ucs4_le_decode;
+#ifdef WORDS_BIGENDIAN
+          FAXPP_set_tokenizer_decode(env, FAXPP_ucs4_le_decode);
+#else
+          FAXPP_set_tokenizer_decode(env, FAXPP_ucs4_native_decode);
+#endif
           break;
         }
         break;
@@ -132,14 +130,11 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
         switch(*buf) {
         case 0x00:
           /* 3C 00 3F 00  UTF-16, little-endian */
-          if(native_little_endian()) {
-            env->decode = FAXPP_utf16_native_decode;
-            env->start_element_name_state = utf16_start_element_name_state;
-            env->element_content_state = utf16_element_content_state;
-            if(env->encode == FAXPP_utf16_native_encode)
-              env->encode = 0;
-          }
-          else env->decode = FAXPP_utf16_le_decode;
+#ifdef WORDS_BIGENDIAN
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf16_le_decode);
+#else
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf16_native_decode);
+#endif
           break;
         }
         break;
@@ -151,9 +146,7 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
         switch(*buf) {
         case 0x6D:
           /* 3C 3F 78 6D  UTF-8, ISO 646, ASCII, some part of ISO 8859, Shift-JIS, EUC, etc. */
-          env->decode = FAXPP_utf8_decode;
-          if(env->encode == FAXPP_utf8_encode)
-            env->encode = 0;
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
           break;
         }
         break;
@@ -182,9 +175,7 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
       switch(*buf++) {
       case 0xBF:
         /* EF BB BF  UTF-8 with byte order mark */
-        env->decode = FAXPP_utf8_decode;
-        if(env->encode == FAXPP_utf8_encode)
-          env->encode = 0;
+        FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
         // Skip BOM
         env->position += 3;
       }
@@ -202,14 +193,11 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
           return UNSUPPORTED_ENCODING;
         default:
           /* FE FF ## ##  UTF-16, big-endian */
-          if(native_little_endian()) env->decode = FAXPP_utf16_be_decode;
-          else {
-            env->decode = FAXPP_utf16_native_decode;
-            env->start_element_name_state = utf16_start_element_name_state;
-            env->element_content_state = utf16_element_content_state;
-            if(env->encode == FAXPP_utf16_native_encode)
-              env->encode = 0;
-          }
+#ifdef WORDS_BIGENDIAN
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf16_native_decode);
+#else
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf16_be_decode);
+#endif
           // Skip BOM
           env->position += 2;
           break;
@@ -217,14 +205,11 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
         break;
       default:
         /* FE FF ## ##  UTF-16, big-endian */
-        if(native_little_endian()) env->decode = FAXPP_utf16_be_decode;
-        else {
-          env->decode = FAXPP_utf16_native_decode;
-          env->start_element_name_state = utf16_start_element_name_state;
-          env->element_content_state = utf16_element_content_state;
-          if(env->encode == FAXPP_utf16_native_encode)
-            env->encode = 0;
-        }
+#ifdef WORDS_BIGENDIAN
+        FAXPP_set_tokenizer_decode(env, FAXPP_utf16_native_decode);
+#else
+        FAXPP_set_tokenizer_decode(env, FAXPP_utf16_be_decode);
+#endif
         // Skip BOM
         env->position += 2;
         break;
@@ -240,21 +225,21 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
         switch(*buf) {
         case 0x00:
           /* FF FE 00 00  UCS-4, little-endian machine (4321 order) */
-          if(native_little_endian()) env->decode = FAXPP_ucs4_native_decode;
-          else env->decode = FAXPP_ucs4_le_decode;
+#ifdef WORDS_BIGENDIAN
+          FAXPP_set_tokenizer_decode(env, FAXPP_ucs4_le_decode);
+#else
+          FAXPP_set_tokenizer_decode(env, FAXPP_ucs4_native_decode);
+#endif
           // Skip BOM
           env->position += 4;
           break;
         default:
           /* FF FE ## ##  UTF-16, little-endian */
-          if(native_little_endian()) {
-            env->decode = FAXPP_utf16_native_decode;
-            env->start_element_name_state = utf16_start_element_name_state;
-            env->element_content_state = utf16_element_content_state;
-            if(env->encode == FAXPP_utf16_native_encode)
-              env->encode = 0;
-          }
-          else env->decode = FAXPP_utf16_le_decode;
+#ifdef WORDS_BIGENDIAN
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf16_le_decode);
+#else
+          FAXPP_set_tokenizer_decode(env, FAXPP_utf16_native_decode);
+#endif
           // Skip BOM
           env->position += 2;
           break;
@@ -262,14 +247,11 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
         break;
       default:
         /* FF FE ## ##  UTF-16, little-endian */
-        if(native_little_endian()) {
-          env->decode = FAXPP_utf16_native_decode;
-          env->start_element_name_state = utf16_start_element_name_state;
-          env->element_content_state = utf16_element_content_state;
-          if(env->encode == FAXPP_utf16_native_encode)
-            env->encode = 0;
-        }
-        else env->decode = FAXPP_utf16_le_decode;
+#ifdef WORDS_BIGENDIAN
+        FAXPP_set_tokenizer_decode(env, FAXPP_utf16_le_decode);
+#else
+        FAXPP_set_tokenizer_decode(env, FAXPP_utf16_native_decode);
+#endif
         // Skip BOM
         env->position += 2;
         break;
@@ -279,14 +261,48 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
     break;
   }
 
-  if(env->decode == FAXPP_utf8_decode) {
-    if(env->encode == FAXPP_utf8_encode)
-      env->encode = 0;
-    env->start_element_name_state = utf8_start_element_name_state;
-    env->element_content_state = utf8_element_content_state;
-  }
-
   return NO_ERROR;
+}
+
+FAXPP_DecodeFunction
+FAXPP_get_tokenizer_decode(const FAXPP_Tokenizer *tokenizer)
+{
+  return tokenizer->decode;
+}
+
+void
+FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction decode)
+{
+  if(decode == FAXPP_utf16_native_decode ||
+#ifdef WORDS_BIGENDIAN
+     decode == FAXPP_utf16_be_decode
+#else
+     decode == FAXPP_utf16_le_decode
+#endif
+     ) {
+    tokenizer->decode = FAXPP_utf16_native_decode;
+
+    if(tokenizer->encode == FAXPP_utf16_native_encode)
+      tokenizer->encode = 0;
+
+    tokenizer->start_element_name_state = utf16_start_element_name_state;
+    tokenizer->element_content_state = utf16_element_content_state;
+  }
+  else if(decode == FAXPP_utf8_decode) {
+    tokenizer->decode = FAXPP_utf8_decode;
+
+    if(tokenizer->encode == FAXPP_utf8_encode)
+      tokenizer->encode = 0;
+
+    tokenizer->start_element_name_state = utf8_start_element_name_state;
+    tokenizer->element_content_state = utf8_element_content_state;
+  }
+  else {
+    tokenizer->decode = decode;
+
+    tokenizer->start_element_name_state = default_start_element_name_state;
+    tokenizer->element_content_state = default_element_content_state;
+  }
 }
 
 FAXPP_Error

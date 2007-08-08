@@ -55,6 +55,9 @@ struct FAXPP_ParserEnv_s {
   FAXPP_ParseMode mode;
   FAXPP_EncodeFunction encode;
 
+  FAXPP_EncodingCallback encoding;
+  void *encoding_user_data;
+
   FAXPP_ReadCallback read;
   void *read_user_data;
 

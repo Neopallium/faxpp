@@ -82,7 +82,11 @@ main(int argc, char **argv)
       if(err == PREMATURE_END_OF_BUFFER && length == sizeof(xml)) {
         // Repopulate the buffer
         void *buffer_position;
-        FAXPP_tokenizer_release_buffer(tokenizer, &buffer_position);
+        err = FAXPP_tokenizer_release_buffer(tokenizer, &buffer_position);
+        if(err != NO_ERROR) {
+          printf("ERROR: %s\n", FAXPP_err_to_string(err));
+          exit(1);
+        }
 
         if(buffer_position < (void*)xml + sizeof(xml)) {
           length = (void*)(xml + sizeof(xml)) - buffer_position;
@@ -92,7 +96,11 @@ main(int argc, char **argv)
 
         length += fread(xml, 1, sizeof(xml) - length, file);
 
-        FAXPP_continue_tokenize(tokenizer, xml, length, length != sizeof(xml));
+        err = FAXPP_continue_tokenize(tokenizer, xml, length, length != sizeof(xml));
+        if(err != NO_ERROR) {
+          printf("ERROR: %s\n", FAXPP_err_to_string(err));
+          exit(1);
+        }
       }
       else if(err != NO_ERROR) {
         printf("%03d:%03d ERROR: %s\n", FAXPP_get_tokenizer_error_line(tokenizer),

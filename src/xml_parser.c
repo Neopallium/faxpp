@@ -40,6 +40,14 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env);
 static FAXPP_Error wf_start_document_next_event(FAXPP_ParserEnv *env);
 static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env);
 
+static FAXPP_DecodeFunction p_default_encoding_callback(void *userData, const FAXPP_Text *encoding,
+                                                        FAXPP_DecodeFunction sniffedEncoding)
+{
+  // TBD implement this - jpcs
+  // TBD eliminate the callback functions entirely - jpcs
+  return sniffedEncoding;
+}
+
 FAXPP_Parser *FAXPP_create_parser(FAXPP_ParseMode mode, FAXPP_EncodeFunction encode)
 {
   FAXPP_ParserEnv *env = malloc(sizeof(FAXPP_ParserEnv));
@@ -47,6 +55,8 @@ FAXPP_Parser *FAXPP_create_parser(FAXPP_ParseMode mode, FAXPP_EncodeFunction enc
 
   env->mode = mode;
   env->encode = encode;
+
+  env->encoding = p_default_encoding_callback;
 
   /* The next_event field is set in p_reset_parser() */
 
@@ -122,6 +132,29 @@ void FAXPP_free_parser(FAXPP_Parser *env)
   free(env);
 }
 
+void FAXPP_set_null_terminate(FAXPP_Parser *parser, unsigned int boolean)
+{
+  parser->null_terminate = boolean != 0;
+}
+
+void FAXPP_set_encode(FAXPP_Parser *parser, FAXPP_EncodeFunction encode)
+{
+  parser->encode = encode;
+}
+
+
+void FAXPP_set_encoding_callback(FAXPP_Parser *parser, FAXPP_EncodingCallback callback, void *userData)
+{
+  if(callback == 0) {
+    parser->encoding = p_default_encoding_callback;
+    parser->encoding_user_data = 0;
+  }
+  else {
+    parser->encoding = callback;
+    parser->encoding_user_data = userData;
+  }
+}
+
 static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env, int allocate_buffer)
 {
   // Reset the stack buffer cursor
@@ -147,7 +180,7 @@ static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env, int allocate_buffer)
   return NO_ERROR;
 }
 
-FAXPP_Error FAXPP_init_parse(FAXPP_Parser *env, void *buffer, unsigned int length)
+FAXPP_Error FAXPP_init_parse(FAXPP_Parser *env, void *buffer, unsigned int length, unsigned int done)
 {
   FAXPP_Error err = p_reset_parser(env, /*allocate_buffer*/0);
   if(err != 0) return err;
@@ -155,7 +188,7 @@ FAXPP_Error FAXPP_init_parse(FAXPP_Parser *env, void *buffer, unsigned int lengt
   env->read = 0;
   env->read_user_data = 0;
 
-  return FAXPP_init_tokenize(&env->tenv, buffer, length, /*done*/1, env->encode);
+  return FAXPP_init_tokenize(&env->tenv, buffer, length, done, env->encode);
 }
 
 static unsigned int p_file_read_callback(void *userData, void *buffer, unsigned int length)
@@ -178,7 +211,6 @@ FAXPP_Error FAXPP_init_parse_callback(FAXPP_Parser *env, FAXPP_ReadCallback call
 
   unsigned int len = env->read(env->read_user_data, env->read_buffer, env->read_buffer_length);
 
-  // TBD boolean for indicating this is the last buffer - jpcs
   return FAXPP_init_tokenize(&env->tenv, env->read_buffer, len, /*done*/len != env->read_buffer_length, env->encode);
 }
 
@@ -291,14 +323,14 @@ static void p_change_stack_buffer(void *userData, FAXPP_Buffer *buffer, void *ne
   } \
 }
 
-static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
+FAXPP_Error FAXPP_release_buffer(FAXPP_Parser *env, void **buffer_position)
 {
-  unsigned int len = 0;
-  unsigned int readlen;
   unsigned int i;
   FAXPP_AttrValue *atval;
+  FAXPP_Error err;
 
-  FAXPP_tokenizer_release_buffer(&env->tenv, 0);
+  err = FAXPP_tokenizer_release_buffer(&env->tenv, buffer_position);
+  if(err != 0) return err;
 
   // Copy any strings in the event which point to the old buffer
   // into the event_buffer
@@ -322,6 +354,24 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
     }
   }
 
+  return NO_ERROR;
+}
+
+FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *env, void *buffer,
+                                 unsigned int length, unsigned int done)
+{
+  return FAXPP_continue_tokenize(&env->tenv, buffer, length, done);
+}
+
+static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
+{
+  unsigned int len = 0;
+  unsigned int readlen;
+  FAXPP_Error err;
+
+  err = FAXPP_release_buffer(env, 0);
+  if(err != 0) return err;
+
   if(env->tenv.position < env->tenv.buffer_end) {
     // We're half way through a charcter, so we need to copy
     // the partial char to the begining of the buffer to keep
@@ -335,7 +385,7 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
     return PREMATURE_END_OF_BUFFER;
 
   len += readlen;
-  return FAXPP_continue_tokenize(&env->tenv, env->read_buffer, len, /*done*/len != env->read_buffer_length);
+  return FAXPP_continue_parse(env, env->read_buffer, len, /*done*/len != env->read_buffer_length);
 }
 
 #define p_check_err(err, env) \
@@ -601,6 +651,7 @@ static void set_err_info_from_attr(FAXPP_ParserEnv *env, const FAXPP_Attribute *
 static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
 {
   FAXPP_Error err = 0;
+  FAXPP_DecodeFunction decode;
 
   p_reset_event(env);
 
@@ -613,15 +664,20 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
       p_set_location_from_token(env);
       break;
     case XML_DECL_ENCODING_TOKEN:
-      // TBD invoke a callback function to change the transcoder
       p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
       break;
     case XML_DECL_STANDALONE_TOKEN:
       p_copy_text_from_token(&env->event.standalone, env, /*useTokenBuffer*/0);
       break;
     default:
-      env->next_event = nc_next_event;
       env->buffered_token = 1;
+
+      // Invoke the callback function to change the decoder
+      decode = env->encoding(env->encoding_user_data, &env->event.encoding, env->tenv.decode);
+      if(decode == 0) return UNSUPPORTED_ENCODING;
+      FAXPP_set_tokenizer_decode(&env->tenv, decode);
+
+      env->next_event = nc_next_event;
       env->event.type = START_DOCUMENT_EVENT;
       return NO_ERROR;
     }
@@ -633,6 +689,8 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
 
 static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
 {
+  // TBD keep all state in the FAXPP_ParserEnv to allow progressive parse to work correctly - jpcs
+
   FAXPP_Error err = 0;
 
   p_reset_event(env);

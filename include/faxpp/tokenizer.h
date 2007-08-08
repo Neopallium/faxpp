@@ -39,6 +39,7 @@ typedef struct FAXPP_TokenizerEnv_s FAXPP_Tokenizer;
  * \relatesalso FAXPP_Tokenizer
  */
 FAXPP_Tokenizer *FAXPP_create_tokenizer();
+
 /**
  * Frees a tokenizer object
  *
@@ -47,6 +48,28 @@ FAXPP_Tokenizer *FAXPP_create_tokenizer();
  * \relatesalso FAXPP_Tokenizer
  */
 void FAXPP_free_tokenizer(FAXPP_Tokenizer *tokenizer);
+
+/**
+ * Returns the current FAXPP_DecodeFunction that the tokenizer is using.
+ * 
+ * \param tokenizer
+ * \return The decode function
+ *
+ * \relatesalso FAXPP_Tokenizer
+ */
+FAXPP_DecodeFunction FAXPP_get_tokenizer_decode(const FAXPP_Tokenizer *tokenizer);
+
+/**
+ * Sets the FAXPP_DecodeFunction that the tokenizer uses to decode the XML document.
+ * This will typically be called when an encoding declaration is read, to switch to
+ * the correct decode function.
+ * 
+ * \param tokenizer
+ * \param decode The decode function
+ *
+ * \relatesalso FAXPP_Tokenizer
+ */
+void FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction decode);
 
 /**
  * Initialize the tokenizer to tokenize the given buffer, returning strings
@@ -93,7 +116,7 @@ FAXPP_Error FAXPP_tokenizer_release_buffer(FAXPP_Tokenizer *tokenizer, void **bu
  * FAXPP_tokenizer_release_buffer() should have been called before this,
  * and the remaining data in the old buffer transferred to the new one.
  * 
- * \param tokenizer The tokenizer to initialize
+ * \param tokenizer
  * \param buffer A pointer to the start of the buffer to tokenize
  * \param length The length of the given buffer
  * \param done Set to non-zero if this is the last buffer from the input

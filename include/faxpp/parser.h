@@ -103,6 +103,22 @@ typedef enum {
 typedef unsigned int (*FAXPP_ReadCallback)(void *userData, void *buffer, unsigned int length);
 
 /**
+ * The function called when faxpp reads an encoding declaration in the XML document, or determines
+ * that the document does not contain an encoding declaration. The function should return a
+ * FAXPP_DecodeFunction for the encoding, or null if the encoding is not supported.
+ *
+ * \param userData The user data supplied to the FAXPP_set_encoding_callback() method
+ * \param encoding The encoding string found, or null if the document does not contain an encoding
+ * declaration.
+ * \param sniffedEncoding The encoding function already in use by the tokenizer, that was determined
+ * using auto-detection when document parsing began.
+ *
+ * \return The FAXPP_DecodeFunction to use to decode the document, or null if the encoding is not supported
+ */
+typedef FAXPP_DecodeFunction (*FAXPP_EncodingCallback)(void *userData, const FAXPP_Text *encoding,
+                                                       FAXPP_DecodeFunction sniffedEncoding);
+
+/**
  * Creates a parser object
  *
  * \param mode The type of checks the parser should perform
@@ -154,6 +170,19 @@ void FAXPP_set_null_terminate(FAXPP_Parser *parser, unsigned int boolean);
 void FAXPP_set_encode(FAXPP_Parser *parser, FAXPP_EncodeFunction encode);
 
 /**
+ * Sets the encoding callback function that the parser will call when it reads an
+ * encoding declaration in the XML document, or determines that the document does
+ * not contain an encoding declaration.
+ *
+ * \param parser
+ * \param callback The encoding callback function to use, or null to use the default encoding callback
+ * \param userData The user data to be passed to the callback function when it is called
+ *
+ * \relatesalso FAXPP_Parser
+ */
+void FAXPP_set_encoding_callback(FAXPP_Parser *parser, FAXPP_EncodingCallback callback, void *userData);
+
+/**
  * Initialize the parser to parse the given buffer. This will halt any
  * parse that was already in progress.
  *
@@ -164,6 +193,7 @@ void FAXPP_set_encode(FAXPP_Parser *parser, FAXPP_EncodeFunction encode);
  * \param parser The parser to initialize
  * \param buffer A pointer to the start of the buffer to parse
  * \param length The length of the given buffer
+ * \param done Set to non-zero if this is the last buffer from the input
  *
  * \retval UNSUPPORTED_ENCODING If the encoding sniffing algorithm cannot recognize
  * the encoding of the buffer
@@ -172,7 +202,7 @@ void FAXPP_set_encode(FAXPP_Parser *parser, FAXPP_EncodeFunction encode);
  *
  * \relatesalso FAXPP_Parser
  */
-FAXPP_Error FAXPP_init_parse(FAXPP_Parser *parser, void *buffer, unsigned int length);
+FAXPP_Error FAXPP_init_parse(FAXPP_Parser *parser, void *buffer, unsigned int length, unsigned int done);
 
 /**
  * Initialize the parser to parse the given file. This will halt any
@@ -209,6 +239,43 @@ FAXPP_Error FAXPP_init_parse_file(FAXPP_Parser *parser, FILE *file);
  * \relatesalso FAXPP_Parser
  */
 FAXPP_Error FAXPP_init_parse_callback(FAXPP_Parser *parser, FAXPP_ReadCallback callback, void *userData);
+
+/**
+ * Instructs the parser to release any dependencies it has on it's current buffer.
+ *
+ * This is typically called on recieving a PREMATURE_END_OF_BUFFER error, before
+ * using FAXPP_continue_parse() to provide a new buffer. In this case, the buffer data
+ * between *buffer_position and the end of the buffer need to be copied into the start of
+ * the new buffer.
+ *
+ * \param parser
+ * \param[out] buffer_position Set to a pointer in the current buffer that the tokenizer
+ * has tokenized up to
+ *
+ * \retval OUT_OF_MEMORY
+ * \retval NO_ERROR
+ *
+ * \relatesalso FAXPP_Parser
+ */
+FAXPP_Error FAXPP_release_buffer(FAXPP_Parser *parser, void **buffer_position);
+
+/**
+ * Provides a new buffer for the parser to continue parsing.
+ *
+ * FAXPP_release_buffer() should have been called before this,
+ * and the remaining data in the old buffer transferred to the new one.
+ * 
+ * \param parser
+ * \param buffer A pointer to the start of the buffer to parse
+ * \param length The length of the given buffer
+ * \param done Set to non-zero if this is the last buffer from the input
+ *
+ * \retval NO_ERROR
+ *
+ * \relatesalso FAXPP_Parser
+ */
+FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *parser, void *buffer,
+                                 unsigned int length, unsigned int done);
 
 /**
  * Parses the next event, placing the information for it
