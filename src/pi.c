@@ -32,7 +32,7 @@ pi_name_start_state(FAXPP_TokenizerEnv *env)
   default:
     env->state = pi_name_state;
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NAME_START_CHAR) == 0) {
+    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0) {
       return INVALID_CHAR_IN_PI_NAME;
     }
     break;
@@ -113,7 +113,7 @@ pi_name_state(FAXPP_TokenizerEnv *env)
       token_start_position(env);
       return NO_ERROR;
     default:
-      if((FAXPP_char_flags(env->current_char) & NAME_CHAR) == 0) {
+      if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0) {
         next_char(env);
         return INVALID_CHAR_IN_PI_NAME;
       }

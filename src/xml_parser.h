@@ -49,14 +49,13 @@ typedef struct FAXPP_ElementInfo_s {
 
 typedef struct FAXPP_ParserEnv_s FAXPP_ParserEnv;
 
+typedef FAXPP_Error (*FAXPP_NextEvent)(FAXPP_ParserEnv *env);
+
 struct FAXPP_ParserEnv_s {
-  FAXPP_Error (*next_event)(FAXPP_ParserEnv *env);
+  FAXPP_NextEvent next_event;
+  FAXPP_NextEvent main_next_event;
 
-  FAXPP_ParseMode mode;
   FAXPP_EncodeFunction encode;
-
-  FAXPP_EncodingCallback encoding;
-  void *encoding_user_data;
 
   FAXPP_ReadCallback read;
   void *read_user_data;
@@ -66,6 +65,7 @@ struct FAXPP_ParserEnv_s {
 
   FAXPP_TokenizerEnv tenv;
   unsigned int buffered_token:1;
+  unsigned int decode_needs_setting:1;
   unsigned int null_terminate:1;
 
   unsigned int err_line;

@@ -61,6 +61,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "default_start_element_name_seen_colon_state";
   else if(state == default_start_element_name_seen_colon_state2)
     return "default_start_element_name_seen_colon_state2";
+  else if(state == default_start_element_mandatory_ws_state)
+    return "default_start_element_mandatory_ws_state";
   else if(state == default_start_element_ws_state)
     return "default_start_element_ws_state";
   else if(state == default_element_content_markup_state)
@@ -110,6 +112,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "utf8_start_element_name_seen_colon_state";
   else if(state == utf8_start_element_name_seen_colon_state2)
     return "utf8_start_element_name_seen_colon_state2";
+  else if(state == utf8_start_element_mandatory_ws_state)
+    return "utf8_start_element_mandatory_ws_state";
   else if(state == utf8_start_element_ws_state)
     return "utf8_start_element_ws_state";
   else if(state == utf8_attr_name_state)
@@ -159,6 +163,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "utf16_start_element_name_seen_colon_state";
   else if(state == utf16_start_element_name_seen_colon_state2)
     return "utf16_start_element_name_seen_colon_state2";
+  else if(state == utf16_start_element_mandatory_ws_state)
+    return "utf16_start_element_mandatory_ws_state";
   else if(state == utf16_start_element_ws_state)
     return "utf16_start_element_ws_state";
   else if(state == utf16_attr_name_state)
@@ -328,16 +334,82 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "xml_decl_encoding_state7";
   else if(state == xml_decl_encoding_state8)
     return "xml_decl_encoding_state8";
-  else if(state == xml_decl_encoding_value_state)
-    return "xml_decl_encoding_value_state";
-  else if(state == xml_decl_encoding_value_quot_state1)
-    return "xml_decl_encoding_value_quot_state1";
-  else if(state == xml_decl_encoding_value_quot_state2)
-    return "xml_decl_encoding_value_quot_state2";
-  else if(state == xml_decl_encoding_value_apos_state1)
-    return "xml_decl_encoding_value_apos_state1";
-  else if(state == xml_decl_encoding_value_apos_state2)
-    return "xml_decl_encoding_value_apos_state2";
+
+  else if(state == xml_decl_encoding_value_state1)
+    return "xml_decl_encoding_value_state1";
+  else if(state == xml_decl_encoding_value_state2)
+    return "xml_decl_encoding_value_state2";
+  else if(state == xml_decl_encoding_value_utf_state1)
+    return "xml_decl_encoding_value_utf_state1";
+  else if(state == xml_decl_encoding_value_utf_state2)
+    return "xml_decl_encoding_value_utf_state2";
+  else if(state == xml_decl_encoding_value_utf_state3)
+    return "xml_decl_encoding_value_utf_state3";
+  else if(state == xml_decl_encoding_value_utf_state4)
+    return "xml_decl_encoding_value_utf_state4";
+  else if(state == xml_decl_encoding_value_utf8_state)
+    return "xml_decl_encoding_value_utf8_state";
+  else if(state == xml_decl_encoding_value_utf16_state1)
+    return "xml_decl_encoding_value_utf16_state1";
+  else if(state == xml_decl_encoding_value_utf16_state2)
+    return "xml_decl_encoding_value_utf16_state2";
+  else if(state == xml_decl_encoding_value_utf16be_state1)
+    return "xml_decl_encoding_value_utf16be_state1";
+  else if(state == xml_decl_encoding_value_utf16be_state2)
+    return "xml_decl_encoding_value_utf16be_state2";
+  else if(state == xml_decl_encoding_value_utf16le_state1)
+    return "xml_decl_encoding_value_utf16le_state1";
+  else if(state == xml_decl_encoding_value_utf16le_state2)
+    return "xml_decl_encoding_value_utf16le_state2";
+  else if(state == xml_decl_encoding_value_iso_state1)
+    return "xml_decl_encoding_value_iso_state1";
+  else if(state == xml_decl_encoding_value_iso_state2)
+    return "xml_decl_encoding_value_iso_state2";
+  else if(state == xml_decl_encoding_value_iso_state3)
+    return "xml_decl_encoding_value_iso_state3";
+  else if(state == xml_decl_encoding_value_iso_state4)
+    return "xml_decl_encoding_value_iso_state4";
+  else if(state == xml_decl_encoding_value_ucs4_state1)
+    return "xml_decl_encoding_value_ucs4_state1";
+  else if(state == xml_decl_encoding_value_ucs4_state2)
+    return "xml_decl_encoding_value_ucs4_state2";
+  else if(state == xml_decl_encoding_value_ucs4_state3)
+    return "xml_decl_encoding_value_ucs4_state3";
+  else if(state == xml_decl_encoding_value_ucs4_state4)
+    return "xml_decl_encoding_value_ucs4_state4";
+  else if(state == xml_decl_encoding_value_ucs4_state5)
+    return "xml_decl_encoding_value_ucs4_state5";
+  else if(state == xml_decl_encoding_value_ucs4_state6)
+    return "xml_decl_encoding_value_ucs4_state6";
+  else if(state == xml_decl_encoding_value_ucs4_state7)
+    return "xml_decl_encoding_value_ucs4_state7";
+  else if(state == xml_decl_encoding_value_ucs4_state8)
+    return "xml_decl_encoding_value_ucs4_state8";
+  else if(state == xml_decl_encoding_value_ucs4_state9)
+    return "xml_decl_encoding_value_ucs4_state9";
+  else if(state == xml_decl_encoding_value_ucs4_state10)
+    return "xml_decl_encoding_value_ucs4_state10";
+  else if(state == xml_decl_encoding_value_ucs4_state11)
+    return "xml_decl_encoding_value_ucs4_state11";
+  else if(state == xml_decl_encoding_value_ucs4_state12)
+    return "xml_decl_encoding_value_ucs4_state12";
+  else if(state == xml_decl_encoding_value_iso_8859_1_state1)
+    return "xml_decl_encoding_value_iso_8859_1_state1";
+  else if(state == xml_decl_encoding_value_iso_8859_1_state2)
+    return "xml_decl_encoding_value_iso_8859_1_state2";
+  else if(state == xml_decl_encoding_value_iso_8859_1_state3)
+    return "xml_decl_encoding_value_iso_8859_1_state3";
+  else if(state == xml_decl_encoding_value_iso_8859_1_state4)
+    return "xml_decl_encoding_value_iso_8859_1_state4";
+  else if(state == xml_decl_encoding_value_iso_8859_1_state5)
+    return "xml_decl_encoding_value_iso_8859_1_state5";
+  else if(state == xml_decl_encoding_value_iso_8859_1_state6)
+    return "xml_decl_encoding_value_iso_8859_1_state6";
+  else if(state == xml_decl_encoding_value_quot_state)
+    return "xml_decl_encoding_value_quot_state";
+  else if(state == xml_decl_encoding_value_apos_state)
+    return "xml_decl_encoding_value_apos_state";
+
   else if(state == xml_decl_standalone_ws_state)
     return "xml_decl_standalone_ws_state";
   else if(state == xml_decl_seen_question_state)

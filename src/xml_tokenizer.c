@@ -297,6 +297,18 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
     tokenizer->start_element_name_state = utf8_start_element_name_state;
     tokenizer->element_content_state = utf8_element_content_state;
   }
+  else if(decode == FAXPP_ucs4_native_decode ||
+#ifdef WORDS_BIGENDIAN
+     decode == FAXPP_ucs4_be_decode
+#else
+     decode == FAXPP_ucs4_le_decode
+#endif
+     ) {
+    tokenizer->decode = FAXPP_ucs4_native_decode;
+
+    tokenizer->start_element_name_state = default_start_element_name_state;
+    tokenizer->element_content_state = default_element_content_state;
+  }
   else {
     tokenizer->decode = decode;
 

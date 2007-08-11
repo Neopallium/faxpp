@@ -264,7 +264,7 @@ PREFIX(attr_value_apos_state)(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     case '\'':
-      env->state = PREFIX(start_element_ws_state);
+      env->state = PREFIX(start_element_mandatory_ws_state);
       token_end_position(env);
       report_token(ATTRIBUTE_VALUE_TOKEN, env);
       next_char(env);
@@ -319,7 +319,7 @@ PREFIX(attr_value_quot_state)(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     case '"':
-      env->state = PREFIX(start_element_ws_state);
+      env->state = PREFIX(start_element_mandatory_ws_state);
       token_end_position(env);
       report_token(ATTRIBUTE_VALUE_TOKEN, env);
       next_char(env);

@@ -97,6 +97,24 @@ const char *FAXPP_encode_to_string(FAXPP_EncodeFunction t);
 unsigned int FAXPP_utf8_decode(const void *buffer, const void *buffer_end, Char32 *ch);
 
 /**
+ * Decodes a single ISO-8859-1 (Latin1) character from the buffer into it's unicode codepoint.
+ *
+ * \param buffer The buffer to decode from
+ * \param buffer_end A pointer to the end of the buffer
+ * \param[out] ch The decoded unicode codepoint
+ *
+ * \return The length of the char, unless it is bigger than TRANSCODE_ERROR,
+ * in which case it is an error code.
+ *
+ * \retval TRANSCODE_PREMATURE_END_OF_BUFFER If there is not enough buffer left to
+ * decode another character
+ * \retval TRANSCODE_BAD_ENCODING If the the encoding is invalid
+ *
+ * \see FAXPP_DecodeFunction
+ */
+unsigned int FAXPP_iso_8859_1_decode(const void *buffer, const void *buffer_end, Char32 *ch);
+
+/**
  * Decodes a single UTF-16 little endian character from the buffer into it's unicode codepoint.
  *
  * \param buffer The buffer to decode from

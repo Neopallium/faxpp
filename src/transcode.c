@@ -20,6 +20,8 @@ const char *decode_to_string(FAXPP_DecodeFunction t)
 {
   if(t == FAXPP_utf8_decode)
     return "UTF-8";
+  else if(t == FAXPP_iso_8859_1_decode)
+    return "ISO-8859-1";
   else if (t == FAXPP_utf16_le_decode)
     return "UTF-16LE";
   else if (t == FAXPP_utf16_be_decode)
@@ -147,6 +149,15 @@ FAXPP_utf8_decode(const void *buffer, const void *buffer_end,
 
   *ch = c;
   return len;
+}
+
+// ISO-8859-1 is the first 256 codepoints from Unicode
+unsigned int
+FAXPP_iso_8859_1_decode(const void *buffer, const void *buffer_end,
+                        Char32 *ch)
+{
+  *ch = *(uint8_t*)buffer;
+  return 1;
 }
 
 /*

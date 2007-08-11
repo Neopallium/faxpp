@@ -214,7 +214,7 @@ void calculateBase(const char *testFile, const FAXPP_AttrValue *atval, char *out
   *ptr = 0;
 }
 
-FAXPP_Error run_test_case(const char *filename)
+FAXPP_Error run_test_case(const char *filename, unsigned int *errLine)
 {
   FAXPP_Parser *testparser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_encode);
 
@@ -225,11 +225,15 @@ FAXPP_Error run_test_case(const char *filename)
   }
 
   FAXPP_Error err = FAXPP_init_parse_file(testparser, file);
-  if(err != NO_ERROR) error(err, 0, 0);
+  if(err == NO_ERROR) {
+    while((err = FAXPP_next_event(testparser)) == 0) {
+      if(FAXPP_get_current_event(testparser)->type == END_DOCUMENT_EVENT)
+        break;
+    }
+  }
 
-  while((err = FAXPP_next_event(testparser)) == 0) {
-    if(FAXPP_get_current_event(testparser)->type == END_DOCUMENT_EVENT)
-      break;
+  if(err != 0) {
+    *errLine = FAXPP_get_error_line(testparser);
   }
 
   fclose(file);
@@ -247,6 +251,7 @@ main(int argc, char **argv)
   char base_buffer[1024];
   char file_buffer[1024];
   FAXPP_Error result;
+  unsigned int errLine;
   int output_events = 0;
 
   int test_failures = 0;
@@ -313,7 +318,7 @@ main(int argc, char **argv)
         attr = find_attribute(event, "URI");
         calculateBase(base_buffer, &attr->value, file_buffer);
 
-        result = run_test_case(file_buffer);
+        result = run_test_case(file_buffer, &errLine);
         if(result == DOCTYPE_NOT_IMPLEMENTED) {
           printf("^");
           fflush(stdout);
@@ -356,6 +361,10 @@ main(int argc, char **argv)
         if(attr) {
           fprintf(stderr, "\nSections: ");
           output_attr_value(&attr->value, stderr);
+        }
+
+        if(result != NO_ERROR) {
+          fprintf(stderr, "\nError: %s:%i", FAXPP_err_to_string(result), errLine);
         }
 
         fprintf(stderr, "\n");

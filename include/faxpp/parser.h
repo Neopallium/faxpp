@@ -103,22 +103,6 @@ typedef enum {
 typedef unsigned int (*FAXPP_ReadCallback)(void *userData, void *buffer, unsigned int length);
 
 /**
- * The function called when faxpp reads an encoding declaration in the XML document, or determines
- * that the document does not contain an encoding declaration. The function should return a
- * FAXPP_DecodeFunction for the encoding, or null if the encoding is not supported.
- *
- * \param userData The user data supplied to the FAXPP_set_encoding_callback() method
- * \param encoding The encoding string found, or null if the document does not contain an encoding
- * declaration.
- * \param sniffedEncoding The encoding function already in use by the tokenizer, that was determined
- * using auto-detection when document parsing began.
- *
- * \return The FAXPP_DecodeFunction to use to decode the document, or null if the encoding is not supported
- */
-typedef FAXPP_DecodeFunction (*FAXPP_EncodingCallback)(void *userData, const FAXPP_Text *encoding,
-                                                       FAXPP_DecodeFunction sniffedEncoding);
-
-/**
  * Creates a parser object
  *
  * \param mode The type of checks the parser should perform
@@ -170,17 +154,26 @@ void FAXPP_set_null_terminate(FAXPP_Parser *parser, unsigned int boolean);
 void FAXPP_set_encode(FAXPP_Parser *parser, FAXPP_EncodeFunction encode);
 
 /**
- * Sets the encoding callback function that the parser will call when it reads an
- * encoding declaration in the XML document, or determines that the document does
- * not contain an encoding declaration.
- *
+ * Returns the current FAXPP_DecodeFunction that the parser is using.
+ * 
  * \param parser
- * \param callback The encoding callback function to use, or null to use the default encoding callback
- * \param userData The user data to be passed to the callback function when it is called
+ * \return The decode function
  *
  * \relatesalso FAXPP_Parser
  */
-void FAXPP_set_encoding_callback(FAXPP_Parser *parser, FAXPP_EncodingCallback callback, void *userData);
+FAXPP_DecodeFunction FAXPP_get_decode(const FAXPP_Parser *parser);
+
+/**
+ * Sets the FAXPP_DecodeFunction that the parser uses to decode the XML document.
+ * This will typically be called when an encoding declaration is read, to switch to
+ * the correct decode function.
+ * 
+ * \param parser
+ * \param decode The decode function
+ *
+ * \relatesalso FAXPP_Parser
+ */
+void FAXPP_set_decode(FAXPP_Parser *parser, FAXPP_DecodeFunction decode);
 
 /**
  * Initialize the parser to parse the given buffer. This will halt any

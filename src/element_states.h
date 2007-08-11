@@ -127,6 +127,28 @@ PREFIX(start_element_name_seen_colon_state2)(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Error
+PREFIX(start_element_mandatory_ws_state)(FAXPP_TokenizerEnv *env)
+{
+  END_CHECK;
+
+  READ_CHAR;
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    // Fall through
+  case '/':
+  case '>':
+    env->state = PREFIX(start_element_ws_state);
+    break;
+  default:
+    env->state = PREFIX(start_element_ws_state);
+    return EXPECTING_WHITESPACE;
+  }
+  return NO_ERROR;  
+}
+
+FAXPP_Error
 PREFIX(start_element_ws_state)(FAXPP_TokenizerEnv *env)
 {
   END_CHECK;
