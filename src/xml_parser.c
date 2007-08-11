@@ -1217,7 +1217,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
         case DEC_CHAR_REFERENCE_EVENT:
           /* [WFC: Legal Character] */
           ch = p_dec_char_ref_value(&attrVal->name, env);
-          if((FAXPP_char_flags(ch) & NON_RESTRICTED_CHAR) == 0) {
+          if((FAXPP_char_flags(ch) & env->tenv.non_restricted_char) == 0) {
             set_err_info_from_attr(env, attr);
             return RESTRICTED_CHAR;
           }
@@ -1233,7 +1233,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
         case HEX_CHAR_REFERENCE_EVENT:
           /* [WFC: Legal Character] */
           ch = p_hex_char_ref_value(&attrVal->name, env);
-          if((FAXPP_char_flags(ch) & NON_RESTRICTED_CHAR) == 0) {
+          if((FAXPP_char_flags(ch) & env->tenv.non_restricted_char) == 0) {
             set_err_info_from_attr(env, attr);
             return RESTRICTED_CHAR;
           }
@@ -1340,7 +1340,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
   case DEC_CHAR_REFERENCE_EVENT:
     /* [WFC: Legal Character] */
     ch = p_dec_char_ref_value(&env->event.name, env);
-    if((FAXPP_char_flags(ch) & NON_RESTRICTED_CHAR) == 0) {
+    if((FAXPP_char_flags(ch) & env->tenv.non_restricted_char) == 0) {
       set_err_info_from_event(env);
       return RESTRICTED_CHAR;
     }
@@ -1357,7 +1357,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
   case HEX_CHAR_REFERENCE_EVENT:
     /* [WFC: Legal Character] */
     ch = p_hex_char_ref_value(&env->event.name, env);
-    if((FAXPP_char_flags(ch) & NON_RESTRICTED_CHAR) == 0) {
+    if((FAXPP_char_flags(ch) & env->tenv.non_restricted_char) == 0) {
       set_err_info_from_event(env);
       return RESTRICTED_CHAR;
     }

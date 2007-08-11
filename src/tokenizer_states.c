@@ -619,7 +619,7 @@ initial_markup_state(FAXPP_TokenizerEnv *env)
     env->seen_doc_element = 1;
     token_start_position(env);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
     break;
   }

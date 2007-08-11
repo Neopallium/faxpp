@@ -90,7 +90,7 @@ default_element_content_state(FAXPP_TokenizerEnv *env)
     LINE_ENDINGS
       break;
     default:
-      if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0) {
+      if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0) {
         next_char(env);
         return RESTRICTED_CHAR;
       }
@@ -181,7 +181,7 @@ utf8_element_content_state(FAXPP_TokenizerEnv *env)
         return BAD_ENCODING;
       }
 
-      if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0) {
+      if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0) {
         next_char(env);
         return RESTRICTED_CHAR;
       }
@@ -249,7 +249,7 @@ utf16_element_content_state(FAXPP_TokenizerEnv *env)
         }
       }
 
-      if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0) {
+      if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0) {
         next_char(env);
         return RESTRICTED_CHAR;
       }

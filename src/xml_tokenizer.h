@@ -60,6 +60,10 @@ struct FAXPP_TokenizerEnv_s {
 
   FAXPP_StateFunction start_element_name_state;
   FAXPP_StateFunction element_content_state;
+
+  uint8_t ncname_start_char;
+  uint8_t ncname_char;
+  uint8_t non_restricted_char;
 };
 
 #endif

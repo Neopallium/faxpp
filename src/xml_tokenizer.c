@@ -19,6 +19,7 @@
 
 #include "xml_tokenizer.h"
 #include "tokenizer_states.h"
+#include "char_classes.h"
 #include "config.h"
 #include <faxpp/token.h>
 
@@ -380,6 +381,10 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, uns
 
   env->start_element_name_state = default_start_element_name_state;
   env->element_content_state = default_element_content_state;
+
+  env->ncname_start_char = NCNAME_START_CHAR10;
+  env->ncname_char = NCNAME_CHAR10;
+  env->non_restricted_char = NON_RESTRICTED_CHAR10;
 
   FAXPP_Error err = sniff_encoding(env);
   if(err) return err;

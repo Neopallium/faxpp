@@ -57,7 +57,7 @@ PREFIX(start_element_name_state)(FAXPP_TokenizerEnv *env)
     }
 
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0) {
+    if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0) {
       return INVALID_CHAR_IN_ELEMENT_NAME;
     }
   }
@@ -76,7 +76,7 @@ PREFIX(start_element_name_seen_colon_state)(FAXPP_TokenizerEnv *env)
   default: 
     env->state = PREFIX(start_element_name_seen_colon_state2);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
     break;
   }
@@ -118,7 +118,7 @@ PREFIX(start_element_name_seen_colon_state2)(FAXPP_TokenizerEnv *env)
     }
 
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
   }
 
@@ -181,7 +181,7 @@ PREFIX(start_element_ws_state)(FAXPP_TokenizerEnv *env)
     env->state = PREFIX(attr_name_state);
     token_start_position(env);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
       return INVALID_CHAR_IN_ATTRIBUTE_NAME;
     break;
   }
@@ -218,7 +218,7 @@ PREFIX(element_content_markup_state)(FAXPP_TokenizerEnv *env)
     env->state = (env)->start_element_name_state;
     token_start_position(env);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
     break;
   }
@@ -298,7 +298,7 @@ PREFIX(end_element_name_state)(FAXPP_TokenizerEnv *env)
   default:
     env->state = PREFIX(end_element_name_state2);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
   }
   return NO_ERROR;  
@@ -339,7 +339,7 @@ PREFIX(end_element_name_state2)(FAXPP_TokenizerEnv *env)
       break;
     }
 
-    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0) {
+    if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0) {
       next_char(env);
       return INVALID_CHAR_IN_ELEMENT_NAME;
     }
@@ -361,7 +361,7 @@ PREFIX(end_element_name_seen_colon_state)(FAXPP_TokenizerEnv *env)
   default:
     env->state = PREFIX(end_element_name_seen_colon_state2);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
     break;
   }
@@ -398,7 +398,7 @@ PREFIX(end_element_name_seen_colon_state2)(FAXPP_TokenizerEnv *env)
     }
 
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
   }
 

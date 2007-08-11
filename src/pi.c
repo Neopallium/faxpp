@@ -32,7 +32,7 @@ pi_name_start_state(FAXPP_TokenizerEnv *env)
   default:
     env->state = pi_name_state;
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0) {
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0) {
       return INVALID_CHAR_IN_PI_NAME;
     }
     break;
@@ -113,7 +113,7 @@ pi_name_state(FAXPP_TokenizerEnv *env)
       token_start_position(env);
       return NO_ERROR;
     default:
-      if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0) {
+      if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0) {
         next_char(env);
         return INVALID_CHAR_IN_PI_NAME;
       }
@@ -139,7 +139,7 @@ pi_ws_state(FAXPP_TokenizerEnv *env)
     env->state = pi_content_state;
     token_start_position(env);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0)
       return RESTRICTED_CHAR;
     break;
   }
@@ -161,7 +161,7 @@ pi_content_state(FAXPP_TokenizerEnv *env)
     LINE_ENDINGS
     default:
       next_char(env);
-      if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
+      if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0)
         return RESTRICTED_CHAR;
       break;
     }
@@ -193,7 +193,7 @@ pi_content_seen_question_state(FAXPP_TokenizerEnv *env)
   default:
     env->state = pi_content_state;
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NON_RESTRICTED_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0)
       return RESTRICTED_CHAR;
     break;
   }

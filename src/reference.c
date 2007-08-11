@@ -53,7 +53,7 @@ reference_state(FAXPP_TokenizerEnv *env)
     env->state = entity_reference_state;
     token_start_position(env);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
       return INVALID_CHAR_IN_ENTITY_REFERENCE;
     break;
   }
@@ -323,7 +323,7 @@ entity_reference_state(FAXPP_TokenizerEnv *env)
     }
 
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0)
       return INVALID_CHAR_IN_ENTITY_REFERENCE;
   }
 

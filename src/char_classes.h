@@ -19,18 +19,19 @@
 
 #include <faxpp/transcode.h>
 
-#define NCNAME_START_CHAR   0x01
-#define NCNAME_CHAR         0x02
-#define NAME_START_CHAR     0x04
-#define NAME_CHAR           0x08
-#define WHITESPACE_CHAR     0x10
-#define NON_RESTRICTED_CHAR 0x20
+#define NCNAME_START_CHAR10   0x01
+#define NCNAME_CHAR10         0x02
+#define NCNAME_START_CHAR11   0x04
+#define NCNAME_CHAR11         0x08
+#define NON_RESTRICTED_CHAR10 0x10
+#define NON_RESTRICTED_CHAR11 0x20
+#define WHITESPACE_CHAR       0x40
 
 const char *FAXPP_char_flags_to_string(unsigned int flags);
 
 #define FAXPP_char_flags(ch) (((ch) < 256) ? FAXPP_char_flags_256[(ch)] : FAXPP_char_flags_impl((ch)))
 
-unsigned int FAXPP_char_flags_impl(Char32 c);
+uint8_t FAXPP_char_flags_impl(Char32 c);
 const uint8_t FAXPP_char_flags_256[256];
 
 #endif

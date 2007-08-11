@@ -39,7 +39,7 @@ xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
     env->seen_doc_element = 1;
     token_start_position(env);
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_START_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
       return INVALID_CHAR_IN_ELEMENT_NAME;
     break;
   }
@@ -144,7 +144,7 @@ xml_decl_or_pi_state4(FAXPP_TokenizerEnv *env)
   default:
     env->state = pi_name_state;
     next_char(env);
-    if((FAXPP_char_flags(env->current_char) & NCNAME_CHAR) == 0)
+    if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0)
       return INVALID_CHAR_IN_PI_NAME;
     break;
   }
@@ -215,8 +215,13 @@ xml_decl_version_value_state4(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case '0':
+    retrieve_state(env);
+    break;
   case '1':
     retrieve_state(env);
+    env->ncname_start_char = NCNAME_START_CHAR11;
+    env->ncname_char = NCNAME_CHAR11;
+    env->non_restricted_char = NON_RESTRICTED_CHAR11;
     break;
   default:
     retrieve_state(env);
