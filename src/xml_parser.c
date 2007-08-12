@@ -151,7 +151,6 @@ FAXPP_DecodeFunction FAXPP_get_decode(const FAXPP_Parser *parser)
 void FAXPP_set_decode(FAXPP_Parser *parser, FAXPP_DecodeFunction decode)
 {
   FAXPP_set_tokenizer_decode(&parser->tenv, decode);
-  parser->decode_needs_setting = 0;
   if(parser->next_event == nc_unsupported_encoding_next_event) {
     parser->next_event = parser->main_next_event;
   }
@@ -163,7 +162,6 @@ static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env, int allocate_buffer)
   FAXPP_reset_buffer(&env->stack_buffer);
 
   env->buffered_token = 0;
-  env->decode_needs_setting = 0;
 
   if(allocate_buffer && !env->read_buffer) {
     env->read_buffer = malloc(READ_BUFFER_SIZE);
@@ -644,6 +642,37 @@ static void set_err_info_from_attr(FAXPP_ParserEnv *env, const FAXPP_Attribute *
   env->err_column = attr->column;
 }
 
+// Needs upper case strings passed to it
+static int p_case_insensitive_equals(const char *str, FAXPP_EncodeFunction encode, const FAXPP_Text *text)
+{
+  // No encoding represents a character with as many as 10 bytes
+  uint8_t encode_buffer[10];
+  unsigned int encode_len;
+
+  void *text_ptr = text->ptr;
+  void *text_end = text_ptr + text->len;
+
+  while(*str != 0) {
+    if(text_ptr >= text_end) return 0;
+
+    encode_len = encode(encode_buffer, encode_buffer + sizeof(encode_buffer), *str);
+    if((text_end - text_ptr) < encode_len || memcmp(encode_buffer, text_ptr, encode_len) != 0) {
+      if(*str >= 'A' && *str <= 'Z') {
+        // Try the lower case letter as well
+        encode_len = encode(encode_buffer, encode_buffer + sizeof(encode_buffer), (*str) - 'A' + 'a');
+        if((text_end - text_ptr) < encode_len || memcmp(encode_buffer, text_ptr, encode_len) != 0)
+          return 0;
+      }
+      else return 0;
+    }
+
+    text_ptr += encode_len;
+    ++str;
+  }
+
+  return text_ptr == text_end;
+}
+
 static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
 {
   FAXPP_Error err = 0;
@@ -660,61 +689,60 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
       break;
     case XML_DECL_ENCODING_TOKEN:
       p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
-      env->decode_needs_setting = 1;
-      break;
-    case XML_DECL_ENCODING_UTF8_TOKEN:
-      p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
-      if(env->tenv.decode != FAXPP_utf8_decode)
-        return BAD_ENCODING;
-      break;
-    case XML_DECL_ENCODING_UTF16_TOKEN:
-      p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
-      if(env->tenv.decode != FAXPP_utf16_le_decode &&
-         env->tenv.decode != FAXPP_utf16_be_decode &&
-         env->tenv.decode != FAXPP_utf16_native_decode)
-        return BAD_ENCODING;
-      break;
-    case XML_DECL_ENCODING_UTF16LE_TOKEN:
-      p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
-      if(env->tenv.decode != FAXPP_utf16_le_decode
-#ifndef WORDS_BIGENDIAN
-         && env->tenv.decode != FAXPP_utf16_native_decode
-#endif
-         )
-        return BAD_ENCODING;
-      break;
-    case XML_DECL_ENCODING_UTF16BE_TOKEN:
-      p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
-      if(env->tenv.decode != FAXPP_utf16_be_decode
-#ifdef WORDS_BIGENDIAN
-         && env->tenv.decode != FAXPP_utf16_native_decode
-#endif
-         )
-        return BAD_ENCODING;
-      break;
-    case XML_DECL_ENCODING_UCS4_TOKEN:
-      p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
-      if(env->tenv.decode != FAXPP_ucs4_le_decode &&
-         env->tenv.decode != FAXPP_ucs4_be_decode &&
-         env->tenv.decode != FAXPP_ucs4_native_decode)
-        return BAD_ENCODING;
-      break;
-    case XML_DECL_ENCODING_ISO_8859_1_TOKEN:
-      p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
-      FAXPP_set_decode(env, FAXPP_iso_8859_1_decode);
       break;
     case XML_DECL_STANDALONE_TOKEN:
       p_copy_text_from_token(&env->event.standalone, env, /*useTokenBuffer*/0);
       break;
     default:
       env->buffered_token = 1;
-      env->next_event = env->main_next_event;
+      env->next_event = nc_unsupported_encoding_next_event;
       env->event.type = START_DOCUMENT_EVENT;
 
-      if(env->decode_needs_setting) {
-        env->next_event = nc_unsupported_encoding_next_event;
+      // Check the encoding string against our internally supported encodings
+      if(env->event.encoding.ptr == 0) {
+          env->next_event = env->main_next_event;
       }
-
+      else if(p_case_insensitive_equals("UTF-8", env->encode, &env->event.encoding)) {
+        env->next_event = env->main_next_event;
+        if(env->tenv.decode != FAXPP_utf8_decode)
+          return BAD_ENCODING;
+      }
+      else if(p_case_insensitive_equals("UTF-16", env->encode, &env->event.encoding)) {
+        env->next_event = env->main_next_event;
+        if(env->tenv.decode != FAXPP_utf16_le_decode &&
+           env->tenv.decode != FAXPP_utf16_be_decode &&
+           env->tenv.decode != FAXPP_utf16_native_decode)
+          return BAD_ENCODING;
+      }
+      else if(p_case_insensitive_equals("UTF-16LE", env->encode, &env->event.encoding)) {
+        env->next_event = env->main_next_event;
+        if(env->tenv.decode != FAXPP_utf16_le_decode
+#ifndef WORDS_BIGENDIAN
+           && env->tenv.decode != FAXPP_utf16_native_decode
+#endif
+           )
+          return BAD_ENCODING;
+      }
+      else if(p_case_insensitive_equals("UTF-16BE", env->encode, &env->event.encoding)) {
+        env->next_event = env->main_next_event;
+        if(env->tenv.decode != FAXPP_utf16_be_decode
+#ifdef WORDS_BIGENDIAN
+           && env->tenv.decode != FAXPP_utf16_native_decode
+#endif
+           )
+          return BAD_ENCODING;
+      }
+      else if(p_case_insensitive_equals("ISO-10646-UCS-4", env->encode, &env->event.encoding)) {
+        env->next_event = env->main_next_event;
+        if(env->tenv.decode != FAXPP_ucs4_le_decode &&
+           env->tenv.decode != FAXPP_ucs4_be_decode &&
+           env->tenv.decode != FAXPP_ucs4_native_decode)
+          return BAD_ENCODING;
+      }
+      else if(p_case_insensitive_equals("ISO-8859-1", env->encode, &env->event.encoding)) {
+        FAXPP_set_decode(env, FAXPP_iso_8859_1_decode);
+      }
+    
       return NO_ERROR;
     }
   }
@@ -995,12 +1023,6 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case NO_TOKEN:
     case XML_DECL_VERSION_TOKEN:
     case XML_DECL_ENCODING_TOKEN:
-    case XML_DECL_ENCODING_UTF8_TOKEN:
-    case XML_DECL_ENCODING_UTF16_TOKEN:
-    case XML_DECL_ENCODING_UTF16LE_TOKEN:
-    case XML_DECL_ENCODING_UTF16BE_TOKEN:
-    case XML_DECL_ENCODING_UCS4_TOKEN:
-    case XML_DECL_ENCODING_ISO_8859_1_TOKEN:
     case XML_DECL_STANDALONE_TOKEN:
     case PI_VALUE_TOKEN:
       break;

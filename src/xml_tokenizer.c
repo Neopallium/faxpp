@@ -34,9 +34,6 @@
 FAXPP_Error
 sniff_encoding(FAXPP_TokenizerEnv *env)
 {
-  // Default encoding is UTF-8
-  FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
-
   // Make initial judgement on the encoding
   unsigned char *buf = (unsigned char*)env->position;
 
@@ -262,6 +259,10 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
     break;
   }
 
+  if(env->decode == 0) {
+    // Default encoding is UTF-8
+    FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
+  }
   return NO_ERROR;
 }
 
@@ -369,6 +370,7 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, uns
   env->seen_doc_element = 0;
   env->buffer_done = done;
 
+  env->decode = 0;
   env->encode = encode;
 
   env->token_buffer.cursor = 0;
