@@ -64,7 +64,6 @@ struct FAXPP_ParserEnv_s {
   unsigned int read_buffer_length;
 
   FAXPP_TokenizerEnv tenv;
-  unsigned int buffered_token:1;
   unsigned int null_terminate:1;
 
   unsigned int err_line;

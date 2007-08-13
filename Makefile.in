@@ -41,7 +41,7 @@ noinst_PROGRAMS = tokenizer_example$(EXEEXT) parser_example$(EXEEXT) \
 	xmlconf_runner$(EXEEXT)
 DIST_COMMON = $(am__configure_deps) $(srcdir)/Makefile.am \
 	$(srcdir)/Makefile.in $(top_srcdir)/configure \
-	$(top_srcdir)/src/config.h.in autotools/config.guess \
+	$(top_srcdir)/src/config.h.in TODO autotools/config.guess \
 	autotools/config.sub autotools/depcomp autotools/install-sh \
 	autotools/ltmain.sh autotools/missing
 subdir = .
@@ -256,7 +256,8 @@ EXTRA_DIST = \
 docs/Doxyfile.api \
 docs/header.html \
 docs/api \
-LICENSE
+LICENSE \
+TODO
 
 all: all-recursive
 

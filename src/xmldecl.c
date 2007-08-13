@@ -673,6 +673,7 @@ xml_decl_seen_question_state(FAXPP_TokenizerEnv *env)
   switch(env->current_char) {
   case '>':
     env->state = initial_misc_state;
+    report_empty_token(XML_DECL_END_TOKEN, env);
     next_char(env);
     token_start_position(env);
     break;

@@ -35,9 +35,7 @@
 FAXPP_Error init_tokenizer_internal(FAXPP_TokenizerEnv *env);
 void free_tokenizer_internal(FAXPP_TokenizerEnv *env);
 
-static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env);
 static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env);
-static FAXPP_Error nc_pi_content_next_event(FAXPP_ParserEnv *env);
 static FAXPP_Error nc_unsupported_encoding_next_event(FAXPP_ParserEnv *env);
 
 static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env);
@@ -58,7 +56,7 @@ FAXPP_Parser *FAXPP_create_parser(FAXPP_ParseMode mode, FAXPP_EncodeFunction enc
     break;
   }
 
-  env->next_event = nc_start_document_next_event;
+  env->next_event = env->main_next_event;
 
   env->max_attr_count = INITIAL_ATTRS_SIZE;
   env->attrs = (FAXPP_Attribute*)malloc(sizeof(FAXPP_Attribute) * INITIAL_ATTRS_SIZE);
@@ -161,15 +159,13 @@ static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env, int allocate_buffer)
   // Reset the stack buffer cursor
   FAXPP_reset_buffer(&env->stack_buffer);
 
-  env->buffered_token = 0;
-
   if(allocate_buffer && !env->read_buffer) {
     env->read_buffer = malloc(READ_BUFFER_SIZE);
     if(!env->read_buffer) return OUT_OF_MEMORY;
     env->read_buffer_length = READ_BUFFER_SIZE;
   }
 
-  env->next_event = nc_start_document_next_event;
+  env->next_event = env->main_next_event;
 
   return NO_ERROR;
 }
@@ -424,16 +420,11 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
 
 #define p_next_token(err, env) \
 { \
-  if((env)->buffered_token) { \
-    (env)->buffered_token = 0; \
-  } else { \
-    (env)->tenv.result_token.type = NO_TOKEN; \
-    while((env)->tenv.result_token.type == NO_TOKEN) { \
-      (err) = (env)->tenv.state(&(env)->tenv); \
-      p_check_err((err), (env)); \
-    } \
+  (env)->tenv.result_token.type = NO_TOKEN; \
+  while((env)->tenv.result_token.type == NO_TOKEN) { \
+    (err) = (env)->tenv.state(&(env)->tenv); \
+    p_check_err((err), (env)); \
   } \
-\
 /*   p_print_token(env); */ \
 }
 
@@ -673,7 +664,12 @@ static int p_case_insensitive_equals(const char *str, FAXPP_EncodeFunction encod
   return text_ptr == text_end;
 }
 
-static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
+static FAXPP_Error nc_unsupported_encoding_next_event(FAXPP_ParserEnv *env)
+{
+  return UNSUPPORTED_ENCODING;
+}
+
+static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
 {
   FAXPP_Error err = 0;
 
@@ -693,8 +689,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
     case XML_DECL_STANDALONE_TOKEN:
       p_copy_text_from_token(&env->event.standalone, env, /*useTokenBuffer*/0);
       break;
-    default:
-      env->buffered_token = 1;
+    case XML_DECL_END_TOKEN:
       env->next_event = nc_unsupported_encoding_next_event;
       env->event.type = START_DOCUMENT_EVENT;
 
@@ -744,48 +739,6 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
       }
     
       return NO_ERROR;
-    }
-  }
-
-  // Never happens
-  return NO_ERROR;
-}
-
-static FAXPP_Error nc_pi_content_next_event(FAXPP_ParserEnv *env)
-{
-  FAXPP_Error err = 0;
-
-  p_next_token(err, env);
-
-  switch(env->tenv.result_token.type) {
-  case PI_VALUE_TOKEN:
-    p_copy_text_from_token(&env->event.value, env, /*useTokenBuffer*/0);
-    break;
-  default:
-    env->buffered_token = 1;
-    break;
-  }
-
-  env->next_event = env->main_next_event;
-  env->event.type = PI_EVENT;
-  return NO_ERROR;
-}
-
-static FAXPP_Error nc_unsupported_encoding_next_event(FAXPP_ParserEnv *env)
-{
-  return UNSUPPORTED_ENCODING;
-}
-
-static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
-{
-  FAXPP_Error err = 0;
-
-  p_reset_event(env);
-
-  while(1) {
-    p_next_token(err, env);
-
-    switch(env->tenv.result_token.type) {
     case START_ELEMENT_PREFIX_TOKEN:
       p_copy_text_from_token(&env->event.prefix, env, /*useTokenBuffer*/0);
       p_set_location_from_token(env);
@@ -895,9 +848,11 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case PI_NAME_TOKEN:
       p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/0);
       p_set_location_from_token(env);
-
-      env->next_event = nc_pi_content_next_event;
-      return nc_pi_content_next_event(env);
+      break;
+    case PI_VALUE_TOKEN:
+      p_copy_text_from_token(&env->event.value, env, /*useTokenBuffer*/0);
+      env->event.type = PI_EVENT;
+      return NO_ERROR;
     case AMP_ENTITY_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, ENTITY_REFERENCE_EVENT, '&');
@@ -1021,10 +976,6 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       env->event.type = END_DOCUMENT_EVENT;
       return NO_ERROR;
     case NO_TOKEN:
-    case XML_DECL_VERSION_TOKEN:
-    case XML_DECL_ENCODING_TOKEN:
-    case XML_DECL_STANDALONE_TOKEN:
-    case PI_VALUE_TOKEN:
       break;
     }
   }
@@ -1201,10 +1152,8 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
 
   switch(env->event.type) {
   case START_DOCUMENT_EVENT:
-    // Handled in nc_start_document_next_event
     break;
   case PI_EVENT:
-    // Handled in nc_pi_content_next_event
     break;
   case END_DOCUMENT_EVENT:
     break;

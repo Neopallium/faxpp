@@ -335,6 +335,15 @@ void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Bu
   } \
 }
 
+#define report_token_maybe_empty(token_int, env) \
+{ \
+  if((env)->token.value.len == 0) (env)->token.value.ptr = 0; \
+  memcpy(&(env)->result_token, &(env)->token, sizeof(FAXPP_Token)); \
+  (env)->result_token.type = (token_int); \
+  (env)->token.value.ptr = 0; \
+  (env)->token.value.len = 0; \
+}
+
 #define report_empty_token(token_int, env) \
 { \
   (env)->result_token.type = (token_int); \

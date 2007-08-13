@@ -64,6 +64,8 @@ FAXPP_token_to_string(const FAXPP_TokenType type)
     return "XML_DECL_ENCODING_TOKEN";
   case XML_DECL_STANDALONE_TOKEN:
     return "XML_DECL_STANDALONE_TOKEN";
+  case XML_DECL_END_TOKEN:
+    return "XML_DECL_END_TOKEN";
   case XMLNS_PREFIX_TOKEN:
     return "XMLNS_PREFIX_TOKEN";
   case XMLNS_NAME_TOKEN:

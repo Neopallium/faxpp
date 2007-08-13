@@ -181,7 +181,7 @@ pi_content_seen_question_state(FAXPP_TokenizerEnv *env)
     base_state(env);
     env->token_buffer.cursor = 0;
     env->token.value.len = env->token_position1 - env->token.value.ptr;
-    report_token(PI_VALUE_TOKEN, env);
+    report_token_maybe_empty(PI_VALUE_TOKEN, env);
     next_char(env);
     token_start_position(env);
     break;
