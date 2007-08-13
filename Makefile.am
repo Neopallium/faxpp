@@ -46,7 +46,8 @@ EXTRA_DIST = \
 docs/Doxyfile.api \
 docs/header.html \
 docs/api \
-LICENSE
+LICENSE \
+TODO
 
 .PHONY: docs
 

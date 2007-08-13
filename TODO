@@ -1,0 +1,5 @@
+Attribute value normalization (especially needed for namespace resolution)
+Entity expansion framework
+DTD internal subset parsing
+DTD external subset parsing
+DTD validation
