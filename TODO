@@ -1,4 +1,8 @@
 Attribute value normalization (especially needed for namespace resolution)
+Handle "xml" namespace properly
+xml:space value checking
+Error for redefining "xml" namespace
+Error for defining "xmlns" namespace
 Entity expansion framework
 DTD internal subset parsing
 DTD external subset parsing
