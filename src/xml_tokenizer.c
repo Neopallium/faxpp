@@ -319,11 +319,21 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
   }
 }
 
+void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newBuffer)
+{
+  FAXPP_TokenizerEnv *env = (FAXPP_TokenizerEnv*)userData;
+
+  env->token_position1 += newBuffer - buffer->buffer;
+  env->token_position2 += newBuffer - buffer->buffer;
+
+  env->token.value.ptr = newBuffer;
+}
+
 FAXPP_Error
 init_tokenizer_internal(FAXPP_TokenizerEnv *env)
 {
   memset(env, 0, sizeof(FAXPP_TokenizerEnv));
-  return FAXPP_init_buffer(&env->token_buffer, INITIAL_TOKEN_BUFFER_SIZE);
+  return FAXPP_init_buffer(&env->token_buffer, INITIAL_TOKEN_BUFFER_SIZE, change_token_buffer, env);
 }
 
 void
@@ -418,8 +428,7 @@ FAXPP_tokenizer_release_buffer(FAXPP_Tokenizer *tokenizer, void **buffer_positio
     tokenizer->token.value.ptr = tokenizer->token_buffer.cursor;
     tokenizer->token.value.len = token_length;
 
-    return FAXPP_buffer_append(&tokenizer->token_buffer, token_start, token_length,
-                               change_token_buffer, tokenizer);
+    return FAXPP_buffer_append(&tokenizer->token_buffer, token_start, token_length);
   }
 
   return NO_ERROR;

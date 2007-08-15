@@ -389,16 +389,6 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
 }
 #endif
 
-void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Buffer)
-{
-  FAXPP_TokenizerEnv *env = (FAXPP_TokenizerEnv*)userData;
-
-  env->token_position1 += newFAXPP_Buffer - buffer->buffer;
-  env->token_position2 += newFAXPP_Buffer - buffer->buffer;
-
-  env->token.value.ptr = newFAXPP_Buffer;
-}
-
 /*********************
  *
  *  Tokenizer State Functions

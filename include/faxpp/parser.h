@@ -142,6 +142,28 @@ void FAXPP_free_parser(FAXPP_Parser *parser);
 void FAXPP_set_null_terminate(FAXPP_Parser *parser, unsigned int boolean);
 
 /**
+ * Sets whether the parser will normalize attributes values into a single string.
+ * This option is off by default for NO_CHECKS_PARSE_MODE, and on for other parser
+ * modes.
+ *
+ * The XML specification requires conformant parsers to normalize attribute values
+ * by expanding entity references and turning all whitespace to &amp;#x20; characters.
+ * This option will have no effect on a parser in NO_CHECKS_PARSE_MODE, since this
+ * mode will never normalize attribute values.
+ *
+ * Setting this parameter whilst a parse is in progress has undefined results.
+ *
+ * Normalizing attribute values will involve copying the strings, and so
+ * will be slower where copying strings was not otherwise necessary.
+ * 
+ * \param parser
+ * \param boolean Whether to normalize attribute values
+ *
+ * \relatesalso FAXPP_Parser
+ */
+void FAXPP_set_normalize_attrs(FAXPP_Parser *parser, unsigned int boolean);
+
+/**
  * Sets the encoding that the parser will use when encoding event values.
  *
  * Setting this parameter whilst a parse is in progress has undefined results.

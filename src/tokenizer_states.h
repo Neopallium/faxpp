@@ -250,8 +250,6 @@ FAXPP_Error xml_decl_seen_question_state(FAXPP_TokenizerEnv *env);
 const char *state_to_string(FAXPP_StateFunction state);
 #endif
 
-void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Buffer);
-
 #define read_char_no_check(env) \
 { \
   (env)->char_len = \
@@ -280,11 +278,9 @@ void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Bu
   if((env)->token_buffer.cursor) { \
     FAXPP_Error err; \
     if((env)->encode) { \
-      err = FAXPP_buffer_append_ch(&(env)->token_buffer, (env)->encode, (env)->current_char, \
-                                   change_token_buffer, (env)); \
+      err = FAXPP_buffer_append_ch(&(env)->token_buffer, (env)->encode, (env)->current_char); \
     } else { \
-      err = FAXPP_buffer_append(&(env)->token_buffer, (env)->position, (env)->char_len, \
-                                change_token_buffer, (env)); \
+      err = FAXPP_buffer_append(&(env)->token_buffer, (env)->position, (env)->char_len); \
     } \
     if(err != 0) return err; \
   } \

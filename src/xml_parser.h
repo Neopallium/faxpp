@@ -65,6 +65,7 @@ struct FAXPP_ParserEnv_s {
 
   FAXPP_TokenizerEnv tenv;
   unsigned int null_terminate:1;
+  unsigned int normalize_attrs:1;
 
   unsigned int err_line;
   unsigned int err_column;

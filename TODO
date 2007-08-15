@@ -1,8 +1,17 @@
-Attribute value normalization (especially needed for namespace resolution)
+Small tasks
+-----------
+
+Normalize whitespace in attribute values
+Normalize line endings in element character content / PI values / comment values
+Accept XML 1.1 line endings as whitespace
 Handle "xml" namespace properly
 xml:space value checking
 Error for redefining "xml" namespace
 Error for defining "xmlns" namespace
+
+Large tasks
+-----------
+
 Entity expansion framework
 DTD internal subset parsing
 DTD external subset parsing

@@ -110,17 +110,17 @@ output_event(const FAXPP_Event *event, FILE *stream)
           break;
         case ENTITY_REFERENCE_EVENT:
           fprintf(stream, "&");
-          output_text(&atval->value, stream);
+          output_text(&atval->name, stream);
           fprintf(stream, ";");
           break;
         case DEC_CHAR_REFERENCE_EVENT:
           fprintf(stream, "&#");
-          output_text(&atval->value, stream);
+          output_text(&atval->name, stream);
           fprintf(stream, ";");
           break;
         case HEX_CHAR_REFERENCE_EVENT:
           fprintf(stream, "&#x");
-          output_text(&atval->value, stream);
+          output_text(&atval->name, stream);
           fprintf(stream, ";");
           break;
         default:

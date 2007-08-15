@@ -20,25 +20,27 @@
 #include <faxpp/error.h>
 #include <faxpp/transcode.h>
 
+typedef struct FAXPP_Buffer_s FAXPP_Buffer;
+typedef void (*FAXPP_BufferResizeCallback)(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Buffer);
+
 /// Implementation of a resizing buffer
-typedef struct FAXPP_Buffer_s {
+struct FAXPP_Buffer_s {
   void *buffer;
   unsigned int length;
   void *cursor;
-} FAXPP_Buffer;
 
-typedef void (*FAXPP_BufferResizeCallback)(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Buffer);
+  FAXPP_BufferResizeCallback callback;
+  void *userData;
+};
 
-FAXPP_Error FAXPP_init_buffer(FAXPP_Buffer *buffer, unsigned int initialSize);
+FAXPP_Error FAXPP_init_buffer(FAXPP_Buffer *buffer, unsigned int initialSize,
+                              FAXPP_BufferResizeCallback callback, void *userData);
 void FAXPP_free_buffer(FAXPP_Buffer *buffer);
 
 #define FAXPP_reset_buffer(buf) (buf)->cursor = (buf)->buffer
 
-FAXPP_Error FAXPP_resize_buffer(FAXPP_Buffer *buffer, unsigned int minSize,
-                                FAXPP_BufferResizeCallback callback, void *userData);
-FAXPP_Error FAXPP_buffer_append(FAXPP_Buffer *buffer, void *ptr, unsigned int len,
-                                FAXPP_BufferResizeCallback callback, void *userData);
-FAXPP_Error FAXPP_buffer_append_ch(FAXPP_Buffer *buffer, FAXPP_EncodeFunction encode, Char32 ch,
-                                   FAXPP_BufferResizeCallback callback, void *userData);
+FAXPP_Error FAXPP_resize_buffer(FAXPP_Buffer *buffer, unsigned int minSize);
+FAXPP_Error FAXPP_buffer_append(FAXPP_Buffer *buffer, void *ptr, unsigned int len);
+FAXPP_Error FAXPP_buffer_append_ch(FAXPP_Buffer *buffer, FAXPP_EncodeFunction encode, Char32 ch);
 
 #endif
