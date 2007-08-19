@@ -47,7 +47,8 @@ docs/Doxyfile.api \
 docs/header.html \
 docs/api \
 LICENSE \
-TODO
+TODO \
+ChangeLog
 
 .PHONY: docs
 

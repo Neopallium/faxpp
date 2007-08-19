@@ -1,0 +1,26 @@
+Faxpp: A small, fast XML pull parser written in C with an API that can
+return UTF-8 or UTF-16 strings.
+
+version 0.2 (2007.08.20):
+	* Implemented a test harness for the XML Conformance Test Suite
+	* Added support for streaming input to the tokenizer and parser,
+	  without the need for a callback function.
+	* Implemented an encoding framework to allow the user to specify
+	  implementation defined encodings based on a document's
+	  declared encoding.
+	* Added built-in decoding support for ISO-8859-1 (Latin1).
+	* Implemented attribute value normalization, adding a parser
+	  option to enable/disable it.
+	* Recognize built in entity references - raise an error
+	  for any unknown entity.
+	* Implemented the XML 1.0 char classes as well as the XML 1.1
+	  ones, and switched between them depending on the XML version
+	  declaration.
+	* Added tokens for the end of the XML declaration, and the built
+	  in entity references.
+	* Check for restricted characters anywhere in the document.
+	* Check for illegal "]]>" in element content.
+	* Require whitespace between attributes.
+	* Fix handling of namespace 1.1 prefix undefines.
+	* Fixed a bug in entity output in the examples.
+	* Added a todo list.
