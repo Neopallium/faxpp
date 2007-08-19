@@ -32,7 +32,7 @@
 #define INITIAL_EVENT_BUFFER_SIZE 256
 #define INITIAL_STACK_BUFFER_SIZE 1024
 
-FAXPP_Error init_tokenizer_internal(FAXPP_TokenizerEnv *env);
+FAXPP_Error init_tokenizer_internal(FAXPP_TokenizerEnv *env, FAXPP_EncodeFunction encode);
 void free_tokenizer_internal(FAXPP_TokenizerEnv *env);
 
 static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env);
@@ -47,21 +47,6 @@ FAXPP_Parser *FAXPP_create_parser(FAXPP_ParseMode mode, FAXPP_EncodeFunction enc
 {
   FAXPP_ParserEnv *env = malloc(sizeof(FAXPP_ParserEnv));
   memset(env, 0, sizeof(FAXPP_ParserEnv));
-
-  env->encode = encode;
-
-  switch(mode) {
-  case NO_CHECKS_PARSE_MODE:
-    env->main_next_event = nc_next_event;
-    env->normalize_attrs = 0;
-    break;
-  case WELL_FORMED_PARSE_MODE:
-    env->main_next_event = wf_next_event;
-    env->normalize_attrs = 1;
-    break;
-  }
-
-  env->next_event = env->main_next_event;
 
   env->max_attr_count = INITIAL_ATTRS_SIZE;
   env->attrs = (FAXPP_Attribute*)malloc(sizeof(FAXPP_Attribute) * INITIAL_ATTRS_SIZE);
@@ -80,10 +65,23 @@ FAXPP_Parser *FAXPP_create_parser(FAXPP_ParseMode mode, FAXPP_EncodeFunction enc
     return 0;
   }
 
-  if(init_tokenizer_internal(&env->tenv) == OUT_OF_MEMORY) {
+  if(init_tokenizer_internal(&env->tenv, encode) == OUT_OF_MEMORY) {
     FAXPP_free_parser(env);
     return 0;
   }
+
+  switch(mode) {
+  case NO_CHECKS_PARSE_MODE:
+    env->main_next_event = nc_next_event;
+    FAXPP_set_normalize_attrs(env, 0);
+    break;
+  case WELL_FORMED_PARSE_MODE:
+    env->main_next_event = wf_next_event;
+    FAXPP_set_normalize_attrs(env, 1);
+    break;
+  }
+
+  env->next_event = env->main_next_event;
 
   return env;
 }
@@ -142,12 +140,12 @@ void FAXPP_set_null_terminate(FAXPP_Parser *parser, unsigned int boolean)
 
 void FAXPP_set_normalize_attrs(FAXPP_Parser *parser, unsigned int boolean)
 {
-  parser->normalize_attrs = boolean != 0;
+  parser->tenv.normalize_attrs = boolean != 0;
 }
 
 void FAXPP_set_encode(FAXPP_Parser *parser, FAXPP_EncodeFunction encode)
 {
-  parser->encode = encode;
+  parser->tenv.encode = encode;
 }
 
 
@@ -188,7 +186,7 @@ FAXPP_Error FAXPP_init_parse(FAXPP_Parser *env, void *buffer, unsigned int lengt
   env->read = 0;
   env->read_user_data = 0;
 
-  return FAXPP_init_tokenize(&env->tenv, buffer, length, done, env->encode);
+  return FAXPP_init_tokenize(&env->tenv, buffer, length, done);
 }
 
 static unsigned int p_file_read_callback(void *userData, void *buffer, unsigned int length)
@@ -211,7 +209,7 @@ FAXPP_Error FAXPP_init_parse_callback(FAXPP_Parser *env, FAXPP_ReadCallback call
 
   unsigned int len = env->read(env->read_user_data, env->read_buffer, env->read_buffer_length);
 
-  return FAXPP_init_tokenize(&env->tenv, env->read_buffer, len, /*done*/len != env->read_buffer_length, env->encode);
+  return FAXPP_init_tokenize(&env->tenv, env->read_buffer, len, /*done*/len != env->read_buffer_length);
 }
 
 FAXPP_Error FAXPP_next_event(FAXPP_Parser *env)
@@ -317,7 +315,7 @@ static void p_change_stack_buffer(void *userData, FAXPP_Buffer *buffer, void *ne
     void *newPtr = (env)->event_buffer.cursor; \
     FAXPP_Error err = FAXPP_buffer_append(&(env)->event_buffer, (text)->ptr, (text)->len); \
     if((env)->null_terminate && err == 0) \
-      err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->encode, 0); \
+      err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->tenv.encode, 0); \
     if(err != 0) return err; \
     (text)->ptr = newPtr; \
   } \
@@ -455,7 +453,7 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
     (text)->len = (o)->len; \
     FAXPP_Error err = FAXPP_buffer_append(&(env)->stack_buffer, (o)->ptr, (o)->len); \
     if((env)->null_terminate && err == 0) \
-      err = FAXPP_buffer_append_ch(&(env)->stack_buffer, (env)->encode, 0); \
+      err = FAXPP_buffer_append_ch(&(env)->stack_buffer, (env)->tenv.encode, 0); \
     if(err != 0) return err; \
 /*   } else { */ \
 /*     p_set_text_from_text((text), (o)); */ \
@@ -488,7 +486,7 @@ FAXPP_Error p_normalize_attr_value(FAXPP_Text *text, FAXPP_Buffer *buffer, const
   text->len = buffer->cursor - text->ptr;
 
   if(env->null_terminate)
-    return FAXPP_buffer_append_ch(buffer, env->encode, 0);
+    return FAXPP_buffer_append_ch(buffer, env->tenv.encode, 0);
 
   return NO_ERROR;
 }
@@ -503,7 +501,7 @@ FAXPP_Error p_normalize_attr_value(FAXPP_Text *text, FAXPP_Buffer *buffer, const
     (text)->ptr = (env)->event_buffer.cursor; \
     FAXPP_Error err = FAXPP_buffer_append(&(env)->event_buffer, (env)->tenv.result_token.value.ptr, (env)->tenv.result_token.value.len); \
     if((env)->null_terminate && err == 0) \
-      err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->encode, 0); \
+      err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->tenv.encode, 0); \
     if(err != 0) return err; \
   } \
 }
@@ -588,10 +586,10 @@ static FAXPP_Error p_set_attr_value(FAXPP_Attribute *attr, FAXPP_ParserEnv *env,
 #define p_set_text_to_char(text, env, ch) \
 { \
   (text)->ptr = (env)->event_buffer.cursor; \
-  FAXPP_Error err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->encode, (ch)); \
+  FAXPP_Error err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->tenv.encode, (ch)); \
   (text)->len = (env)->event_buffer.cursor - (text)->ptr; \
   if((env)->null_terminate && err == 0) \
-    err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->encode, 0); \
+    err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->tenv.encode, 0); \
   if(err != 0) return err; \
 }
 
@@ -736,19 +734,19 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       if(env->event.encoding.ptr == 0) {
           env->next_event = env->main_next_event;
       }
-      else if(p_case_insensitive_equals("UTF-8", env->encode, &env->event.encoding)) {
+      else if(p_case_insensitive_equals("UTF-8", env->tenv.encode, &env->event.encoding)) {
         env->next_event = env->main_next_event;
         if(env->tenv.decode != FAXPP_utf8_decode)
           return BAD_ENCODING;
       }
-      else if(p_case_insensitive_equals("UTF-16", env->encode, &env->event.encoding)) {
+      else if(p_case_insensitive_equals("UTF-16", env->tenv.encode, &env->event.encoding)) {
         env->next_event = env->main_next_event;
         if(env->tenv.decode != FAXPP_utf16_le_decode &&
            env->tenv.decode != FAXPP_utf16_be_decode &&
            env->tenv.decode != FAXPP_utf16_native_decode)
           return BAD_ENCODING;
       }
-      else if(p_case_insensitive_equals("UTF-16LE", env->encode, &env->event.encoding)) {
+      else if(p_case_insensitive_equals("UTF-16LE", env->tenv.encode, &env->event.encoding)) {
         env->next_event = env->main_next_event;
         if(env->tenv.decode != FAXPP_utf16_le_decode
 #ifndef WORDS_BIGENDIAN
@@ -757,7 +755,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
            )
           return BAD_ENCODING;
       }
-      else if(p_case_insensitive_equals("UTF-16BE", env->encode, &env->event.encoding)) {
+      else if(p_case_insensitive_equals("UTF-16BE", env->tenv.encode, &env->event.encoding)) {
         env->next_event = env->main_next_event;
         if(env->tenv.decode != FAXPP_utf16_be_decode
 #ifdef WORDS_BIGENDIAN
@@ -766,14 +764,14 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
            )
           return BAD_ENCODING;
       }
-      else if(p_case_insensitive_equals("ISO-10646-UCS-4", env->encode, &env->event.encoding)) {
+      else if(p_case_insensitive_equals("ISO-10646-UCS-4", env->tenv.encode, &env->event.encoding)) {
         env->next_event = env->main_next_event;
         if(env->tenv.decode != FAXPP_ucs4_le_decode &&
            env->tenv.decode != FAXPP_ucs4_be_decode &&
            env->tenv.decode != FAXPP_ucs4_native_decode)
           return BAD_ENCODING;
       }
-      else if(p_case_insensitive_equals("ISO-8859-1", env->encode, &env->event.encoding)) {
+      else if(p_case_insensitive_equals("ISO-8859-1", env->tenv.encode, &env->event.encoding)) {
         FAXPP_set_decode(env, FAXPP_iso_8859_1_decode);
       }
     
@@ -1231,11 +1229,11 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
           }
 
           attrVal->value.ptr = env->event_buffer.cursor;
-          err = FAXPP_buffer_append_ch(&env->event_buffer, env->encode, ch);
+          err = FAXPP_buffer_append_ch(&env->event_buffer, env->tenv.encode, ch);
           attrVal->value.len = env->event_buffer.cursor - attrVal->value.ptr;
 
           if(env->null_terminate && err == 0)
-            err = FAXPP_buffer_append_ch(&env->event_buffer, env->encode, 0);
+            err = FAXPP_buffer_append_ch(&env->event_buffer, env->tenv.encode, 0);
           if(err != 0) return err;
           break;
         case HEX_CHAR_REFERENCE_EVENT:
@@ -1247,11 +1245,11 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
           }
 
           attrVal->value.ptr = env->event_buffer.cursor;
-          err = FAXPP_buffer_append_ch(&env->event_buffer, env->encode, ch);
+          err = FAXPP_buffer_append_ch(&env->event_buffer, env->tenv.encode, ch);
           attrVal->value.len = env->event_buffer.cursor - attrVal->value.ptr;
 
           if(env->null_terminate && err == 0)
-            err = FAXPP_buffer_append_ch(&env->event_buffer, env->encode, 0);
+            err = FAXPP_buffer_append_ch(&env->event_buffer, env->tenv.encode, 0);
           if(err != 0) return err;
           break;
         default: break;
@@ -1259,7 +1257,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
       }
 
       /* Normalize the attribute values if required */
-      if(env->normalize_attrs && attr->value.next != 0) {
+      if(env->tenv.normalize_attrs && attr->value.next != 0) {
         err = p_normalize_attr_value(&tmpText, &env->event_buffer, &attr->value, env);
         if(err != 0) return err;
 
@@ -1367,11 +1365,11 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
     }
 
     env->event.value.ptr = env->event_buffer.cursor;
-    err = FAXPP_buffer_append_ch(&env->event_buffer, env->encode, ch);
+    err = FAXPP_buffer_append_ch(&env->event_buffer, env->tenv.encode, ch);
     env->event.value.len = env->event_buffer.cursor - env->event.value.ptr;
 
     if(env->null_terminate && err == 0)
-      err = FAXPP_buffer_append_ch(&env->event_buffer, env->encode, 0);
+      err = FAXPP_buffer_append_ch(&env->event_buffer, env->tenv.encode, 0);
     if(err != 0) return err;
 
     break;
@@ -1384,11 +1382,11 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
     }
 
     env->event.value.ptr = env->event_buffer.cursor;
-    err = FAXPP_buffer_append_ch(&env->event_buffer, env->encode, ch);
+    err = FAXPP_buffer_append_ch(&env->event_buffer, env->tenv.encode, ch);
     env->event.value.len = env->event_buffer.cursor - env->event.value.ptr;
 
     if(env->null_terminate && err == 0)
-      err = FAXPP_buffer_append_ch(&env->event_buffer, env->encode, 0);
+      err = FAXPP_buffer_append_ch(&env->event_buffer, env->tenv.encode, 0);
     if(err != 0) return err;
 
     break;

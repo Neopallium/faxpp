@@ -276,12 +276,7 @@ const char *state_to_string(FAXPP_StateFunction state);
 #define next_char(env) \
 { \
   if((env)->token_buffer.cursor) { \
-    FAXPP_Error err; \
-    if((env)->encode) { \
-      err = FAXPP_buffer_append_ch(&(env)->token_buffer, (env)->encode, (env)->current_char); \
-    } else { \
-      err = FAXPP_buffer_append(&(env)->token_buffer, (env)->position, (env)->char_len); \
-    } \
+    FAXPP_Error err = FAXPP_buffer_append_ch(&(env)->token_buffer, (env)->encode, (env)->current_char); \
     if(err != 0) return err; \
   } \
 \

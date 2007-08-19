@@ -285,7 +285,7 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
     tokenizer->decode = FAXPP_utf16_native_decode;
 
     if(tokenizer->encode == FAXPP_utf16_native_encode)
-      tokenizer->encode = 0;
+      tokenizer->do_encode = 0;
 
     tokenizer->start_element_name_state = utf16_start_element_name_state;
     tokenizer->element_content_state = utf16_element_content_state;
@@ -294,7 +294,7 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
     tokenizer->decode = FAXPP_utf8_decode;
 
     if(tokenizer->encode == FAXPP_utf8_encode)
-      tokenizer->encode = 0;
+      tokenizer->do_encode = 0;
 
     tokenizer->start_element_name_state = utf8_start_element_name_state;
     tokenizer->element_content_state = utf8_element_content_state;
@@ -330,9 +330,10 @@ void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newBuffer)
 }
 
 FAXPP_Error
-init_tokenizer_internal(FAXPP_TokenizerEnv *env)
+init_tokenizer_internal(FAXPP_TokenizerEnv *env, FAXPP_EncodeFunction encode)
 {
   memset(env, 0, sizeof(FAXPP_TokenizerEnv));
+  env->encode = encode;
   return FAXPP_init_buffer(&env->token_buffer, INITIAL_TOKEN_BUFFER_SIZE, change_token_buffer, env);
 }
 
@@ -343,12 +344,12 @@ free_tokenizer_internal(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Tokenizer *
-FAXPP_create_tokenizer()
+FAXPP_create_tokenizer(FAXPP_EncodeFunction encode)
 {
   FAXPP_TokenizerEnv *result = malloc(sizeof(FAXPP_TokenizerEnv));
   if(result == 0) return 0;
 
-  if(init_tokenizer_internal(result) == OUT_OF_MEMORY) {
+  if(init_tokenizer_internal(result, encode) == OUT_OF_MEMORY) {
     free(result);
     return 0;
   }
@@ -364,7 +365,7 @@ FAXPP_free_tokenizer(FAXPP_Tokenizer *tokenizer)
 }
 
 FAXPP_Error
-FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, unsigned int done, FAXPP_EncodeFunction encode)
+FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, unsigned int done)
 {
   env->buffer = buffer;
   env->buffer_end = buffer + length;
@@ -377,11 +378,11 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, uns
   env->column = 0;
 
   env->nesting_level = 0;
+  env->do_encode = 1;
   env->seen_doc_element = 0;
   env->buffer_done = done;
 
   env->decode = 0;
-  env->encode = encode;
 
   env->token_buffer.cursor = 0;
 

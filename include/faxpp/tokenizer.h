@@ -34,11 +34,12 @@ typedef struct FAXPP_TokenizerEnv_s FAXPP_Tokenizer;
 /**
  * Creates a tokenizer object
  *
+ * \param encode The encoding function to use when encoding token values
  * \return A pointer to the tokenizer object, or 0 if out of memory.
  *
  * \relatesalso FAXPP_Tokenizer
  */
-FAXPP_Tokenizer *FAXPP_create_tokenizer();
+FAXPP_Tokenizer *FAXPP_create_tokenizer(FAXPP_EncodeFunction encode);
 
 /**
  * Frees a tokenizer object
@@ -79,7 +80,6 @@ void FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction
  * \param buffer A pointer to the start of the buffer to tokenize
  * \param length The length of the given buffer
  * \param done Set to non-zero if this is the last buffer from the input
- * \param encode The encoding function to use when encoding token values
  *
  * \retval UNSUPPORTED_ENCODING If the encoding sniffing algorithm cannot recognize
  * the encoding of the buffer
@@ -88,8 +88,7 @@ void FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction
  * \relatesalso FAXPP_Tokenizer
  */
 FAXPP_Error FAXPP_init_tokenize(FAXPP_Tokenizer *tokenizer, void *buffer,
-                                unsigned int length, unsigned int done,
-                                FAXPP_EncodeFunction encode);
+                                unsigned int length, unsigned int done);
 
 /**
  * Instructs the tokenizer to release any dependencies it has on it's current buffer.

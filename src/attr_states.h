@@ -280,8 +280,14 @@ PREFIX(attr_value_apos_state)(FAXPP_TokenizerEnv *env)
     case '<':
       next_char(env);
       return INVALID_CHAR_IN_ATTRIBUTE;
-    WHITESPACE:
-      env->current_char = ' ';
+    LINE_ENDINGS
+    case '\t':
+      if(env->normalize_attrs) {
+        // Move the token to the buffer, to normalize it
+        FAXPP_Error err = FAXPP_tokenizer_release_buffer(env, 0);
+        if(err != NO_ERROR) return err;
+        env->current_char = ' ';
+      }
       break;
     default:
       DEFAULT_CASE;
@@ -335,9 +341,16 @@ PREFIX(attr_value_quot_state)(FAXPP_TokenizerEnv *env)
     case '<':
       next_char(env);
       return INVALID_CHAR_IN_ATTRIBUTE;
-    WHITESPACE:
-      env->current_char = ' ';
+    LINE_ENDINGS
+    case '\t': {
+      if(env->normalize_attrs) {
+        // Move the token to the buffer, to normalize it
+        FAXPP_Error err = FAXPP_tokenizer_release_buffer(env, 0);
+        if(err != NO_ERROR) return err;
+        env->current_char = ' ';
+      }
       break;
+    }
     default:
       DEFAULT_CASE;
 

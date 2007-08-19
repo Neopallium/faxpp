@@ -1,7 +1,6 @@
 Small tasks
 -----------
 
-Normalize whitespace in attribute values
 Normalize line endings in element character content / PI values / comment values
 Accept XML 1.1 line endings as whitespace
 Handle "xml" namespace properly
