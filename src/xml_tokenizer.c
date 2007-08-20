@@ -275,6 +275,8 @@ FAXPP_get_tokenizer_decode(const FAXPP_Tokenizer *tokenizer)
 void
 FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction decode)
 {
+  tokenizer->do_encode = 1;
+
   if(decode == FAXPP_utf16_native_decode ||
 #ifdef WORDS_BIGENDIAN
      decode == FAXPP_utf16_be_decode
@@ -296,6 +298,13 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
     if(tokenizer->encode == FAXPP_utf8_encode)
       tokenizer->do_encode = 0;
 
+    tokenizer->start_element_name_state = utf8_start_element_name_state;
+    tokenizer->element_content_state = utf8_element_content_state;
+  }
+  else if(decode == FAXPP_iso_8859_1_decode) {
+    tokenizer->decode = FAXPP_iso_8859_1_decode;
+
+    // Latin1 can use the UTF-8 states, since the first 128 values are the same as UTF-8
     tokenizer->start_element_name_state = utf8_start_element_name_state;
     tokenizer->element_content_state = utf8_element_content_state;
   }

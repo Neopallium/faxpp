@@ -280,12 +280,13 @@ const char *state_to_string(FAXPP_StateFunction state);
     if(err != 0) return err; \
   } \
 \
+  (env)->column += 1; \
   (env)->position += (env)->char_len; \
 }
 
 #define token_start_position(env) \
 { \
-  if((env)->encode) { \
+  if((env)->do_encode) { \
     FAXPP_reset_buffer(&(env)->token_buffer); \
     (env)->token.value.ptr = (env)->token_buffer.cursor; \
   } else { \
@@ -353,25 +354,28 @@ const char *state_to_string(FAXPP_StateFunction state);
 }
 
 #define LINE_ENDINGS \
-  case '\n': \
   case '\r': { \
     Char32 next_char; \
-    if((env)->current_char == '\r' && \
-       (env)->decode((env)->position + (env)->char_len, (env)->buffer_end, &next_char) \
-       != TRANSCODE_PREMATURE_END_OF_BUFFER && next_char == '\n') { \
-      (env)->column += 1; \
-    } else { \
-      (env)->line += 1; \
-      (env)->column = 0; \
+    if((env)->decode((env)->position + (env)->char_len, (env)->buffer_end, &next_char) \
+       == TRANSCODE_PREMATURE_END_OF_BUFFER) { \
+      if(!(env)->buffer_done) return PREMATURE_END_OF_BUFFER; \
+      goto LINE_ENDINGS_INC; \
     } \
-  }
+    else if(next_char != '\n') goto LINE_ENDINGS_INC; \
+    goto LINE_ENDINGS_END; \
+  } \
+  case '\n': \
+LINE_ENDINGS_INC: \
+    (env)->line += 1; \
+    (env)->column = (unsigned int)-1; \
+LINE_ENDINGS_END:
 
 /*
  * [3]     S    ::=    (#x20 | #x9 | #xD | #xA)+
  */
 #define WHITESPACE \
   LINE_ENDINGS \
-  case '\t':\
+  case '\t': \
   case ' '
 
 #endif

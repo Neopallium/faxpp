@@ -655,7 +655,7 @@ end_of_buffer_state(FAXPP_TokenizerEnv *env)
   /* Check if it really was a one byte char */ \
   if(env->current_char >= 0x80) { \
     /* Decode properly */ \
-    env->char_len = FAXPP_utf8_decode(env->position, env->buffer_end, &env->current_char); \
+    env->char_len = (env)->decode(env->position, env->buffer_end, &env->current_char); \
     switch((env)->char_len) { \
     case TRANSCODE_PREMATURE_END_OF_BUFFER: \
       return PREMATURE_END_OF_BUFFER; \
