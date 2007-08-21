@@ -41,8 +41,10 @@ typedef struct FAXPP_ElementInfo_s {
   FAXPP_Text uri;
   FAXPP_Text name;
 
+  FAXPP_NamespaceInfo *ns;
   FAXPP_NamespaceInfo *prev_ns;
-  void *prev_stack_cursor;
+
+  FAXPP_Buffer buffer;
 
   struct FAXPP_ElementInfo_s *prev;
 } FAXPP_ElementInfo;
@@ -83,7 +85,6 @@ struct FAXPP_ParserEnv_s {
   FAXPP_NamespaceInfo *namespace_pool;
 
   FAXPP_Buffer event_buffer;
-  FAXPP_Buffer stack_buffer;
 };
 
 #endif

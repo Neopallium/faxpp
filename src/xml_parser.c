@@ -30,7 +30,7 @@
 #define READ_BUFFER_SIZE 16 * 1024
 
 #define INITIAL_EVENT_BUFFER_SIZE 256
-#define INITIAL_STACK_BUFFER_SIZE 1024
+#define INITIAL_ELEMENT_INFO_BUFFER_SIZE 256
 
 FAXPP_Error init_tokenizer_internal(FAXPP_TokenizerEnv *env, FAXPP_EncodeFunction encode);
 void free_tokenizer_internal(FAXPP_TokenizerEnv *env);
@@ -41,7 +41,6 @@ static FAXPP_Error nc_unsupported_encoding_next_event(FAXPP_ParserEnv *env);
 static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env);
 
 static void p_change_event_buffer(void *userData, FAXPP_Buffer *buffer, void *newBuffer);
-static void p_change_stack_buffer(void *userData, FAXPP_Buffer *buffer, void *newBuffer);
 
 FAXPP_Parser *FAXPP_create_parser(FAXPP_ParseMode mode, FAXPP_EncodeFunction encode)
 {
@@ -56,11 +55,6 @@ FAXPP_Parser *FAXPP_create_parser(FAXPP_ParseMode mode, FAXPP_EncodeFunction enc
   }
 
   if(FAXPP_init_buffer(&env->event_buffer, INITIAL_EVENT_BUFFER_SIZE, p_change_event_buffer, env) == OUT_OF_MEMORY) {
-    FAXPP_free_parser(env);
-    return 0;
-  }
-
-  if(FAXPP_init_buffer(&env->stack_buffer, INITIAL_STACK_BUFFER_SIZE, p_change_stack_buffer, env) == OUT_OF_MEMORY) {
     FAXPP_free_parser(env);
     return 0;
   }
@@ -103,6 +97,7 @@ void FAXPP_free_parser(FAXPP_Parser *env)
   while(env->element_info_stack) {
     el = env->element_info_stack;
     env->element_info_stack = el->prev;
+    FAXPP_free_buffer(&el->buffer);
     free(el);
   }
 
@@ -115,6 +110,7 @@ void FAXPP_free_parser(FAXPP_Parser *env)
   while(env->element_info_pool) {
     el = env->element_info_pool;
     env->element_info_pool = el->prev;
+    FAXPP_free_buffer(&el->buffer);
     free(el);
   }
 
@@ -127,7 +123,6 @@ void FAXPP_free_parser(FAXPP_Parser *env)
   if(env->read_buffer) free(env->read_buffer);
 
   FAXPP_free_buffer(&env->event_buffer);
-  FAXPP_free_buffer(&env->stack_buffer);
 
   free_tokenizer_internal(&env->tenv);
   free(env);
@@ -164,9 +159,6 @@ void FAXPP_set_decode(FAXPP_Parser *parser, FAXPP_DecodeFunction decode)
 
 static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env, int allocate_buffer)
 {
-  // Reset the stack buffer cursor
-  FAXPP_reset_buffer(&env->stack_buffer);
-
   if(allocate_buffer && !env->read_buffer) {
     env->read_buffer = malloc(READ_BUFFER_SIZE);
     if(!env->read_buffer) return OUT_OF_MEMORY;
@@ -285,37 +277,13 @@ static void p_change_event_buffer(void *userData, FAXPP_Buffer *buffer, void *ne
   }
 }
 
-static void p_change_stack_buffer(void *userData, FAXPP_Buffer *buffer, void *newBuffer)
-{
-  FAXPP_ParserEnv *env = (FAXPP_ParserEnv*)userData;
-
-  FAXPP_ElementInfo *el = env->element_info_stack;
-  while(el) {
-    p_text_change_buffer(buffer, newBuffer, &el->prefix);
-    p_text_change_buffer(buffer, newBuffer, &el->uri);
-    p_text_change_buffer(buffer, newBuffer, &el->name);
-
-    el->prev_stack_cursor += newBuffer - buffer->buffer;
-
-    el = el->prev;
-  }
-
-  FAXPP_NamespaceInfo *ns = env->namespace_stack;
-  while(ns) {
-    p_text_change_buffer(buffer, newBuffer, &ns->prefix);
-    p_text_change_buffer(buffer, newBuffer, &ns->uri);
-
-    ns = ns->prev;
-  }
-}
-
-#define p_move_text_to_event_buffer(env, text) \
+#define p_move_text_to_buffer(env, text, buf) \
 { \
   if((text)->ptr >= (env)->tenv.buffer && (text)->ptr < (env)->tenv.buffer_end) { \
-    void *newPtr = (env)->event_buffer.cursor; \
-    FAXPP_Error err = FAXPP_buffer_append(&(env)->event_buffer, (text)->ptr, (text)->len); \
+    void *newPtr = (buf)->cursor; \
+    FAXPP_Error err = FAXPP_buffer_append((buf), (text)->ptr, (text)->len); \
     if((env)->null_terminate && err == 0) \
-      err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->tenv.encode, 0); \
+      err = FAXPP_buffer_append_ch((buf), (env)->tenv.encode, 0); \
     if(err != 0) return err; \
     (text)->ptr = newPtr; \
   } \
@@ -332,24 +300,45 @@ FAXPP_Error FAXPP_release_buffer(FAXPP_Parser *env, void **buffer_position)
 
   // Copy any strings in the event which point to the old buffer
   // into the event_buffer
-  p_move_text_to_event_buffer(env, &env->event.prefix);
-  p_move_text_to_event_buffer(env, &env->event.uri);
-  p_move_text_to_event_buffer(env, &env->event.name);
-  p_move_text_to_event_buffer(env, &env->event.value);
-  p_move_text_to_event_buffer(env, &env->event.version);
-  p_move_text_to_event_buffer(env, &env->event.encoding);
-  p_move_text_to_event_buffer(env, &env->event.standalone);
+  p_move_text_to_buffer(env, &env->event.prefix, &env->event_buffer);
+  p_move_text_to_buffer(env, &env->event.uri, &env->event_buffer);
+  p_move_text_to_buffer(env, &env->event.name, &env->event_buffer);
+  p_move_text_to_buffer(env, &env->event.value, &env->event_buffer);
+  p_move_text_to_buffer(env, &env->event.version, &env->event_buffer);
+  p_move_text_to_buffer(env, &env->event.encoding, &env->event_buffer);
+  p_move_text_to_buffer(env, &env->event.standalone, &env->event_buffer);
 
   for(i = 0; i < env->event.attr_count; ++i) {
-    p_move_text_to_event_buffer(env, &env->event.attrs[i].prefix);
-    p_move_text_to_event_buffer(env, &env->event.attrs[i].uri);
-    p_move_text_to_event_buffer(env, &env->event.attrs[i].name);
+    p_move_text_to_buffer(env, &env->event.attrs[i].prefix, &env->event_buffer);
+    p_move_text_to_buffer(env, &env->event.attrs[i].uri, &env->event_buffer);
+    p_move_text_to_buffer(env, &env->event.attrs[i].name, &env->event_buffer);
 
     atval = &env->event.attrs[i].value;
     while(atval) {
-      p_move_text_to_event_buffer(env, &atval->value);
+      p_move_text_to_buffer(env, &atval->name, &env->event_buffer);
+      p_move_text_to_buffer(env, &atval->value, &env->event_buffer);
       atval = atval->next;
     }
+  }
+
+  // Copy any strings in the element and namespace stack which point to the old buffer
+  // into the appropriate element info buffer
+  FAXPP_NamespaceInfo *ns;
+  FAXPP_ElementInfo *el = env->element_info_stack;
+  while(el) {
+    p_move_text_to_buffer(env, &el->prefix, &el->buffer);
+    p_move_text_to_buffer(env, &el->uri, &el->buffer);
+    p_move_text_to_buffer(env, &el->name, &el->buffer);
+
+    ns = el->ns;
+    while(ns != el->prev_ns) {
+      p_move_text_to_buffer(env, &ns->prefix, &el->buffer);
+      p_move_text_to_buffer(env, &ns->uri, &el->buffer);
+
+      ns = ns->prev;
+    }
+
+    el = el->prev;
   }
 
   return NO_ERROR;
@@ -391,14 +380,8 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
   if((err) != NO_ERROR) { \
     if((err) == PREMATURE_END_OF_BUFFER && (env)->read) { \
       (err) = p_read_more((env)); \
-      if((err) != NO_ERROR) { \
-        set_err_info_from_tokenizer((env)); \
-        return (err); \
-      } \
-    } else { \
-      set_err_info_from_tokenizer((env)); \
-      return (err); \
-    } \
+      if((err) != NO_ERROR) goto error; \
+    } else goto error; \
   } \
 }
 
@@ -442,31 +425,29 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
   (text)->len = (o)->len; \
 }
 
-#define p_copy_text_from_event(text, o, env) \
+#define p_copy_text_from_event(text, o, env, buf) \
 { \
-  /* Always copy the string to the stack_buffer, to avoid complications */ \
-  /* when we have to swap buffers */ \
-/*   if(((o)->ptr >= (env)->event_buffer.buffer && */ \
-/*       (o)->ptr < ((env)->event_buffer.buffer + (env)->event_buffer.length)) || */ \
-/*      (env)->null_terminate) { */ \
-    (text)->ptr = (env)->stack_buffer.cursor; \
+  if(((o)->ptr >= (env)->event_buffer.buffer && \
+      (o)->ptr < ((env)->event_buffer.buffer + (env)->event_buffer.length)) || \
+     (env)->null_terminate) { \
+    (text)->ptr = (buf)->cursor; \
     (text)->len = (o)->len; \
-    FAXPP_Error err = FAXPP_buffer_append(&(env)->stack_buffer, (o)->ptr, (o)->len); \
+    FAXPP_Error err = FAXPP_buffer_append((buf), (o)->ptr, (o)->len); \
     if((env)->null_terminate && err == 0) \
-      err = FAXPP_buffer_append_ch(&(env)->stack_buffer, (env)->tenv.encode, 0); \
+      err = FAXPP_buffer_append_ch((buf), (env)->tenv.encode, 0); \
     if(err != 0) return err; \
-/*   } else { */ \
-/*     p_set_text_from_text((text), (o)); */ \
-/*   } */ \
+  } else { \
+    p_set_text_from_text((text), (o)); \
+  } \
 }
 
-#define p_copy_text_from_attr_value(text, attrval, env) \
+#define p_copy_text_from_attr_value(text, attrval, env, buffer) \
 { \
   if((attrval)->next == 0) { \
-    p_copy_text_from_event((text), &(attrval)->value, (env)); \
+    p_copy_text_from_event((text), &(attrval)->value, (env), (buffer)); \
   } \
   else { \
-    FAXPP_Error err = p_normalize_attr_value((text), &(env)->stack_buffer, (attrval), (env)); \
+    FAXPP_Error err = p_normalize_attr_value((text), (buffer), (attrval), (env)); \
     if(err != NO_ERROR) return err; \
   } \
 }
@@ -786,10 +767,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       break;
     case XMLNS_PREFIX_TOKEN:
       err = p_next_attr(env);
-      if(err != 0) {
-        set_err_info_from_tokenizer(env);
-        return err;
-      }
+      if(err != 0) goto error;
 
       p_copy_text_from_token(&env->current_attr->prefix, env, /*useTokenBuffer*/0);
       p_set_location_from_token_a(env->current_attr, env);
@@ -797,10 +775,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       break;
     case XMLNS_NAME_TOKEN:
       err = p_next_attr(env);
-      if(err != 0) {
-        set_err_info_from_tokenizer(env);
-        return err;
-      }
+      if(err != 0) goto error;
 
       p_copy_text_from_token(&env->current_attr->name, env, /*useTokenBuffer*/0);
       p_set_location_from_token_a(env->current_attr, env);
@@ -808,10 +783,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       break;
     case XML_PREFIX_TOKEN:
       err = p_next_attr(env);
-      if(err != 0) {
-        set_err_info_from_tokenizer(env);
-        return err;
-      }
+      if(err != 0) goto error;
 
       p_copy_text_from_token(&env->current_attr->prefix, env, /*useTokenBuffer*/0);
       p_set_location_from_token_a(env->current_attr, env);
@@ -819,10 +791,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       break;
     case ATTRIBUTE_PREFIX_TOKEN:
       err = p_next_attr(env);
-      if(err != 0) {
-        set_err_info_from_tokenizer(env);
-        return err;
-      }
+      if(err != 0) goto error;
 
       p_copy_text_from_token(&env->current_attr->prefix, env, /*useTokenBuffer*/0);
       p_set_location_from_token_a(env->current_attr, env);
@@ -830,20 +799,14 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case ATTRIBUTE_NAME_TOKEN:
       if(!env->current_attr || env->current_attr->name.ptr != 0) {
         err = p_next_attr(env);
-        if(err != 0) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err != 0) goto error;
       }
       p_copy_text_from_token(&env->current_attr->name, env, /*useTokenBuffer*/0);
       p_set_location_from_token_a(env->current_attr, env);
       break;
     case ATTRIBUTE_VALUE_TOKEN:
       err = p_set_attr_value(env->current_attr, env, CHARACTERS_EVENT);
-      if(err) {
-        set_err_info_from_tokenizer(env);
-        return err;
-      }
+      if(err) goto error;
       break;
     case START_ELEMENT_END_TOKEN:
       env->event.type = START_ELEMENT_EVENT;
@@ -893,10 +856,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case AMP_ENTITY_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, ENTITY_REFERENCE_EVENT, '&');
-        if(err) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err) goto error;
       } else {
         p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/1);
         p_set_text_to_char(&env->event.value, env, '&');
@@ -908,10 +868,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case APOS_ENTITY_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, ENTITY_REFERENCE_EVENT, '\'');
-        if(err) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err) goto error;
       } else {
         p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/1);
         p_set_text_to_char(&env->event.value, env, '\'');
@@ -923,10 +880,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case GT_ENTITY_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, ENTITY_REFERENCE_EVENT, '>');
-        if(err) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err) goto error;
       } else {
         p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/1);
         p_set_text_to_char(&env->event.value, env, '>');
@@ -938,10 +892,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case LT_ENTITY_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, ENTITY_REFERENCE_EVENT, '<');
-        if(err) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err) goto error;
       } else {
         p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/1);
         p_set_text_to_char(&env->event.value, env, '<');
@@ -953,10 +904,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case QUOT_ENTITY_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, ENTITY_REFERENCE_EVENT, '"');
-        if(err) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err) goto error;
       } else {
         p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/1);
         p_set_text_to_char(&env->event.value, env, '"');
@@ -969,10 +917,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case ENTITY_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, ENTITY_REFERENCE_EVENT, 0);
-        if(err) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err) goto error;
       } else {
         p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/1);
         p_set_location_from_token(env);
@@ -983,10 +928,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case DEC_CHAR_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, DEC_CHAR_REFERENCE_EVENT, 0);
-        if(err) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err) goto error;
       } else {
         p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/1);
         p_set_location_from_token(env);
@@ -997,10 +939,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case HEX_CHAR_REFERENCE_TOKEN:
       if(env->current_attr) {
         err = p_set_attr_value_name(env->current_attr, env, HEX_CHAR_REFERENCE_EVENT, 0);
-        if(err) {
-          set_err_info_from_tokenizer(env);
-          return err;
-        }
+        if(err) goto error;
       } else {
         p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/1);
         p_set_location_from_token(env);
@@ -1019,6 +958,10 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
 
   // Never happens
   return NO_ERROR;
+
+ error:
+  set_err_info_from_tokenizer(env);
+  return err;
 }
 
 #define p_compare_text(a, b) (((a)->len == (b)->len) ? memcmp((a)->ptr, (b)->ptr, (a)->len) : ((a)->len - (b)->len))
@@ -1046,11 +989,12 @@ static FAXPP_Error p_add_ns_info(FAXPP_ParserEnv *env, const FAXPP_Attribute *at
   memset(nsinfo, 0, sizeof(FAXPP_NamespaceInfo));
   nsinfo->prev = env->namespace_stack;
   env->namespace_stack = nsinfo;
+  env->element_info_stack->ns = nsinfo;
 
-  p_copy_text_from_attr_value(&nsinfo->uri, &attr->value, env);
+  p_copy_text_from_attr_value(&nsinfo->uri, &attr->value, env, &env->element_info_stack->buffer);
 
   if(attr->prefix.len != 0) {
-    p_copy_text_from_event(&nsinfo->prefix, &attr->name, env);
+    p_copy_text_from_event(&nsinfo->prefix, &attr->name, env, &env->element_info_stack->buffer);
   }
 
   return NO_ERROR;
@@ -1082,30 +1026,52 @@ static FAXPP_Error p_find_ns_info_impl(const FAXPP_ParserEnv *env, const FAXPP_T
   return NO_URI_FOR_PREFIX;
 }
 
-static FAXPP_Error p_push_element(FAXPP_ParserEnv *env)
+static void p_change_element_info_buffer(void *userData, FAXPP_Buffer *buffer, void *newBuffer)
+{
+  FAXPP_ElementInfo *el = (FAXPP_ElementInfo*)userData;
+
+  p_text_change_buffer(buffer, newBuffer, &el->prefix);
+  p_text_change_buffer(buffer, newBuffer, &el->uri);
+  p_text_change_buffer(buffer, newBuffer, &el->name);
+
+  FAXPP_NamespaceInfo *ns = el->ns;
+  while(ns != el->prev_ns) {
+    p_text_change_buffer(buffer, newBuffer, &ns->prefix);
+    p_text_change_buffer(buffer, newBuffer, &ns->uri);
+
+    ns = ns->prev;
+  }
+}
+
+static FAXPP_Error p_push_element(FAXPP_ParserEnv *env, int selfClosing)
 {
   FAXPP_ElementInfo *einfo = env->element_info_pool;
 
   if(einfo == 0) {
     einfo = (FAXPP_ElementInfo*)malloc(sizeof(FAXPP_ElementInfo));
     if(!einfo) return OUT_OF_MEMORY;
+
+    if(FAXPP_init_buffer(&einfo->buffer, INITIAL_ELEMENT_INFO_BUFFER_SIZE,
+                         p_change_element_info_buffer, einfo) == OUT_OF_MEMORY)
+      return OUT_OF_MEMORY;
   }
   else {
-    env->element_info_pool = einfo->prev; 
+    env->element_info_pool = einfo->prev;
+    FAXPP_reset_buffer(&einfo->buffer);
   }
 
   einfo->prev = env->element_info_stack;
   env->element_info_stack = einfo;
 
   /* Store the current place in the namespace stack */
+  einfo->ns = env->namespace_stack;
   einfo->prev_ns = env->namespace_stack;
 
-  /* Store the current place in the stack buffer */
-  einfo->prev_stack_cursor = env->stack_buffer.cursor;
-
-  einfo->uri.ptr = 0; einfo->uri.len = 0;
-  p_copy_text_from_event(&einfo->prefix, &env->event.prefix, env);
-  p_copy_text_from_event(&einfo->name, &env->event.name, env);
+  if(!selfClosing) {
+    einfo->uri.ptr = 0; einfo->uri.len = 0;
+    p_copy_text_from_event(&einfo->prefix, &env->event.prefix, env, &einfo->buffer);
+    p_copy_text_from_event(&einfo->name, &env->event.name, env, &einfo->buffer);
+  }
 
   return NO_ERROR;
 }
@@ -1127,9 +1093,6 @@ static void p_pop_element(FAXPP_ParserEnv *env)
     ns->prev = env->namespace_pool;
     env->namespace_pool = ns;
   }
-
-  /* Return the stack_buffer back to it's state before this element */
-  env->stack_buffer.cursor = einfo->prev_stack_cursor;
 
   env->element_info_stack = einfo->prev;
 
@@ -1197,7 +1160,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
   case START_ELEMENT_EVENT:
   case SELF_CLOSING_ELEMENT_EVENT:
     /* Store the element name */
-    err = p_push_element(env);
+    err = p_push_element(env, env->event.type == SELF_CLOSING_ELEMENT_EVENT);
     if(err != 0) {
       set_err_info_from_event(env);
       return err;
@@ -1287,7 +1250,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
     }
 
     /* Copy the element's URI to the element stack */
-    /* No need to use the stack_buffer, since the value already comes from there */
+    /* No need to use the element info buffer, since the value already comes from there */
     p_set_text_from_text(&env->element_info_stack->uri, &env->event.uri);
 
     for(i = 0; i < env->event.attr_count; ++i) {
@@ -1328,6 +1291,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
     /* [WFC: Element Type Match] */
     if(p_compare_text(&env->element_info_stack->name, &env->event.name) != 0 ||
        p_compare_text(&env->element_info_stack->prefix, &env->event.prefix) != 0) {
+
       set_err_info_from_event(env);
       err = ELEMENT_NAME_MISMATCH;
     }
