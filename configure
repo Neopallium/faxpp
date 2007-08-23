@@ -2436,12 +2436,12 @@ fi
 echo "${ECHO_T}$sp_profile" >&6; }
 
 if test "$sp_profile" = "yes"; then
-        CFLAGS="$CFLAGS -g -pg -DDEBUG -Wall -Werror"
-        CXXFLAGS="$CXXFLAGS -g -pg -DDEBUG -Wall -Werror"
+        CFLAGS="$CFLAGS -g -pg -DDEBUG -Wall"
+        CXXFLAGS="$CXXFLAGS -g -pg -DDEBUG -Wall"
 else
 if test "$sp_debug" = "yes"; then
-        CFLAGS="$CFLAGS -g -DDEBUG -Wall -Werror"
-        CXXFLAGS="$CXXFLAGS -g -DDEBUG -Wall -Werror"
+        CFLAGS="$CFLAGS -g -DDEBUG -Wall"
+        CXXFLAGS="$CXXFLAGS -g -DDEBUG -Wall"
 else
         CFLAGS="$CFLAGS -O2 -Wall"
         CXXFLAGS="$CXXFLAGS -O2 -Wall"

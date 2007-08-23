@@ -17,10 +17,11 @@
 #include "tokenizer_states.h"
 #include "char_classes.h"
 
-#ifdef DEBUG
 const char *FAXPP_state_to_string(FAXPP_StateFunction state)
 {
-  if(state == initial_state)
+  if(state == switch_state)
+    return "switch_state";
+  else if(state == initial_state)
     return "initial_state";
   else if(state == initial_misc_state)
     return "initial_misc_state";
@@ -55,158 +56,56 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
   else if(state == pi_content_seen_question_state)
     return "pi_content_seen_question_state";
 
-  else if(state == default_start_element_name_state)
-    return "default_start_element_name_state";
-  else if(state == default_start_element_name_seen_colon_state)
-    return "default_start_element_name_seen_colon_state";
-  else if(state == default_start_element_name_seen_colon_state2)
-    return "default_start_element_name_seen_colon_state2";
-  else if(state == default_start_element_mandatory_ws_state)
-    return "default_start_element_mandatory_ws_state";
-  else if(state == default_start_element_ws_state)
-    return "default_start_element_ws_state";
-  else if(state == default_element_content_markup_state)
-    return "default_element_content_markup_state";
-  else if(state == default_attr_name_state)
-    return "default_attr_name_state";
-  else if(state == default_attr_name_seen_colon_state)
-    return "default_attr_name_seen_colon_state";
-  else if(state == default_attr_name_seen_colon_state2)
-    return "default_attr_name_seen_colon_state2";
-  else if(state == default_attr_equals_state)
-    return "default_attr_equals_state";
-  else if(state == default_attr_value_start_state)
-    return "default_attr_value_start_state";
-  else if(state == default_attr_value_apos_state)
-    return "default_attr_value_apos_state";
-  else if(state == default_attr_value_quot_state)
-    return "default_attr_value_quot_state";
-  else if(state == default_element_content_state)
-    return "default_element_content_state";
-  else if(state == default_element_content_rsquare_state1)
-    return "default_element_content_rsquare_state1";
-  else if(state == default_element_content_rsquare_state2)
-    return "default_element_content_rsquare_state2";
-  else if(state == default_end_element_name_state)
-    return "default_end_element_name_state";
-  else if(state == default_end_element_name_state2)
-    return "default_end_element_name_state2";
-  else if(state == default_end_element_name_seen_colon_state)
-    return "default_end_element_name_seen_colon_state";
-  else if(state == default_end_element_name_seen_colon_state2)
-    return "default_end_element_name_seen_colon_state2";
-  else if(state == default_ns_name_state1)
-    return "default_ns_name_state1";
-  else if(state == default_ns_name_state2)
-    return "default_ns_name_state2";
-  else if(state == default_ns_name_state3)
-    return "default_ns_name_state3";
-  else if(state == default_ns_name_state4)
-    return "default_ns_name_state4";
-  else if(state == default_ns_name_state5)
-    return "default_ns_name_state5";
+  else if(state == DEFAULT_attr_name_seen_colon_state)
+    return "DEFAULT_attr_name_seen_colon_state";
+  else if(state == DEFAULT_attr_name_seen_colon_state2)
+    return "DEFAULT_attr_name_seen_colon_state2";
+  else if(state == DEFAULT_attr_equals_state)
+    return "DEFAULT_attr_equals_state";
+  else if(state == DEFAULT_ns_name_state1)
+    return "DEFAULT_ns_name_state1";
+  else if(state == DEFAULT_ns_name_state2)
+    return "DEFAULT_ns_name_state2";
+  else if(state == DEFAULT_ns_name_state3)
+    return "DEFAULT_ns_name_state3";
+  else if(state == DEFAULT_ns_name_state4)
+    return "DEFAULT_ns_name_state4";
+  else if(state == DEFAULT_ns_name_state5)
+    return "DEFAULT_ns_name_state5";
 
-  else if(state == utf8_start_element_name_state)
-    return "utf8_start_element_name_state";
-  else if(state == utf8_start_element_name_seen_colon_state)
-    return "utf8_start_element_name_seen_colon_state";
-  else if(state == utf8_start_element_name_seen_colon_state2)
-    return "utf8_start_element_name_seen_colon_state2";
-  else if(state == utf8_start_element_mandatory_ws_state)
-    return "utf8_start_element_mandatory_ws_state";
-  else if(state == utf8_start_element_ws_state)
-    return "utf8_start_element_ws_state";
-  else if(state == utf8_attr_name_state)
-    return "utf8_attr_name_state";
-  else if(state == utf8_attr_name_seen_colon_state)
-    return "utf8_attr_name_seen_colon_state";
-  else if(state == utf8_attr_name_seen_colon_state2)
-    return "utf8_attr_name_seen_colon_state2";
-  else if(state == utf8_attr_equals_state)
-    return "utf8_attr_equals_state";
-  else if(state == utf8_attr_value_start_state)
-    return "utf8_attr_value_start_state";
-  else if(state == utf8_attr_value_apos_state)
-    return "utf8_attr_value_apos_state";
-  else if(state == utf8_attr_value_quot_state)
-    return "utf8_attr_value_quot_state";
-  else if(state == utf8_element_content_state)
-    return "utf8_element_content_state";
-  else if(state == utf8_element_content_rsquare_state1)
-    return "utf8_element_content_rsquare_state1";
-  else if(state == utf8_element_content_rsquare_state2)
-    return "utf8_element_content_rsquare_state2";
-  else if(state == utf8_element_content_markup_state)
-    return "utf8_element_content_markup_state";
-  else if(state == utf8_end_element_name_state)
-    return "utf8_end_element_name_state";
-  else if(state == utf8_end_element_name_state2)
-    return "utf8_end_element_name_state2";
-  else if(state == utf8_end_element_name_seen_colon_state)
-    return "utf8_end_element_name_seen_colon_state";
-  else if(state == utf8_end_element_name_seen_colon_state2)
-    return "utf8_end_element_name_seen_colon_state2";
-  else if(state == utf8_ns_name_state1)
-    return "utf8_ns_name_state1";
-  else if(state == utf8_ns_name_state2)
-    return "utf8_ns_name_state2";
-  else if(state == utf8_ns_name_state3)
-    return "utf8_ns_name_state3";
-  else if(state == utf8_ns_name_state4)
-    return "utf8_ns_name_state4";
-  else if(state == utf8_ns_name_state5)
-    return "utf8_ns_name_state5";
+  else if(state == UTF8_attr_name_seen_colon_state)
+    return "UTF8_attr_name_seen_colon_state";
+  else if(state == UTF8_attr_name_seen_colon_state2)
+    return "UTF8_attr_name_seen_colon_state2";
+  else if(state == UTF8_attr_equals_state)
+    return "UTF8_attr_equals_state";
+  else if(state == UTF8_ns_name_state1)
+    return "UTF8_ns_name_state1";
+  else if(state == UTF8_ns_name_state2)
+    return "UTF8_ns_name_state2";
+  else if(state == UTF8_ns_name_state3)
+    return "UTF8_ns_name_state3";
+  else if(state == UTF8_ns_name_state4)
+    return "UTF8_ns_name_state4";
+  else if(state == UTF8_ns_name_state5)
+    return "UTF8_ns_name_state5";
 
-  else if(state == utf16_start_element_name_state)
-    return "utf16_start_element_name_state";
-  else if(state == utf16_start_element_name_seen_colon_state)
-    return "utf16_start_element_name_seen_colon_state";
-  else if(state == utf16_start_element_name_seen_colon_state2)
-    return "utf16_start_element_name_seen_colon_state2";
-  else if(state == utf16_start_element_mandatory_ws_state)
-    return "utf16_start_element_mandatory_ws_state";
-  else if(state == utf16_start_element_ws_state)
-    return "utf16_start_element_ws_state";
-  else if(state == utf16_attr_name_state)
-    return "utf16_attr_name_state";
-  else if(state == utf16_attr_name_seen_colon_state)
-    return "utf16_attr_name_seen_colon_state";
-  else if(state == utf16_attr_name_seen_colon_state2)
-    return "utf16_attr_name_seen_colon_state2";
-  else if(state == utf16_attr_equals_state)
-    return "utf16_attr_equals_state";
-  else if(state == utf16_attr_value_start_state)
-    return "utf16_attr_value_start_state";
-  else if(state == utf16_attr_value_apos_state)
-    return "utf16_attr_value_apos_state";
-  else if(state == utf16_attr_value_quot_state)
-    return "utf16_attr_value_quot_state";
-  else if(state == utf16_element_content_state)
-    return "utf16_element_content_state";
-  else if(state == utf16_element_content_rsquare_state1)
-    return "utf16_element_content_rsquare_state1";
-  else if(state == utf16_element_content_rsquare_state2)
-    return "utf16_element_content_rsquare_state2";
-  else if(state == utf16_element_content_markup_state)
-    return "utf16_element_content_markup_state";
-  else if(state == utf16_end_element_name_state)
-    return "utf16_end_element_name_state";
-  else if(state == utf16_end_element_name_state2)
-    return "utf16_end_element_name_state2";
-  else if(state == utf16_end_element_name_seen_colon_state)
-    return "utf16_end_element_name_seen_colon_state";
-  else if(state == utf16_end_element_name_seen_colon_state2)
-    return "utf16_end_element_name_seen_colon_state2";
-  else if(state == utf16_ns_name_state1)
-    return "utf16_ns_name_state1";
-  else if(state == utf16_ns_name_state2)
-    return "utf16_ns_name_state2";
-  else if(state == utf16_ns_name_state3)
-    return "utf16_ns_name_state3";
-  else if(state == utf16_ns_name_state4)
-    return "utf16_ns_name_state4";
-  else if(state == utf16_ns_name_state5)
-    return "utf16_ns_name_state5";
+  else if(state == UTF16_attr_name_seen_colon_state)
+    return "UTF16_attr_name_seen_colon_state";
+  else if(state == UTF16_attr_name_seen_colon_state2)
+    return "UTF16_attr_name_seen_colon_state2";
+  else if(state == UTF16_attr_equals_state)
+    return "UTF16_attr_equals_state";
+  else if(state == UTF16_ns_name_state1)
+    return "UTF16_ns_name_state1";
+  else if(state == UTF16_ns_name_state2)
+    return "UTF16_ns_name_state2";
+  else if(state == UTF16_ns_name_state3)
+    return "UTF16_ns_name_state3";
+  else if(state == UTF16_ns_name_state4)
+    return "UTF16_ns_name_state4";
+  else if(state == UTF16_ns_name_state5)
+    return "UTF16_ns_name_state5";
 
   else if(state == start_element_end_state)
     return "start_element_end_state";
@@ -387,7 +286,6 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
 
   return "unknown";
 }
-#endif
 
 /*********************
  *
@@ -539,7 +437,7 @@ initial_markup_state(FAXPP_TokenizerEnv *env)
     break;
   LINE_ENDINGS
   default:
-    env->state = (env)->start_element_name_state;
+    change_enum_state(env, env->start_element_name_enum_state);
     env->seen_doc_element = 1;
     token_start_position(env);
     next_char(env);
@@ -608,7 +506,7 @@ final_markup_state(FAXPP_TokenizerEnv *env)
     break;
   LINE_ENDINGS
   default:
-    env->state = (env)->start_element_name_state;
+    change_enum_state(env, env->start_element_name_enum_state);
     token_start_position(env);
     next_char(env);
     return ADDITIONAL_DOCUMENT_ELEMENT;
@@ -623,9 +521,126 @@ end_of_buffer_state(FAXPP_TokenizerEnv *env)
     return NO_ERROR;
 }
 
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+FAXPP_Error switch_state(FAXPP_TokenizerEnv *env)
+{
+ START:
+  switch(env->enum_state) {
+#include "element.h"
+
 // Include the default states
 
-#define PREFIX(name) default_ ## name
+#define PREFIX(name) DEFAULT_ ## name
+#define END_CHECK \
+  if((env)->position >= (env)->buffer_end) \
+    return PREMATURE_END_OF_BUFFER
+#define READ_CHAR read_char_no_check(env)
+#define DEFAULT_CASE (void)0
+
+#include "element_cases.h"
+#include "attr_cases.h"
+
+#undef DEFAULT_CASE
+#undef READ_CHAR
+#undef END_CHECK
+#undef PREFIX
+
+// Include the utf8 states
+
+#define PREFIX(name) UTF8_ ## name
+#define END_CHECK \
+  if((env)->position >= (env)->buffer_end) \
+    return PREMATURE_END_OF_BUFFER
+#define READ_CHAR \
+  /* Assume it's a one byte character for now */ \
+  env->current_char = *(uint8_t*)env->position; \
+  env->char_len = 1; \
+  print_tokenizer_state(env)
+#define DEFAULT_CASE \
+{ \
+  /* Check if it really was a one byte char */ \
+  if(env->current_char >= 0x80) { \
+    /* Decode properly */ \
+    env->char_len = (env)->decode(env->position, env->buffer_end, &env->current_char); \
+    switch((env)->char_len) { \
+    case TRANSCODE_PREMATURE_END_OF_BUFFER: \
+      return PREMATURE_END_OF_BUFFER; \
+    case TRANSCODE_BAD_ENCODING: \
+      return BAD_ENCODING; \
+    } \
+  } \
+}
+
+#include "element_cases.h"
+#include "attr_cases.h"
+
+#undef DEFAULT_CASE
+#undef READ_CHAR
+#undef END_CHECK
+#undef PREFIX
+
+// Include the utf16 states
+
+#define PREFIX(name) UTF16_ ## name
+#define END_CHECK \
+  if((env)->position + 1 >= (env)->buffer_end) \
+    return PREMATURE_END_OF_BUFFER
+#define READ_CHAR \
+  /* Assume it's not a surrogate pair for now */ \
+  env->current_char = *(uint16_t*)env->position; \
+  env->char_len = 1 * sizeof(uint16_t); \
+  print_tokenizer_state(env)
+#define DEFAULT_CASE \
+{ \
+  /* Check if it was actually a surrogate pair */ \
+  if(env->current_char >= 0xD800 && env->current_char <= 0xDF00) { \
+    /* Decode properly */ \
+    env->char_len = FAXPP_utf16_native_decode(env->position, env->buffer_end, &env->current_char); \
+    switch((env)->char_len) { \
+    case TRANSCODE_PREMATURE_END_OF_BUFFER: \
+      return PREMATURE_END_OF_BUFFER; \
+    case TRANSCODE_BAD_ENCODING: \
+      return BAD_ENCODING; \
+    } \
+  } \
+}
+
+#include "element_cases.h"
+#include "attr_cases.h"
+
+#undef DEFAULT_CASE
+#undef READ_CHAR
+#undef END_CHECK
+#undef PREFIX
+
+  }
+  goto START;
+
+ NEXT_CHAR:
+  next_char(env);
+  goto START;
+
+ NEXT_CHAR_RETURN:
+  next_char(env);
+  return NO_ERROR;
+
+ NEXT_CHAR_TOK_START_RETURN:
+  next_char(env);
+  token_start_position(env);
+  return NO_ERROR;
+
+ NEXT_CHAR_RESTRICTED_CHAR_ERROR:
+  next_char(env);
+  return RESTRICTED_CHAR;
+
+}
+
+////////////////////////////////////////////////////////////////////////////////////////////////////
+
+// Include the default states
+
+#define PREFIX(name) DEFAULT_ ## name
 #define END_CHECK \
   if((env)->position >= (env)->buffer_end) \
     return PREMATURE_END_OF_BUFFER
@@ -642,14 +657,15 @@ end_of_buffer_state(FAXPP_TokenizerEnv *env)
 
 // Include the utf8 states
 
-#define PREFIX(name) utf8_ ## name
+#define PREFIX(name) UTF8_ ## name
 #define END_CHECK \
   if((env)->position >= (env)->buffer_end) \
     return PREMATURE_END_OF_BUFFER
 #define READ_CHAR \
   /* Assume it's a one byte character for now */ \
   env->current_char = *(uint8_t*)env->position; \
-  env->char_len = 1
+  env->char_len = 1; \
+  print_tokenizer_state(env)
 #define DEFAULT_CASE \
 { \
   /* Check if it really was a one byte char */ \
@@ -675,14 +691,15 @@ end_of_buffer_state(FAXPP_TokenizerEnv *env)
 
 // Include the utf16 states
 
-#define PREFIX(name) utf16_ ## name
+#define PREFIX(name) UTF16_ ## name
 #define END_CHECK \
   if((env)->position + 1 >= (env)->buffer_end) \
     return PREMATURE_END_OF_BUFFER
 #define READ_CHAR \
   /* Assume it's not a surrogate pair for now */ \
   env->current_char = *(uint16_t*)env->position; \
-  env->char_len = 1 * sizeof(uint16_t)
+  env->char_len = 1 * sizeof(uint16_t); \
+  print_tokenizer_state(env)
 #define DEFAULT_CASE \
 { \
   /* Check if it was actually a surrogate pair */ \

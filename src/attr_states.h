@@ -16,7 +16,7 @@
 
 // This file needs to have a number of macros defined before it is included
 
-#define NS_CHAR_STATE(name, ch, next_state, fallback_state) \
+#define NS_CHAR_STATE(name, ch, next_state) \
 FAXPP_Error \
 name(FAXPP_TokenizerEnv *env) \
 { \
@@ -28,16 +28,16 @@ name(FAXPP_TokenizerEnv *env) \
     next_char(env); \
     break; \
   default: \
-    env->state = (fallback_state); \
+    change_enum_state(env, PREFIX(ATTR_NAME_STATE)); \
     break; \
   } \
   return NO_ERROR; \
 }
 
-NS_CHAR_STATE(PREFIX(ns_name_state1), 'm', PREFIX(ns_name_state2), PREFIX(attr_name_state))
-NS_CHAR_STATE(PREFIX(ns_name_state2), 'l', PREFIX(ns_name_state3), PREFIX(attr_name_state))
+NS_CHAR_STATE(PREFIX(ns_name_state1), 'm', PREFIX(ns_name_state2))
+NS_CHAR_STATE(PREFIX(ns_name_state2), 'l', PREFIX(ns_name_state3))
 
-NS_CHAR_STATE(PREFIX(ns_name_state4), 's', PREFIX(ns_name_state5), PREFIX(attr_name_state))
+NS_CHAR_STATE(PREFIX(ns_name_state4), 's', PREFIX(ns_name_state5))
 
 #undef NS_CHAR_STATE
 
@@ -59,7 +59,7 @@ PREFIX(ns_name_state3)(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     break;
   default:
-    env->state = PREFIX(attr_name_state);
+    change_enum_state(env, PREFIX(ATTR_NAME_STATE));
     break;
   }
   return NO_ERROR;
@@ -78,7 +78,7 @@ PREFIX(ns_name_state5)(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   case '=':
-    env->state = PREFIX(attr_value_start_state);
+    change_enum_state(env, PREFIX(ATTR_VALUE_START_STATE));
     token_end_position(env);
     report_token(XMLNS_NAME_TOKEN, env);
     next_char(env);
@@ -91,54 +91,12 @@ PREFIX(ns_name_state5)(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     break;
   default:
-    env->state = PREFIX(attr_name_state);
+    change_enum_state(env, PREFIX(ATTR_NAME_STATE));
     next_char(env);
     if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0)
       return INVALID_CHAR_IN_ATTRIBUTE_NAME;
     break;
   }
-  return NO_ERROR;  
-}
-
-FAXPP_Error
-PREFIX(attr_name_state)(FAXPP_TokenizerEnv *env)
-{
-  while(1) {
-    END_CHECK;
-
-    READ_CHAR;
-
-    switch(env->current_char) {
-    WHITESPACE:
-      env->state = PREFIX(attr_equals_state);
-      token_end_position(env);
-      report_token(ATTRIBUTE_NAME_TOKEN, env);
-      next_char(env);
-      return NO_ERROR;
-    case '=':
-      env->state = PREFIX(attr_value_start_state);
-      token_end_position(env);
-      report_token(ATTRIBUTE_NAME_TOKEN, env);
-      next_char(env);
-      return NO_ERROR;
-    case ':':
-      env->state = PREFIX(attr_name_seen_colon_state);
-      token_end_position(env);
-      report_token(ATTRIBUTE_PREFIX_TOKEN, env);
-      next_char(env);
-      token_start_position(env);
-      return NO_ERROR;
-    default:
-      DEFAULT_CASE;
-      break;
-    }
-
-    next_char(env);
-    if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0)
-      return INVALID_CHAR_IN_ATTRIBUTE_NAME;
-  }
-
-  // Never happens
   return NO_ERROR;  
 }
 
@@ -176,7 +134,7 @@ PREFIX(attr_name_seen_colon_state2)(FAXPP_TokenizerEnv *env)
       next_char(env);
       return NO_ERROR;
     case '=':
-      env->state = PREFIX(attr_value_start_state);
+      change_enum_state(env, PREFIX(ATTR_VALUE_START_STATE));
       token_end_position(env);
       report_token(ATTRIBUTE_NAME_TOKEN, env);
       next_char(env);
@@ -204,7 +162,7 @@ PREFIX(attr_equals_state)(FAXPP_TokenizerEnv *env)
   WHITESPACE:
     break;
   case '=':
-    env->state = PREFIX(attr_value_start_state);
+    change_enum_state(env, PREFIX(ATTR_VALUE_START_STATE));
     break;
   default:
     next_char(env);
@@ -212,158 +170,5 @@ PREFIX(attr_equals_state)(FAXPP_TokenizerEnv *env)
   }
   next_char(env);
   return NO_ERROR;  
-}
-
-FAXPP_Error
-PREFIX(attr_value_start_state)(FAXPP_TokenizerEnv *env)
-{
-  END_CHECK;
-
-  READ_CHAR;
-
-  switch(env->current_char) {
-  WHITESPACE:
-    next_char(env);
-    break;
-  case '"':
-    env->state = PREFIX(attr_value_quot_state);
-    next_char(env);
-    token_start_position(env);
-    break;
-  case '\'':
-    env->state = PREFIX(attr_value_apos_state);
-    next_char(env);
-    token_start_position(env);
-    break;
-  default:
-    DEFAULT_CASE;
-
-    next_char(env);
-    return INVALID_CHAR_IN_ATTRIBUTE;
-  }
-  return NO_ERROR;
-}
-
-FAXPP_Error
-PREFIX(attr_value_apos_state)(FAXPP_TokenizerEnv *env)
-{
-  while(1) {
-    if(env->position >= env->buffer_end) {
-      if(env->token.value.ptr) {
-        token_end_position(env);
-        if(env->token.value.len != 0) {
-          report_token(ATTRIBUTE_VALUE_TOKEN, env);
-          return NO_ERROR;
-        }
-      }
-      token_start_position(env);
-      return PREMATURE_END_OF_BUFFER;
-    }
-
-    READ_CHAR;
-
-    switch(env->current_char) {
-    case '\'':
-      env->state = PREFIX(start_element_mandatory_ws_state);
-      token_end_position(env);
-      report_token(ATTRIBUTE_VALUE_TOKEN, env);
-      next_char(env);
-      return NO_ERROR;
-    case '&':
-      store_state(env);
-      env->state = reference_state;
-      token_end_position(env);
-      report_token(ATTRIBUTE_VALUE_TOKEN, env);
-      next_char(env);
-      token_start_position(env);
-      return NO_ERROR;
-    case '<':
-      next_char(env);
-      return INVALID_CHAR_IN_ATTRIBUTE;
-    LINE_ENDINGS
-    case '\t':
-      if(env->normalize_attrs) {
-        // Move the token to the buffer, to normalize it
-        FAXPP_Error err = FAXPP_tokenizer_release_buffer(env, 0);
-        if(err != NO_ERROR) return err;
-        env->current_char = ' ';
-      }
-      break;
-    default:
-      DEFAULT_CASE;
-
-      if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0) {
-        next_char(env);
-        return RESTRICTED_CHAR;
-      }
-      break;
-    }
-    next_char(env);
-  }
-
-  // Never happens
-  return NO_ERROR;
-}
-
-FAXPP_Error
-PREFIX(attr_value_quot_state)(FAXPP_TokenizerEnv *env)
-{
-  while(1) {
-    if(env->position >= env->buffer_end) {
-      if(env->token.value.ptr) {
-        token_end_position(env);
-        if(env->token.value.len != 0) {
-          report_token(ATTRIBUTE_VALUE_TOKEN, env);
-          return NO_ERROR;
-        }
-      }
-      token_start_position(env);
-      return PREMATURE_END_OF_BUFFER;
-    }
-
-    READ_CHAR;
-
-    switch(env->current_char) {
-    case '"':
-      env->state = PREFIX(start_element_mandatory_ws_state);
-      token_end_position(env);
-      report_token(ATTRIBUTE_VALUE_TOKEN, env);
-      next_char(env);
-      return NO_ERROR;
-    case '&':
-      store_state(env);
-      env->state = reference_state;
-      token_end_position(env);
-      report_token(ATTRIBUTE_VALUE_TOKEN, env);
-      next_char(env);
-      token_start_position(env);
-      return NO_ERROR;
-    case '<':
-      next_char(env);
-      return INVALID_CHAR_IN_ATTRIBUTE;
-    LINE_ENDINGS
-    case '\t': {
-      if(env->normalize_attrs) {
-        // Move the token to the buffer, to normalize it
-        FAXPP_Error err = FAXPP_tokenizer_release_buffer(env, 0);
-        if(err != NO_ERROR) return err;
-        env->current_char = ' ';
-      }
-      break;
-    }
-    default:
-      DEFAULT_CASE;
-
-      if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0) {
-        next_char(env);
-        return RESTRICTED_CHAR;
-      }
-      break;
-    }
-    next_char(env);
-  }
-
-  // Never happens
-  return NO_ERROR;
 }
 

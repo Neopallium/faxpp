@@ -289,8 +289,8 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
     if(tokenizer->encode == FAXPP_utf16_native_encode)
       tokenizer->do_encode = 0;
 
-    tokenizer->start_element_name_state = utf16_start_element_name_state;
-    tokenizer->element_content_state = utf16_element_content_state;
+    tokenizer->start_element_name_enum_state = UTF16_START_ELEMENT_NAME_STATE;
+    tokenizer->element_content_enum_state = UTF16_ELEMENT_CONTENT_STATE;
   }
   else if(decode == FAXPP_utf8_decode) {
     tokenizer->decode = FAXPP_utf8_decode;
@@ -298,15 +298,15 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
     if(tokenizer->encode == FAXPP_utf8_encode)
       tokenizer->do_encode = 0;
 
-    tokenizer->start_element_name_state = utf8_start_element_name_state;
-    tokenizer->element_content_state = utf8_element_content_state;
+    tokenizer->start_element_name_enum_state = UTF8_START_ELEMENT_NAME_STATE;
+    tokenizer->element_content_enum_state = UTF8_ELEMENT_CONTENT_STATE;
   }
   else if(decode == FAXPP_iso_8859_1_decode) {
     tokenizer->decode = FAXPP_iso_8859_1_decode;
 
     // Latin1 can use the UTF-8 states, since the first 128 values are the same as UTF-8
-    tokenizer->start_element_name_state = utf8_start_element_name_state;
-    tokenizer->element_content_state = utf8_element_content_state;
+    tokenizer->start_element_name_enum_state = UTF8_START_ELEMENT_NAME_STATE;
+    tokenizer->element_content_enum_state = UTF8_ELEMENT_CONTENT_STATE;
   }
   else if(decode == FAXPP_ucs4_native_decode ||
 #ifdef WORDS_BIGENDIAN
@@ -317,14 +317,14 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
      ) {
     tokenizer->decode = FAXPP_ucs4_native_decode;
 
-    tokenizer->start_element_name_state = default_start_element_name_state;
-    tokenizer->element_content_state = default_element_content_state;
+    tokenizer->start_element_name_enum_state = DEFAULT_START_ELEMENT_NAME_STATE;
+    tokenizer->element_content_enum_state = DEFAULT_ELEMENT_CONTENT_STATE;
   }
   else {
     tokenizer->decode = decode;
 
-    tokenizer->start_element_name_state = default_start_element_name_state;
-    tokenizer->element_content_state = default_element_content_state;
+    tokenizer->start_element_name_enum_state = DEFAULT_START_ELEMENT_NAME_STATE;
+    tokenizer->element_content_enum_state = DEFAULT_ELEMENT_CONTENT_STATE;
   }
 }
 
@@ -401,8 +401,8 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, uns
   env->state = initial_state;
   env->stored_state = 0;
 
-  env->start_element_name_state = default_start_element_name_state;
-  env->element_content_state = default_element_content_state;
+  env->start_element_name_enum_state = DEFAULT_START_ELEMENT_NAME_STATE;
+  env->element_content_enum_state = DEFAULT_ELEMENT_CONTENT_STATE;
 
   env->ncname_start_char = NCNAME_START_CHAR10;
   env->ncname_char = NCNAME_CHAR10;

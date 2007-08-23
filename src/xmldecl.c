@@ -35,7 +35,7 @@ xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
     break;
   LINE_ENDINGS
   default:
-    env->state = (env)->start_element_name_state;
+    change_enum_state(env, env->start_element_name_enum_state);
     env->seen_doc_element = 1;
     token_start_position(env);
     next_char(env);
