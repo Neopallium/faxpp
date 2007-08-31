@@ -29,18 +29,19 @@ PREFIX(start_element_name_state)(FAXPP_TokenizerEnv *env)
       env->state = PREFIX(start_element_ws_state);
       token_end_position(env);
       report_token(START_ELEMENT_NAME_TOKEN, env);
+ next_char_no_error:
       next_char(env);
       return NO_ERROR;
     case '/':
       env->state = self_closing_element_state;
       token_end_position(env);
       report_token(START_ELEMENT_NAME_TOKEN, env);
-      next_char(env);
-      return NO_ERROR;
+      goto next_char_no_error;
     case '>':
       env->state = start_element_end_state;
       token_end_position(env);
       report_token(START_ELEMENT_NAME_TOKEN, env);
+ next_char_tok_start_no_error:
       next_char(env);
       token_start_position(env);
       return NO_ERROR;
@@ -48,9 +49,7 @@ PREFIX(start_element_name_state)(FAXPP_TokenizerEnv *env)
       env->state = PREFIX(start_element_name_seen_colon_state);
       token_end_position(env);
       report_token(START_ELEMENT_PREFIX_TOKEN, env);
-      next_char(env);
-      token_start_position(env);
-      return NO_ERROR;
+      goto next_char_tok_start_no_error;
     default:
       DEFAULT_CASE;
       break;
@@ -97,14 +96,14 @@ PREFIX(start_element_name_seen_colon_state2)(FAXPP_TokenizerEnv *env)
       env->state = PREFIX(start_element_ws_state);
       token_end_position(env);
       report_token(START_ELEMENT_NAME_TOKEN, env);
+ next_char_no_error:
       next_char(env);
       return NO_ERROR;
     case '/':
       env->state = self_closing_element_state;
       token_end_position(env);
       report_token(START_ELEMENT_NAME_TOKEN, env);
-      next_char(env);
-      return NO_ERROR;
+      goto next_char_no_error;
     case '>':
       env->state = start_element_end_state;
       token_end_position(env);
@@ -164,7 +163,7 @@ PREFIX(start_element_ws_state)(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   case '>':
-    env->state = env->element_content_state;
+    env->state = PREFIX(element_content_state);
     env->nesting_level += 1;
     report_empty_token(START_ELEMENT_END_TOKEN, env);
     next_char(env);
@@ -186,6 +185,90 @@ PREFIX(start_element_ws_state)(FAXPP_TokenizerEnv *env)
     break;
   }
   return NO_ERROR;  
+}
+
+FAXPP_Error
+PREFIX(element_content_state)(FAXPP_TokenizerEnv *env)
+{
+  while(1) {
+    if(env->position >= env->buffer_end) {
+      if(env->token.value.ptr) {
+        token_end_position(env);
+        if(env->token.value.len != 0) {
+          report_token(CHARACTERS_TOKEN, env);
+          return NO_ERROR;
+        }
+      }
+      token_start_position(env);
+      return PREMATURE_END_OF_BUFFER;
+    }
+
+    READ_CHAR;
+
+    switch(env->current_char) {
+    case '<':
+      env->state = PREFIX(element_content_markup_state);
+      token_end_position(env);
+      report_token(CHARACTERS_TOKEN, env);
+ next_char_no_error:
+      next_char(env);
+      return NO_ERROR;
+    case '&':
+      store_state(env);
+      env->state = reference_state;
+      token_end_position(env);
+      report_token(CHARACTERS_TOKEN, env);
+      next_char(env);
+      token_start_position(env);
+      return NO_ERROR;
+    case ']':
+      env->state = PREFIX(element_content_rsquare_state1);
+      goto next_char_no_error;
+    LINE_ENDINGS
+      break;
+
+    // 0x0A, 0x0D, 0x26, 0x3C, 0x5D - Done above
+
+    case 0x7F:
+      if(env->non_restricted_char == NON_RESTRICTED_CHAR11) {
+    case 0x00: case 0x01: case 0x02: case 0x03: case 0x04: case 0x05: case 0x06: case 0x07:
+    case 0x08:                       case 0x0B: case 0x0C:            case 0x0E: case 0x0F:
+    case 0x10: case 0x11: case 0x12: case 0x13: case 0x14: case 0x15: case 0x16: case 0x17:
+    case 0x18: case 0x19: case 0x1A: case 0x1B: case 0x1C: case 0x1D: case 0x1E: case 0x1F:
+ restricted_char_error:
+        next_char(env);
+        return RESTRICTED_CHAR;
+      }
+      break;
+    case 0x09:
+    case 0x20: case 0x21: case 0x22: case 0x23: case 0x24: case 0x25:            case 0x27:
+    case 0x28: case 0x29: case 0x2A: case 0x2B: case 0x2C: case 0x2D: case 0x2E: case 0x2F:
+    case 0x30: case 0x31: case 0x32: case 0x33: case 0x34: case 0x35: case 0x36: case 0x37:
+    case 0x38: case 0x39: case 0x3A: case 0x3B:            case 0x3D: case 0x3E: case 0x3F:
+    case 0x40: case 0x41: case 0x42: case 0x43: case 0x44: case 0x45: case 0x46: case 0x47:
+    case 0x48: case 0x49: case 0x4A: case 0x4B: case 0x4C: case 0x4D: case 0x4E: case 0x4F:
+    case 0x50: case 0x51: case 0x52: case 0x53: case 0x54: case 0x55: case 0x56: case 0x57:
+    case 0x58: case 0x59: case 0x5A: case 0x5B: case 0x5C:            case 0x5E: case 0x5F:
+    case 0x60: case 0x61: case 0x62: case 0x63: case 0x64: case 0x65: case 0x66: case 0x67:
+    case 0x68: case 0x69: case 0x6A: case 0x6B: case 0x6C: case 0x6D: case 0x6E: case 0x6F:
+    case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
+    case 0x78: case 0x79: case 0x7A: case 0x7B: case 0x7C: case 0x7D: case 0x7E:
+      // The char is a valid one byte char
+      break;
+
+    default:
+      DEFAULT_CASE;
+
+      if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0)
+        goto restricted_char_error;
+      break;
+    }
+
+    next_char(env);
+  }
+
+  // Never happens
+  return NO_ERROR;
 }
 
 FAXPP_Error
@@ -215,7 +298,7 @@ PREFIX(element_content_markup_state)(FAXPP_TokenizerEnv *env)
   default:
     DEFAULT_CASE;
 
-    env->state = (env)->start_element_name_state;
+    env->state = PREFIX(start_element_name_state);
     token_start_position(env);
     next_char(env);
     if((FAXPP_char_flags(env->current_char) & env->ncname_start_char) == 0)
@@ -324,6 +407,7 @@ PREFIX(end_element_name_state2)(FAXPP_TokenizerEnv *env)
       base_state(env);
       token_end_position(env);
       report_token(END_ELEMENT_NAME_TOKEN, env);
+ next_char_tok_start_no_error:
       next_char(env);
       token_start_position(env);
       return NO_ERROR;
@@ -331,20 +415,16 @@ PREFIX(end_element_name_state2)(FAXPP_TokenizerEnv *env)
       env->state = PREFIX(end_element_name_seen_colon_state);
       token_end_position(env);
       report_token(END_ELEMENT_PREFIX_TOKEN, env);
-      next_char(env);
-      token_start_position(env);
-      return NO_ERROR;
+      goto next_char_tok_start_no_error;
     default:
       DEFAULT_CASE;
       break;
     }
 
+    next_char(env);
     if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0) {
-      next_char(env);
       return INVALID_CHAR_IN_ELEMENT_NAME;
     }
-
-    next_char(env);
   }
 
   // Never happens
