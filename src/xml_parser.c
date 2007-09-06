@@ -35,6 +35,7 @@
 FAXPP_Error init_tokenizer_internal(FAXPP_TokenizerEnv *env, FAXPP_EncodeFunction encode);
 void free_tokenizer_internal(FAXPP_TokenizerEnv *env);
 
+static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env);
 static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env);
 static FAXPP_Error nc_unsupported_encoding_next_event(FAXPP_ParserEnv *env);
 
@@ -75,7 +76,7 @@ FAXPP_Parser *FAXPP_create_parser(FAXPP_ParseMode mode, FAXPP_EncodeFunction enc
     break;
   }
 
-  env->next_event = env->main_next_event;
+  env->next_event = nc_start_document_next_event;
 
   return env;
 }
@@ -165,7 +166,9 @@ static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env, int allocate_buffer)
     env->read_buffer_length = READ_BUFFER_SIZE;
   }
 
-  env->next_event = env->main_next_event;
+  env->buffered_token = 0;
+
+  env->next_event = nc_start_document_next_event;
 
   return NO_ERROR;
 }
@@ -411,10 +414,15 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
 
 #define p_next_token(err, env) \
 { \
-  (env)->tenv.result_token.type = NO_TOKEN; \
-  while((env)->tenv.result_token.type == NO_TOKEN) { \
-    (err) = (env)->tenv.state(&(env)->tenv); \
-    p_check_err((err), (env)); \
+  if((env)->buffered_token) { \
+    (env)->buffered_token = 0; \
+  } \
+  else { \
+    (env)->tenv.result_token.type = NO_TOKEN; \
+    while((env)->tenv.result_token.type == NO_TOKEN) { \
+      (err) = (env)->tenv.state(&(env)->tenv); \
+      p_check_err((err), (env)); \
+    } \
   } \
 /*   p_print_token(env); */ \
 }
@@ -493,6 +501,20 @@ FAXPP_Error p_normalize_attr_value(FAXPP_Text *text, FAXPP_Buffer *buffer, const
     (env)->event.line = (env)->tenv.result_token.line; \
     (env)->event.column = (env)->tenv.result_token.column; \
   } \
+}
+
+#define p_copy_text_from_char32_str(text, env, charStr) \
+{ \
+  (text)->ptr = (env)->event_buffer.cursor; \
+  FAXPP_Error err = 0; \
+  const Char32 *chars = (charStr); \
+  for(; err == 0 && *chars; ++chars) { \
+    err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->tenv.encode, *chars); \
+  } \
+  if((env)->null_terminate && err == 0) \
+    err = FAXPP_buffer_append_ch(&(env)->event_buffer, (env)->tenv.encode, 0); \
+  if(err != 0) return err; \
+  (text)->len = (env)->event_buffer.cursor - (text)->ptr; \
 }
 
 static FAXPP_Error p_next_attr(FAXPP_ParserEnv *env)
@@ -682,22 +704,18 @@ static int p_case_insensitive_equals(const char *str, FAXPP_EncodeFunction encod
   return text_ptr == text_end;
 }
 
-static FAXPP_Error nc_unsupported_encoding_next_event(FAXPP_ParserEnv *env)
-{
-  return UNSUPPORTED_ENCODING;
-}
-
-static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
+static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
 {
   FAXPP_Error err = 0;
 
-  p_reset_event(env);
+  env->event.type = NO_EVENT;
 
   while(1) {
     p_next_token(err, env);
 
     switch(env->tenv.result_token.type) {
     case XML_DECL_VERSION_TOKEN:
+      p_reset_event(env);
       p_copy_text_from_token(&env->event.version, env, /*useTokenBuffer*/0);
       p_set_location_from_token(env);
       break;
@@ -757,6 +775,44 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       }
     
       return NO_ERROR;
+    default:
+      env->buffered_token = 1;
+      p_reset_event(env);
+      env->event.type = START_DOCUMENT_EVENT;
+      env->next_event = env->main_next_event;
+      return NO_ERROR;
+    }
+  }
+
+  // Never happens
+  return NO_ERROR;
+
+ error:
+  set_err_info_from_tokenizer(env);
+  return err;
+}
+
+static FAXPP_Error nc_unsupported_encoding_next_event(FAXPP_ParserEnv *env)
+{
+  return UNSUPPORTED_ENCODING;
+}
+
+static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
+{
+  FAXPP_Error err = 0;
+
+  // TBD - This will break error recovery - jpcs
+  p_reset_event(env);
+
+  while(1) {
+    p_next_token(err, env);
+
+    switch(env->tenv.result_token.type) {
+    case XML_DECL_VERSION_TOKEN:
+    case XML_DECL_ENCODING_TOKEN:
+    case XML_DECL_STANDALONE_TOKEN:
+    case XML_DECL_END_TOKEN:
+      break;
     case START_ELEMENT_PREFIX_TOKEN:
       p_copy_text_from_token(&env->event.prefix, env, /*useTokenBuffer*/0);
       p_set_location_from_token(env);
@@ -1139,6 +1195,20 @@ static Char32 p_hex_char_ref_value(const FAXPP_Text *text, FAXPP_ParserEnv *env)
   return result;
 }
 
+// http://www.w3.org/XML/1998/namespace
+static const Char32 xml_uri[] =
+{
+  'h', 't', 't', 'p', ':', '/', '/', 'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/', 'X', 'M', 'L', '/',
+  '1', '9', '9', '8', '/', 'n', 'a', 'm', 'e', 's', 'p', 'a', 'c', 'e', 0
+};
+
+// http://www.w3.org/2000/xmlns/
+static const Char32 xmlns_uri[] =
+{
+  'h', 't', 't', 'p', ':', '/', '/', 'w', 'w', 'w', '.', 'w', '3', '.', 'o', 'r', 'g', '/', '2', '0', '0', '0',
+  '/', 'x', 'm', 'l', 'n', 's', '/', 0
+};
+
 static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
 {
   int i, j;
@@ -1256,7 +1326,13 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
     for(i = 0; i < env->event.attr_count; ++i) {
       attr = &env->event.attrs[i];
       /* Resolve the attributes' URIs */
-      if(!attr->xmlns_attr && !attr->xml_attr && attr->prefix.len != 0) {
+      if(attr->xmlns_attr) {
+        p_copy_text_from_char32_str(&attr->uri, env, xmlns_uri);
+      }
+      else if(attr->xml_attr) {
+        p_copy_text_from_char32_str(&attr->uri, env, xml_uri);
+      }
+      else if(attr->prefix.len != 0) {
         err = p_find_ns_info(env, &attr->prefix, &attr->uri);
         if(err != 0) {
           set_err_info_from_attr(env, attr);
