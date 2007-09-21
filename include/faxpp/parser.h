@@ -189,6 +189,11 @@ FAXPP_DecodeFunction FAXPP_get_decode(const FAXPP_Parser *parser);
  * Sets the FAXPP_DecodeFunction that the parser uses to decode the XML document.
  * This will typically be called when an encoding declaration is read, to switch to
  * the correct decode function.
+ *
+ * This method can also be called after initialising the parser, to specify that
+ * the encoding for the document is known, and all other encoding hints should be
+ * ignored. Note that it is valid to call this method and proceed with a document
+ * parse when parser initialisation fails with the UNSUPPORTED_ENCODING error.
  * 
  * \param parser
  * \param decode The decode function

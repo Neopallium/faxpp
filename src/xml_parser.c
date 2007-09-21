@@ -153,6 +153,7 @@ FAXPP_DecodeFunction FAXPP_get_decode(const FAXPP_Parser *parser)
 void FAXPP_set_decode(FAXPP_Parser *parser, FAXPP_DecodeFunction decode)
 {
   FAXPP_set_tokenizer_decode(&parser->tenv, decode);
+  parser->user_provided_decode = 1;
   if(parser->next_event == nc_unsupported_encoding_next_event) {
     parser->next_event = parser->main_next_event;
   }
@@ -167,6 +168,7 @@ static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env, int allocate_buffer)
   }
 
   env->buffered_token = 0;
+  env->user_provided_decode = 0;
 
   env->next_event = nc_start_document_next_event;
 
@@ -673,7 +675,7 @@ static void set_err_info_from_attr(FAXPP_ParserEnv *env, const FAXPP_Attribute *
   env->err_column = attr->column;
 }
 
-// Needs upper case strings passed to it
+// "str" should be upper case
 static int p_case_insensitive_equals(const char *str, FAXPP_EncodeFunction encode, const FAXPP_Text *text)
 {
   // No encoding represents a character with as many as 10 bytes
@@ -730,7 +732,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
       env->event.type = START_DOCUMENT_EVENT;
 
       // Check the encoding string against our internally supported encodings
-      if(env->event.encoding.ptr == 0) {
+      if(env->user_provided_decode || env->event.encoding.ptr == 0) {
           env->next_event = env->main_next_event;
       }
       else if(p_case_insensitive_equals("UTF-8", env->tenv.encode, &env->event.encoding)) {

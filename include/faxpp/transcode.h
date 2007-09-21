@@ -79,6 +79,22 @@ const char *FAXPP_decode_to_string(FAXPP_DecodeFunction t);
 const char *FAXPP_encode_to_string(FAXPP_EncodeFunction t);
 
 /**
+ * Returns a FAXPP_DecodeFunction for the given encoding string, or 0
+ * if one is not supported internally.
+ * \param encodingName The encoding to look up
+ * \return a FAXPP_DecodeFunction
+ */
+FAXPP_DecodeFunction FAXPP_string_to_decode(const char *encodingName);
+
+/**
+ * Returns a FAXPP_EncodeFunction for the given encoding string, or 0
+ * if one is not supported internally.
+ * \param encodingName The encoding to look up
+ * \return a FAXPP_EncodeFunction
+ */
+FAXPP_EncodeFunction FAXPP_string_to_encode(const char *encodingName);
+
+/**
  * Decodes a single UTF-8 character from the buffer into it's unicode codepoint.
  *
  * \param buffer The buffer to decode from

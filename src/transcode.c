@@ -16,7 +16,7 @@
 
 #include <faxpp/transcode.h>
 
-const char *decode_to_string(FAXPP_DecodeFunction t)
+const char *FAXPP_decode_to_string(FAXPP_DecodeFunction t)
 {
   if(t == FAXPP_utf8_decode)
     return "UTF-8";
@@ -37,13 +37,81 @@ const char *decode_to_string(FAXPP_DecodeFunction t)
   return "Unknown";
 }
 
-const char *encode_to_string(FAXPP_EncodeFunction t)
+const char *FAXPP_encode_to_string(FAXPP_EncodeFunction t)
 {
   if(t == FAXPP_utf8_encode)
     return "UTF-8";
   else if (t == FAXPP_utf16_native_encode)
     return "UTF-16";
   return "Unknown";
+}
+
+// "str" should be upper case
+static int t_case_insensitive_equals(const char *str, const char *text)
+{
+  while(*str) {
+    if(*str != *text) {
+      // Try the lower case letter as well
+      return *str >= 'A' && *str <= 'Z' && ((*str) - 'A' + 'a') == *text;
+    }
+    ++str;
+    ++text;
+  }
+
+  return *text == 0;
+}
+
+FAXPP_DecodeFunction FAXPP_string_to_decode(const char *encodingName)
+{
+  if(t_case_insensitive_equals("UTF-8", encodingName)) {
+    return FAXPP_utf8_decode;
+  }
+  else if(t_case_insensitive_equals("UTF-16", encodingName)) {
+    return FAXPP_utf16_native_decode;
+  }
+  else if(t_case_insensitive_equals("UTF-16LE", encodingName)) {
+#ifdef WORDS_BIGENDIAN
+    return FAXPP_utf16_le_decode;
+#else
+    return FAXPP_utf16_native_decode;
+#endif
+  }
+  else if(t_case_insensitive_equals("UTF-16BE", encodingName)) {
+#ifdef WORDS_BIGENDIAN
+    return FAXPP_utf16_native_decode;
+#else
+    return FAXPP_utf16_be_decode;
+#endif
+  }
+  else if(t_case_insensitive_equals("ISO-10646-UCS-4", encodingName)) {
+    return FAXPP_ucs4_native_decode;
+  }
+  else if(t_case_insensitive_equals("ISO-8859-1", encodingName)) {
+    return FAXPP_iso_8859_1_decode;
+  }
+
+  return 0;
+}
+
+FAXPP_EncodeFunction FAXPP_string_to_encode(const char *encodingName)
+{
+  if(t_case_insensitive_equals("UTF-8", encodingName)) {
+    return FAXPP_utf8_encode;
+  }
+  else if(t_case_insensitive_equals("UTF-16", encodingName)) {
+    return FAXPP_utf16_native_encode;
+  }
+#ifdef WORDS_BIGENDIAN
+  else if(t_case_insensitive_equals("UTF-16BE", encodingName)) {
+    return FAXPP_utf16_native_encode;
+  }
+#else
+  else if(t_case_insensitive_equals("UTF-16LE", encodingName)) {
+    return FAXPP_utf16_native_encode;
+  }
+#endif
+
+  return 0;
 }
 
 // 9 is the code for an illegal first byte
