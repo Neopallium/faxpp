@@ -810,6 +810,13 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     p_next_token(err, env);
 
     switch(env->tenv.result_token.type) {
+    case DOCTYPE_PREFIX_TOKEN:
+    case DOCTYPE_NAME_TOKEN:
+    case DOCTYPE_END_TOKEN:
+    case SYSTEM_LITERAL_TOKEN:
+      // TBD - jpcs
+      break;
+
     case XML_DECL_VERSION_TOKEN:
     case XML_DECL_ENCODING_TOKEN:
     case XML_DECL_STANDALONE_TOKEN:

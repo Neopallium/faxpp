@@ -319,12 +319,12 @@ main(int argc, char **argv)
         calculateBase(base_buffer, &attr->value, file_buffer);
 
         result = run_test_case(file_buffer, &errLine);
-        if(result == DOCTYPE_NOT_IMPLEMENTED) {
-          printf("^");
-          fflush(stdout);
-          ++test_skips;
-          break;
-        }
+/*         if(result == DOCTYPE_NOT_IMPLEMENTED) { */
+/*           printf("^"); */
+/*           fflush(stdout); */
+/*           ++test_skips; */
+/*           break; */
+/*         } */
 
         // @TYPE is not-wf, error, invalid, or valid
         attr = find_attribute(event, "TYPE");

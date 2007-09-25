@@ -388,6 +388,7 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, uns
 
   env->nesting_level = 0;
   env->do_encode = 1;
+  env->seen_doctype = 0;
   env->seen_doc_element = 0;
   env->buffer_done = done;
 

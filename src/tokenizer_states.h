@@ -240,6 +240,33 @@ FAXPP_Error xml_decl_standalone_value_apos_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error xml_decl_question_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error xml_decl_seen_question_state(FAXPP_TokenizerEnv *env);
 
+FAXPP_Error doctype_or_comment_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_initial_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_initial_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_initial_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_initial_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_initial_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_initial_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_after_name_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_internal_subset_start_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_internal_subset_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_end_state(FAXPP_TokenizerEnv *env);
+
+FAXPP_Error system_id_initial_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error system_id_initial_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error system_id_initial_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error system_id_initial_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error system_id_initial_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error system_id_ws_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error system_literal_start_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error system_literal_apos_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error system_literal_quot_state(FAXPP_TokenizerEnv *env);
+
+
 /*********************
  *
  *  Tokenizer Helper Functions

@@ -82,6 +82,17 @@ FAXPP_token_to_string(const FAXPP_TokenType type)
     return "LT_ENTITY_REFERENCE_TOKEN";
   case QUOT_ENTITY_REFERENCE_TOKEN:
     return "QUOT_ENTITY_REFERENCE_TOKEN";
+
+  case DOCTYPE_PREFIX_TOKEN:
+    return "DOCTYPE_PREFIX_TOKEN";
+  case DOCTYPE_NAME_TOKEN:
+    return "DOCTYPE_NAME_TOKEN";
+  case DOCTYPE_END_TOKEN:
+    return "DOCTYPE_END_TOKEN";
+
+  case SYSTEM_LITERAL_TOKEN:
+    return "SYSTEM_LITERAL_TOKEN";
+
   case NO_TOKEN:
     break;
   }

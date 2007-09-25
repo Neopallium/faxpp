@@ -29,7 +29,7 @@ xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     break;
   case '!':
-    env->state = comment_start_state1;
+    env->state = doctype_or_comment_state;
     next_char(env);
     token_start_position(env);
     break;

@@ -27,11 +27,6 @@ comment_start_state1(FAXPP_TokenizerEnv *env)
     env->state = comment_start_state2;
     next_char(env);
     break;
-  case 'D':
-    env->state = comment_content_state;
-    token_start_position(env);
-    next_char(env);
-    return DOCTYPE_NOT_IMPLEMENTED;
   LINE_ENDINGS
   default:
     env->state = comment_content_state;

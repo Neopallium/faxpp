@@ -43,6 +43,7 @@ struct FAXPP_TokenizerEnv_s {
 
   unsigned int nesting_level;
   unsigned int do_encode:1;
+  unsigned int seen_doctype:1;
   unsigned int seen_doc_element:1;
   unsigned int buffer_done:1;
   unsigned int normalize_attrs:1;

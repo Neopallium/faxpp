@@ -63,7 +63,7 @@ libfaxpp_la_LIBADD =
 am_libfaxpp_la_OBJECTS = buffer.lo cdata.lo char_classes.lo comment.lo \
 	element.lo error.lo event.lo pi.lo reference.lo token.lo \
 	tokenizer_states.lo transcode.lo xmldecl.lo xml_parser.lo \
-	xml_tokenizer.lo
+	xml_tokenizer.lo doctype.lo
 libfaxpp_la_OBJECTS = $(am_libfaxpp_la_OBJECTS)
 libfaxpp_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -251,7 +251,8 @@ src/xmldecl.c \
 src/xml_parser.c \
 src/xml_parser.h \
 src/xml_tokenizer.c \
-src/xml_tokenizer.h
+src/xml_tokenizer.h \
+src/doctype.c
 
 tokenizer_example_SOURCES = examples/tokenizer_example.c
 tokenizer_example_LDADD = libfaxpp.la
@@ -377,6 +378,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/cdata.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/char_classes.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/comment.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/doctype.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/element.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/error.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Plo@am__quote@
@@ -517,6 +519,13 @@ xml_tokenizer.lo: src/xml_tokenizer.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/xml_tokenizer.c' object='xml_tokenizer.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o xml_tokenizer.lo `test -f 'src/xml_tokenizer.c' || echo '$(srcdir)/'`src/xml_tokenizer.c
+
+doctype.lo: src/doctype.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT doctype.lo -MD -MP -MF $(DEPDIR)/doctype.Tpo -c -o doctype.lo `test -f 'src/doctype.c' || echo '$(srcdir)/'`src/doctype.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/doctype.Tpo $(DEPDIR)/doctype.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/doctype.c' object='doctype.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o doctype.lo `test -f 'src/doctype.c' || echo '$(srcdir)/'`src/doctype.c
 
 parser_example.o: examples/parser_example.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT parser_example.o -MD -MP -MF $(DEPDIR)/parser_example.Tpo -c -o parser_example.o `test -f 'examples/parser_example.c' || echo '$(srcdir)/'`examples/parser_example.c

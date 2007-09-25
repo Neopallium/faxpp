@@ -385,6 +385,56 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
   else if(state == xml_decl_question_state)
     return "xml_decl_question_state";
 
+  else if(state == doctype_or_comment_state)
+    return "doctype_or_comment_state";
+  else if(state == doctype_initial_state1)
+    return "doctype_initial_state1";
+  else if(state == doctype_initial_state2)
+    return "doctype_initial_state2";
+  else if(state == doctype_initial_state3)
+    return "doctype_initial_state3";
+  else if(state == doctype_initial_state4)
+    return "doctype_initial_state4";
+  else if(state == doctype_initial_state5)
+    return "doctype_initial_state5";
+  else if(state == doctype_initial_state6)
+    return "doctype_initial_state6";
+  else if(state == doctype_name_state1)
+    return "doctype_name_state1";
+  else if(state == doctype_name_state2)
+    return "doctype_name_state2";
+  else if(state == doctype_name_seen_colon_state1)
+    return "doctype_name_seen_colon_state1";
+  else if(state == doctype_name_seen_colon_state2)
+    return "doctype_name_seen_colon_state2";
+  else if(state == doctype_after_name_state)
+    return "doctype_after_name_state";
+  else if(state == doctype_internal_subset_start_state)
+    return "doctype_internal_subset_start_state";
+  else if(state == doctype_internal_subset_state)
+    return "doctype_internal_subset_state";
+  else if(state == doctype_end_state)
+    return "doctype_end_state";
+
+  else if(state == system_id_initial_state1)
+    return "system_id_initial_state1";
+  else if(state == system_id_initial_state2)
+    return "system_id_initial_state2";
+  else if(state == system_id_initial_state3)
+    return "system_id_initial_state3";
+  else if(state == system_id_initial_state4)
+    return "system_id_initial_state4";
+  else if(state == system_id_initial_state5)
+    return "system_id_initial_state5";
+  else if(state == system_id_ws_state)
+    return "system_id_ws_state";
+  else if(state == system_literal_start_state)
+    return "system_literal_start_state";
+  else if(state == system_literal_apos_state)
+    return "system_literal_apos_state";
+  else if(state == system_literal_quot_state)
+    return "system_literal_quot_state";
+
   return "unknown";
 }
 #endif
@@ -533,7 +583,9 @@ initial_markup_state(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     break;
   case '!':
-    env->state = comment_start_state1;
+    if(env->seen_doctype)
+      env->state = comment_start_state1;
+    else env->state = doctype_or_comment_state;
     next_char(env);
     token_start_position(env);
     break;
