@@ -91,6 +91,14 @@ FAXPP_err_to_string(FAXPP_Error err)
     return "INVALID_SYSTEM_ID";
   case EXPECTING_SYSTEM_LITERAL:
     return "EXPECTING_SYSTEM_LITERAL";
+  case INVALID_PUBLIC_ID:
+    return "INVALID_PUBLIC_ID";
+  case INVALID_CHAR_IN_PUBID_LITERAL:
+    return "INVALID_CHAR_IN_PUBID_LITERAL";
+  case EXPECTING_PUBID_LITERAL:
+    return "EXPECTING_PUBID_LITERAL";
+  case INVALID_DTD_DECL:
+    return "INVALID_DTD_DECL";
   case NO_ERROR:
     break;
   }

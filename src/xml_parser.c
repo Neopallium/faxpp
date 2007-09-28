@@ -814,6 +814,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case DOCTYPE_NAME_TOKEN:
     case DOCTYPE_END_TOKEN:
     case SYSTEM_LITERAL_TOKEN:
+    case PUBID_LITERAL_TOKEN:
       // TBD - jpcs
       break;
 

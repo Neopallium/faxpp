@@ -411,8 +411,10 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "doctype_after_name_state";
   else if(state == doctype_internal_subset_start_state)
     return "doctype_internal_subset_start_state";
-  else if(state == doctype_internal_subset_state)
-    return "doctype_internal_subset_state";
+  else if(state == internal_subset_state)
+    return "internal_subset_state";
+  else if(state == internal_subset_markup_state)
+    return "internal_subset_markup_state";
   else if(state == doctype_end_state)
     return "doctype_end_state";
 
@@ -434,6 +436,25 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "system_literal_apos_state";
   else if(state == system_literal_quot_state)
     return "system_literal_quot_state";
+
+  else if(state == public_id_initial_state1)
+    return "public_id_initial_state1";
+  else if(state == public_id_initial_state2)
+    return "public_id_initial_state2";
+  else if(state == public_id_initial_state3)
+    return "public_id_initial_state3";
+  else if(state == public_id_initial_state4)
+    return "public_id_initial_state4";
+  else if(state == public_id_initial_state5)
+    return "public_id_initial_state5";
+  else if(state == public_id_ws_state)
+    return "public_id_ws_state";
+  else if(state == pubid_literal_start_state)
+    return "pubid_literal_start_state";
+  else if(state == pubid_literal_apos_state)
+    return "pubid_literal_apos_state";
+  else if(state == pubid_literal_quot_state)
+    return "pubid_literal_quot_state";
 
   return "unknown";
 }

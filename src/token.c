@@ -92,6 +92,8 @@ FAXPP_token_to_string(const FAXPP_TokenType type)
 
   case SYSTEM_LITERAL_TOKEN:
     return "SYSTEM_LITERAL_TOKEN";
+  case PUBID_LITERAL_TOKEN:
+    return "PUBID_LITERAL_TOKEN";
 
   case NO_TOKEN:
     break;
