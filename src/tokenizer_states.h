@@ -167,6 +167,7 @@ FAXPP_Error quot_entity_reference_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error quot_entity_reference_state3(FAXPP_TokenizerEnv *env);
 FAXPP_Error quot_entity_reference_state4(FAXPP_TokenizerEnv *env);
 FAXPP_Error entity_reference_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error parameter_entity_reference_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error char_reference_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error dec_char_reference_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error hex_char_reference_state1(FAXPP_TokenizerEnv *env);
@@ -396,7 +397,8 @@ const char *state_to_string(FAXPP_StateFunction state);
 #define LINE_ENDINGS \
   case '\r': { \
     Char32 next_char; \
-    if((env)->decode((env)->position + (env)->char_len, (env)->buffer_end, &next_char) \
+    if((env)->position + (env)->char_len >= (env)->buffer_end || \
+       (env)->decode((env)->position + (env)->char_len, (env)->buffer_end, &next_char) \
        == TRANSCODE_PREMATURE_END_OF_BUFFER) { \
       if(!(env)->buffer_done) return PREMATURE_END_OF_BUFFER; \
       goto LINE_ENDINGS_INC; \

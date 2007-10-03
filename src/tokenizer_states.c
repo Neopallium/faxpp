@@ -246,6 +246,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "quot_entity_reference_state4";
   else if(state == entity_reference_state)
     return "entity_reference_state";
+  else if(state == parameter_entity_reference_state)
+    return "parameter_entity_reference_state";
   else if(state == char_reference_state)
     return "char_reference_state";
   else if(state == dec_char_reference_state)

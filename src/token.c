@@ -52,6 +52,8 @@ FAXPP_token_to_string(const FAXPP_TokenType type)
     return "ATTRIBUTE_PREFIX_TOKEN";
   case ENTITY_REFERENCE_TOKEN:
     return "ENTITY_REFERENCE_TOKEN";
+  case PE_REFERENCE_TOKEN:
+    return "PE_REFERENCE_TOKEN";
   case DEC_CHAR_REFERENCE_TOKEN:
     return "DEC_CHAR_REFERENCE_TOKEN";
   case HEX_CHAR_REFERENCE_TOKEN:

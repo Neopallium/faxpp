@@ -240,7 +240,7 @@ system_id_ws_state(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   default:
-    next_char(env);
+    env->state = system_literal_start_state;
     return EXPECTING_WHITESPACE;
   }
   return NO_ERROR;
@@ -343,7 +343,7 @@ public_id_ws_state(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   default:
-    next_char(env);
+    env->state = pubid_literal_start_state;
     return EXPECTING_WHITESPACE;
   }
   return NO_ERROR;
@@ -493,6 +493,12 @@ internal_subset_state(FAXPP_TokenizerEnv *env)
     break;
   WHITESPACE:
     break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_state;
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
   case '<':
     env->state = internal_subset_markup_state;
     break;

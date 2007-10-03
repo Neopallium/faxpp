@@ -332,6 +332,33 @@ entity_reference_state(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Error
+parameter_entity_reference_state(FAXPP_TokenizerEnv *env)
+{
+  while(1) {
+    read_char(env);
+
+    switch(env->current_char) {
+    LINE_ENDINGS
+      break;
+    case ';':
+      retrieve_state(env);
+      token_end_position(env);
+      report_token(PE_REFERENCE_TOKEN, env);
+      next_char(env);
+      token_start_position(env);
+      return NO_ERROR;
+    }
+
+    next_char(env);
+    if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0)
+      return INVALID_CHAR_IN_ENTITY_REFERENCE;
+  }
+
+  // Never happens
+  return NO_ERROR;
+}
+
+FAXPP_Error
 char_reference_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
