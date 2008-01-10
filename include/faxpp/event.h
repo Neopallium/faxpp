@@ -44,6 +44,9 @@ typedef struct FAXPP_AttrValue_s {
   FAXPP_Text name;
   FAXPP_Text value; ///< The value of the item in the attribute's value. \details Present for all possible event types
 
+  unsigned int line;   ///< The line the attribute value started on
+  unsigned int column; ///< The column the attribute value started on
+
   struct FAXPP_AttrValue_s *next; ///< The next item in the attribute's value, or 0
 
   /// Private - \b Do \b not \b use

@@ -584,6 +584,8 @@ static FAXPP_Error p_set_attr_value(FAXPP_Attribute *attr, FAXPP_ParserEnv *env,
 
   p_copy_text_from_token(&newatval->value, env, /*useTokenBuffer*/0);
   newatval->type = type;
+  newatval->line = env->tenv.result_token.line;
+  newatval->column = env->tenv.result_token.column;
 
   return NO_ERROR;
 }
@@ -617,6 +619,8 @@ static FAXPP_Error p_set_attr_value_name(FAXPP_Attribute *attr, FAXPP_ParserEnv 
 
   p_copy_text_from_token(&newatval->name, env, /*useTokenBuffer*/0);
   newatval->type = type;
+  newatval->line = env->tenv.result_token.line;
+  newatval->column = env->tenv.result_token.column;
 
   if(ch != 0) {
     p_set_text_to_char(&newatval->value, env, ch);
