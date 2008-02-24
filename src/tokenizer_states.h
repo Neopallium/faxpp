@@ -256,6 +256,7 @@ FAXPP_Error doctype_after_name_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error doctype_internal_subset_start_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_markup_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error internal_subset_decl_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error doctype_end_state(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error system_id_initial_state1(FAXPP_TokenizerEnv *env);
@@ -277,6 +278,30 @@ FAXPP_Error public_id_ws_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error pubid_literal_start_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error pubid_literal_apos_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error pubid_literal_quot_state(FAXPP_TokenizerEnv *env);
+
+FAXPP_Error elementdecl_initial_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_initial_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_initial_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_initial_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_initial_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_initial_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_content_state(FAXPP_TokenizerEnv *env);
+
+FAXPP_Error attlistdecl_initial_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_initial_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_initial_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_initial_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_initial_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_initial_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_content_state(FAXPP_TokenizerEnv *env);
 
 
 /*********************

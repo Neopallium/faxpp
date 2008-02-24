@@ -417,6 +417,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "internal_subset_state";
   else if(state == internal_subset_markup_state)
     return "internal_subset_markup_state";
+  else if(state == internal_subset_decl_state)
+    return "internal_subset_decl_state";
   else if(state == doctype_end_state)
     return "doctype_end_state";
 
@@ -457,6 +459,56 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "pubid_literal_apos_state";
   else if(state == pubid_literal_quot_state)
     return "pubid_literal_quot_state";
+
+  else if(state == elementdecl_initial_state1)
+    return "elementdecl_initial_state1";
+  else if(state == elementdecl_initial_state1)
+    return "elementdecl_initial_state1";
+  else if(state == elementdecl_initial_state2)
+    return "elementdecl_initial_state2";
+  else if(state == elementdecl_initial_state3)
+    return "elementdecl_initial_state3";
+  else if(state == elementdecl_initial_state4)
+    return "elementdecl_initial_state4";
+  else if(state == elementdecl_initial_state5)
+    return "elementdecl_initial_state5";
+  else if(state == elementdecl_initial_state6)
+    return "elementdecl_initial_state6";
+  else if(state == elementdecl_name_state1)
+    return "elementdecl_name_state1";
+  else if(state == elementdecl_name_state2)
+    return "elementdecl_name_state2";
+  else if(state == elementdecl_name_seen_colon_state1)
+    return "elementdecl_name_seen_colon_state1";
+  else if(state == elementdecl_name_seen_colon_state2)
+    return "elementdecl_name_seen_colon_state2";
+  else if(state == elementdecl_content_state)
+    return "elementdecl_content_state";
+
+  else if(state == attlistdecl_initial_state1)
+    return "attlistdecl_initial_state1";
+  else if(state == attlistdecl_initial_state1)
+    return "attlistdecl_initial_state1";
+  else if(state == attlistdecl_initial_state2)
+    return "attlistdecl_initial_state2";
+  else if(state == attlistdecl_initial_state3)
+    return "attlistdecl_initial_state3";
+  else if(state == attlistdecl_initial_state4)
+    return "attlistdecl_initial_state4";
+  else if(state == attlistdecl_initial_state5)
+    return "attlistdecl_initial_state5";
+  else if(state == attlistdecl_initial_state6)
+    return "attlistdecl_initial_state6";
+  else if(state == attlistdecl_name_state1)
+    return "attlistdecl_name_state1";
+  else if(state == attlistdecl_name_state2)
+    return "attlistdecl_name_state2";
+  else if(state == attlistdecl_name_seen_colon_state1)
+    return "attlistdecl_name_seen_colon_state1";
+  else if(state == attlistdecl_name_seen_colon_state2)
+    return "attlistdecl_name_seen_colon_state2";
+  else if(state == attlistdecl_content_state)
+    return "attlistdecl_content_state";
 
   return "unknown";
 }

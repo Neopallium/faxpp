@@ -521,17 +521,42 @@ internal_subset_markup_state(FAXPP_TokenizerEnv *env)
     env->state = pi_name_start_state;
     break;
   case '!':
-    env->state = comment_start_state1;
+    env->state = internal_subset_decl_state;
     break;
   LINE_ENDINGS
   default:
-/*     env->state = internal_subset_decl_state; */
     next_char(env);
     return INVALID_DTD_DECL;
   }
 
   next_char(env);
   token_start_position(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+internal_subset_decl_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case '-':
+    env->state = comment_start_state2;
+    break;
+  case 'E':
+    env->state = elementdecl_initial_state1;
+    break;
+  case 'A':
+    env->state = attlistdecl_initial_state1;
+    break;
+  LINE_ENDINGS
+  default:
+    env->state = comment_content_state;
+    token_start_position(env);
+    next_char(env);
+    return INVALID_START_OF_COMMENT;
+  }
+  next_char(env);
   return NO_ERROR;
 }
 
