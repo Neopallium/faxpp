@@ -111,6 +111,11 @@ FAXPP_token_to_string(const FAXPP_TokenType type)
   case ATTLISTDECL_CONTENT_TOKEN:
     return "ATTLISTDECL_CONTENT_TOKEN";
 
+  case NOTATIONDECL_NAME_TOKEN:
+    return "NOTATIONDECL_NAME_TOKEN";
+  case NOTATIONDECL_CONTENT_TOKEN:
+    return "NOTATIONDECL_CONTENT_TOKEN";
+
   case NO_TOKEN:
     break;
   }

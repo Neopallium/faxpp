@@ -826,6 +826,8 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case ATTLISTDECL_PREFIX_TOKEN:
     case ATTLISTDECL_NAME_TOKEN:
     case ATTLISTDECL_CONTENT_TOKEN:
+    case NOTATIONDECL_NAME_TOKEN:
+    case NOTATIONDECL_CONTENT_TOKEN:
       // TBD - jpcs
       break;
 

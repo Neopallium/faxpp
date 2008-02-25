@@ -303,6 +303,17 @@ FAXPP_Error attlistdecl_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error attlistdecl_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error attlistdecl_content_state(FAXPP_TokenizerEnv *env);
 
+FAXPP_Error notationdecl_initial_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_initial_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_initial_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_initial_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_initial_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_initial_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_initial_state7(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_content_state(FAXPP_TokenizerEnv *env);
+
 
 /*********************
  *

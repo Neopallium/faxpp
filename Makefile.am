@@ -34,7 +34,8 @@ src/xml_tokenizer.c \
 src/xml_tokenizer.h \
 src/doctype.c \
 src/elementdecl.c \
-src/attlistdecl.c
+src/attlistdecl.c \
+src/notationdecl.c
 
 tokenizer_example_SOURCES = examples/tokenizer_example.c
 tokenizer_example_LDADD = libfaxpp.la

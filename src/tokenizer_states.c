@@ -510,6 +510,29 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
   else if(state == attlistdecl_content_state)
     return "attlistdecl_content_state";
 
+  else if(state == notationdecl_initial_state1)
+    return "notationdecl_initial_state1";
+  else if(state == notationdecl_initial_state1)
+    return "notationdecl_initial_state1";
+  else if(state == notationdecl_initial_state2)
+    return "notationdecl_initial_state2";
+  else if(state == notationdecl_initial_state3)
+    return "notationdecl_initial_state3";
+  else if(state == notationdecl_initial_state4)
+    return "notationdecl_initial_state4";
+  else if(state == notationdecl_initial_state5)
+    return "notationdecl_initial_state5";
+  else if(state == notationdecl_initial_state6)
+    return "notationdecl_initial_state6";
+  else if(state == notationdecl_initial_state7)
+    return "notationdecl_initial_state7";
+  else if(state == notationdecl_name_state1)
+    return "notationdecl_name_state1";
+  else if(state == notationdecl_name_state2)
+    return "notationdecl_name_state2";
+  else if(state == notationdecl_content_state)
+    return "notationdecl_content_state";
+
   return "unknown";
 }
 #endif

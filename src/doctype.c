@@ -549,6 +549,9 @@ internal_subset_decl_state(FAXPP_TokenizerEnv *env)
   case 'A':
     env->state = attlistdecl_initial_state1;
     break;
+  case 'N':
+    env->state = notationdecl_initial_state1;
+    break;
   LINE_ENDINGS
   default:
     env->state = comment_content_state;
