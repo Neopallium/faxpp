@@ -398,6 +398,9 @@ pubid_literal_apos_state(FAXPP_TokenizerEnv *env)
     case 0x68: case 0x69: case 0x6A: case 0x6B: case 0x6C: case 0x6D: case 0x6E: case 0x6F:
     case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
     case 0x78: case 0x79: case 0x7A:
+    // 0-9
+    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8':
+    case '9': 
     case ' ': case '-': case '(': case ')': case '+': case ',': case '.': case '/': case ':':
     case '=': case '?': case ';': case '!': case '*': case '#': case '@': case '$': case '_':
     case '%':
@@ -439,6 +442,9 @@ pubid_literal_quot_state(FAXPP_TokenizerEnv *env)
     case 0x68: case 0x69: case 0x6A: case 0x6B: case 0x6C: case 0x6D: case 0x6E: case 0x6F:
     case 0x70: case 0x71: case 0x72: case 0x73: case 0x74: case 0x75: case 0x76: case 0x77:
     case 0x78: case 0x79: case 0x7A:
+    // 0-9
+    case '0': case '1': case '2': case '3': case '4': case '5': case '6': case '7': case '8':
+    case '9': 
     case ' ': case '-': case '(': case ')': case '+': case ',': case '.': case '/': case ':':
     case '=': case '?': case ';': case '!': case '*': case '#': case '@': case '$': case '_':
     case '%': case '\'':
@@ -544,7 +550,7 @@ internal_subset_decl_state(FAXPP_TokenizerEnv *env)
     env->state = comment_start_state2;
     break;
   case 'E':
-    env->state = elementdecl_initial_state1;
+    env->state = elementdecl_or_entitydecl_state;
     break;
   case 'A':
     env->state = attlistdecl_initial_state1;

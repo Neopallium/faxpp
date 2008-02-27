@@ -17,6 +17,28 @@
 #include "tokenizer_states.h"
 #include "char_classes.h"
 
+FAXPP_Error
+elementdecl_or_entitydecl_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case 'L':
+    env->state = elementdecl_initial_state1;
+    next_char(env);
+    break;
+  case 'N':
+    env->state = entitydecl_initial_state1;
+    next_char(env);
+    break;
+  LINE_ENDINGS
+  default:
+    next_char(env);
+    return INVALID_DTD_DECL;
+  }
+  return NO_ERROR;
+}
+
 #define SINGLE_CHAR_STATE(name, ch, next_stored_state, next_state, error) \
 FAXPP_Error \
 name(FAXPP_TokenizerEnv *env) \
@@ -37,12 +59,11 @@ name(FAXPP_TokenizerEnv *env) \
   return NO_ERROR; \
 }
 
-SINGLE_CHAR_STATE(elementdecl_initial_state1, 'L', 0, elementdecl_initial_state2, INVALID_DTD_DECL)
-SINGLE_CHAR_STATE(elementdecl_initial_state2, 'E', 0, elementdecl_initial_state3, INVALID_DTD_DECL)
-SINGLE_CHAR_STATE(elementdecl_initial_state3, 'M', 0, elementdecl_initial_state4, INVALID_DTD_DECL)
-SINGLE_CHAR_STATE(elementdecl_initial_state4, 'E', 0, elementdecl_initial_state5, INVALID_DTD_DECL)
-SINGLE_CHAR_STATE(elementdecl_initial_state5, 'N', 0, elementdecl_initial_state6, INVALID_DTD_DECL)
-SINGLE_CHAR_STATE(elementdecl_initial_state6, 'T', elementdecl_name_state1, ws_plus_state, INVALID_DTD_DECL)
+SINGLE_CHAR_STATE(elementdecl_initial_state1, 'E', 0, elementdecl_initial_state2, INVALID_DTD_DECL)
+SINGLE_CHAR_STATE(elementdecl_initial_state2, 'M', 0, elementdecl_initial_state3, INVALID_DTD_DECL)
+SINGLE_CHAR_STATE(elementdecl_initial_state3, 'E', 0, elementdecl_initial_state4, INVALID_DTD_DECL)
+SINGLE_CHAR_STATE(elementdecl_initial_state4, 'N', 0, elementdecl_initial_state5, INVALID_DTD_DECL)
+SINGLE_CHAR_STATE(elementdecl_initial_state5, 'T', elementdecl_name_state1, ws_plus_state, INVALID_DTD_DECL)
 
 FAXPP_Error
 elementdecl_name_state1(FAXPP_TokenizerEnv *env)
@@ -149,6 +170,7 @@ elementdecl_content_state(FAXPP_TokenizerEnv *env)
   switch(env->current_char) {
   case '>':
     base_state(env);
+    token_end_position(env);
     report_token(ELEMENTDECL_CONTENT_TOKEN, env);
     break;
   LINE_ENDINGS

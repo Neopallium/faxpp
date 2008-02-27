@@ -98,6 +98,7 @@ notationdecl_content_state(FAXPP_TokenizerEnv *env)
   switch(env->current_char) {
   case '>':
     base_state(env);
+    token_end_position(env);
     report_token(NOTATIONDECL_CONTENT_TOKEN, env);
     break;
   LINE_ENDINGS

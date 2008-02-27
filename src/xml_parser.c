@@ -819,6 +819,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case DOCTYPE_END_TOKEN:
     case SYSTEM_LITERAL_TOKEN:
     case PUBID_LITERAL_TOKEN:
+    case NDATA_NAME_TOKEN:
     case PE_REFERENCE_TOKEN:
     case ELEMENTDECL_PREFIX_TOKEN:
     case ELEMENTDECL_NAME_TOKEN:
@@ -828,6 +829,10 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case ATTLISTDECL_CONTENT_TOKEN:
     case NOTATIONDECL_NAME_TOKEN:
     case NOTATIONDECL_CONTENT_TOKEN:
+    case ENTITYDECL_NAME_TOKEN:
+    case ENTITYDECL_VALUE_TOKEN:
+    case ENTITYDECL_END_TOKEN:
+    case PARAMENTITYDECL_NAME_TOKEN:
       // TBD - jpcs
       break;
 

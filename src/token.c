@@ -96,6 +96,8 @@ FAXPP_token_to_string(const FAXPP_TokenType type)
     return "SYSTEM_LITERAL_TOKEN";
   case PUBID_LITERAL_TOKEN:
     return "PUBID_LITERAL_TOKEN";
+  case NDATA_NAME_TOKEN:
+    return "NDATA_NAME_TOKEN";
 
   case ELEMENTDECL_PREFIX_TOKEN:
     return "ELEMENTDECL_PREFIX_TOKEN";
@@ -115,6 +117,15 @@ FAXPP_token_to_string(const FAXPP_TokenType type)
     return "NOTATIONDECL_NAME_TOKEN";
   case NOTATIONDECL_CONTENT_TOKEN:
     return "NOTATIONDECL_CONTENT_TOKEN";
+
+  case ENTITYDECL_NAME_TOKEN:
+    return "ENTITYDECL_NAME_TOKEN";
+  case ENTITYDECL_VALUE_TOKEN:
+    return "ENTITYDECL_VALUE_TOKEN";
+  case ENTITYDECL_END_TOKEN:
+    return "ENTITYDECL_END_TOKEN";
+  case PARAMENTITYDECL_NAME_TOKEN:
+    return "PARAMENTITYDECL_NAME_TOKEN";
 
   case NO_TOKEN:
     break;

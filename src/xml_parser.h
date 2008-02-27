@@ -49,6 +49,23 @@ typedef struct FAXPP_ElementInfo_s {
   struct FAXPP_ElementInfo_s *prev;
 } FAXPP_ElementInfo;
 
+typedef struct FAXPP_EntityValue_s {
+  FAXPP_TokenType type;
+  FAXPP_Text value;
+
+  struct FAXPP_EntityValue_s *next;
+} FAXPP_EntityValue;
+
+typedef struct FAXPP_EntityInfo_s {
+  FAXPP_Text name;
+
+  FAXPP_EntityValue value;
+
+  FAXPP_Buffer buffer;
+
+  struct FAXPP_EntityInfo_s *prev;
+} FAXPP_EntityInfo;
+
 typedef struct FAXPP_ParserEnv_s FAXPP_ParserEnv;
 
 typedef FAXPP_Error (*FAXPP_NextEvent)(FAXPP_ParserEnv *env);

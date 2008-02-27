@@ -64,7 +64,7 @@ am_libfaxpp_la_OBJECTS = buffer.lo cdata.lo char_classes.lo comment.lo \
 	element.lo error.lo event.lo pi.lo reference.lo token.lo \
 	tokenizer_states.lo transcode.lo xmldecl.lo xml_parser.lo \
 	xml_tokenizer.lo doctype.lo elementdecl.lo attlistdecl.lo \
-	notationdecl.lo
+	notationdecl.lo entitydecl.lo
 libfaxpp_la_OBJECTS = $(am_libfaxpp_la_OBJECTS)
 libfaxpp_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
@@ -256,7 +256,8 @@ src/xml_tokenizer.h \
 src/doctype.c \
 src/elementdecl.c \
 src/attlistdecl.c \
-src/notationdecl.c
+src/notationdecl.c \
+src/entitydecl.c
 
 tokenizer_example_SOURCES = examples/tokenizer_example.c
 tokenizer_example_LDADD = libfaxpp.la
@@ -386,6 +387,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/doctype.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/element.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elementdecl.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/entitydecl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/error.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/notationdecl.Plo@am__quote@
@@ -554,6 +556,13 @@ notationdecl.lo: src/notationdecl.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/notationdecl.c' object='notationdecl.lo' libtool=yes @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o notationdecl.lo `test -f 'src/notationdecl.c' || echo '$(srcdir)/'`src/notationdecl.c
+
+entitydecl.lo: src/entitydecl.c
+@am__fastdepCC_TRUE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT entitydecl.lo -MD -MP -MF $(DEPDIR)/entitydecl.Tpo -c -o entitydecl.lo `test -f 'src/entitydecl.c' || echo '$(srcdir)/'`src/entitydecl.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/entitydecl.Tpo $(DEPDIR)/entitydecl.Plo
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='src/entitydecl.c' object='entitydecl.lo' libtool=yes @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) $(LIBTOOLFLAGS) --mode=compile $(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o entitydecl.lo `test -f 'src/entitydecl.c' || echo '$(srcdir)/'`src/entitydecl.c
 
 parser_example.o: examples/parser_example.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT parser_example.o -MD -MP -MF $(DEPDIR)/parser_example.Tpo -c -o parser_example.o `test -f 'examples/parser_example.c' || echo '$(srcdir)/'`examples/parser_example.c

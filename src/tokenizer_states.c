@@ -460,8 +460,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
   else if(state == pubid_literal_quot_state)
     return "pubid_literal_quot_state";
 
-  else if(state == elementdecl_initial_state1)
-    return "elementdecl_initial_state1";
+  else if(state == elementdecl_or_entitydecl_state)
+    return "elementdecl_or_entitydecl_state";
   else if(state == elementdecl_initial_state1)
     return "elementdecl_initial_state1";
   else if(state == elementdecl_initial_state2)
@@ -472,8 +472,6 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_initial_state4";
   else if(state == elementdecl_initial_state5)
     return "elementdecl_initial_state5";
-  else if(state == elementdecl_initial_state6)
-    return "elementdecl_initial_state6";
   else if(state == elementdecl_name_state1)
     return "elementdecl_name_state1";
   else if(state == elementdecl_name_state2)
@@ -532,6 +530,59 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "notationdecl_name_state2";
   else if(state == notationdecl_content_state)
     return "notationdecl_content_state";
+
+  else if(state == entitydecl_initial_state1)
+    return "entitydecl_initial_state1";
+  else if(state == entitydecl_initial_state1)
+    return "entitydecl_initial_state1";
+  else if(state == entitydecl_initial_state2)
+    return "entitydecl_initial_state2";
+  else if(state == entitydecl_initial_state3)
+    return "entitydecl_initial_state3";
+  else if(state == entitydecl_initial_state4)
+    return "entitydecl_initial_state4";
+  else if(state == entitydecl_param_or_general_state)
+    return "entitydecl_param_or_general_state";
+
+  else if(state == entitydecl_name_state)
+    return "entitydecl_name_state";
+  else if(state == entitydecl_content_state)
+    return "entitydecl_content_state";
+  else if(state == entitydecl_value_apos_state)
+    return "entitydecl_value_apos_state";
+  else if(state == entitydecl_value_quot_state)
+    return "entitydecl_value_quot_state";
+  else if(state == entitydecl_ws_state)
+    return "entitydecl_ws_state";
+  else if(state == entitydecl_ndata_or_end_state)
+    return "entitydecl_ndata_or_end_state";
+  else if(state == entitydecl_ndata_state1)
+    return "entitydecl_ndata_state1";
+  else if(state == entitydecl_ndata_state2)
+    return "entitydecl_ndata_state2";
+  else if(state == entitydecl_ndata_state3)
+    return "entitydecl_ndata_state3";
+  else if(state == entitydecl_ndata_state4)
+    return "entitydecl_ndata_state4";
+  else if(state == entitydecl_ndata_name_state1)
+    return "entitydecl_ndata_name_state1";
+  else if(state == entitydecl_ndata_name_state2)
+    return "entitydecl_ndata_name_state2";
+  else if(state == entitydecl_end_state)
+    return "entitydecl_end_state";
+
+  else if(state == paramentitydecl_name_state1)
+    return "paramentitydecl_name_state1";
+  else if(state == paramentitydecl_name_state2)
+    return "paramentitydecl_name_state2";
+  else if(state == paramentitydecl_content_state)
+    return "paramentitydecl_content_state";
+  else if(state == paramentitydecl_value_apos_state)
+    return "paramentitydecl_value_apos_state";
+  else if(state == paramentitydecl_value_quot_state)
+    return "paramentitydecl_value_quot_state";
+  else if(state == paramentitydecl_end_state)
+    return "paramentitydecl_end_state";
 
   return "unknown";
 }
