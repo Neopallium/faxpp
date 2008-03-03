@@ -48,6 +48,7 @@ FAXPP_Error default_attr_equals_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error default_attr_value_start_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error default_attr_value_apos_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error default_attr_value_quot_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error default_attr_value_state_en(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error default_element_content_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error default_element_content_rsquare_state1(FAXPP_TokenizerEnv *env);
@@ -78,6 +79,7 @@ FAXPP_Error utf8_attr_equals_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error utf8_attr_value_start_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error utf8_attr_value_apos_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error utf8_attr_value_quot_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error utf8_attr_value_state_en(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error utf8_element_content_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error utf8_element_content_rsquare_state1(FAXPP_TokenizerEnv *env);
@@ -108,6 +110,7 @@ FAXPP_Error utf16_attr_equals_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error utf16_attr_value_start_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error utf16_attr_value_apos_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error utf16_attr_value_quot_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error utf16_attr_value_state_en(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error utf16_element_content_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error utf16_element_content_rsquare_state1(FAXPP_TokenizerEnv *env);
@@ -126,6 +129,7 @@ FAXPP_Error equals_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error initial_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error initial_misc_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error initial_markup_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error parsed_entity_state(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error final_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error final_markup_state(FAXPP_TokenizerEnv *env);
@@ -255,6 +259,7 @@ FAXPP_Error doctype_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error doctype_after_name_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error doctype_internal_subset_start_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error internal_subset_state_en(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_markup_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_decl_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error doctype_end_state(FAXPP_TokenizerEnv *env);
@@ -378,7 +383,7 @@ const char *state_to_string(FAXPP_StateFunction state);
 #define next_char(env) \
 { \
   if((env)->token_buffer.cursor) { \
-    FAXPP_Error err = FAXPP_buffer_append_ch(&(env)->token_buffer, (env)->encode, (env)->current_char); \
+    FAXPP_Error err = FAXPP_buffer_append_ch(&(env)->token_buffer, (env)->transcoder.encode, (env)->current_char); \
     if(err != 0) return err; \
   } \
 \
@@ -412,13 +417,19 @@ const char *state_to_string(FAXPP_StateFunction state);
 
 #define base_state(env) \
 { \
-  if((env)->nesting_level == 0) \
-    if((env)->seen_doc_element) \
-      (env)->state = final_state; \
-    else if((env)->in_internal_subset) \
-      (env)->state = internal_subset_state; \
-    else (env)->state = initial_misc_state; \
-  else (env)->state = (env)->element_content_state; \
+  if((env)->nesting_level != 0) \
+    (env)->state = (env)->element_content_state; \
+  else if((env)->element_entity) \
+    (env)->state = parsed_entity_state; \
+  else if((env)->internal_dtd_entity) \
+    (env)->state = internal_subset_state_en; \
+  else if((env)->external_parsed_entity) \
+    (env)->state = parsed_entity_state; \
+  else if((env)->seen_doc_element) \
+    (env)->state = final_state; \
+  else if((env)->in_internal_subset) \
+    (env)->state = internal_subset_state; \
+  else (env)->state = initial_misc_state; \
 }
 
 #define report_token(token_int, env) \

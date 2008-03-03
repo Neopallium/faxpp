@@ -19,6 +19,7 @@
 
 #include "buffer.h"
 #include <faxpp/tokenizer.h>
+#include <faxpp/parser.h>
 
 /*********************
  *
@@ -29,8 +30,16 @@
 typedef struct FAXPP_TokenizerEnv_s FAXPP_TokenizerEnv;
 typedef FAXPP_Error (*FAXPP_StateFunction)(FAXPP_TokenizerEnv *env);
 
+typedef struct FAXPP_EntityInfo_s FAXPP_EntityInfo;
+typedef struct FAXPP_EntityValue_s FAXPP_EntityValue;
+
 struct FAXPP_TokenizerEnv_s {
-  // TBD Mark end of buffer with EOF instead of using buffer_end - jpcs
+  FAXPP_ReadCallback read;
+  void *read_user_data;
+
+  void *read_buffer;
+  unsigned int read_buffer_length;
+
   void *buffer;
   void *buffer_end;
 
@@ -47,10 +56,21 @@ struct FAXPP_TokenizerEnv_s {
   unsigned int in_internal_subset:1;
   unsigned int seen_doc_element:1;
   unsigned int buffer_done:1;
+
   unsigned int normalize_attrs:1;
+  unsigned int user_provided_decode:1;
+  unsigned int buffered_token:1;
+  unsigned int null_terminate:1;
+
+  unsigned int element_entity:1;
+  unsigned int attr_entity:1;
+  unsigned int internal_dtd_entity:1;
+  unsigned int external_parsed_entity:1;
+
+  unsigned int no_pass_on_state:1;
 
   FAXPP_DecodeFunction decode;
-  FAXPP_EncodeFunction encode;
+  FAXPP_Transcoder transcoder;
 
   FAXPP_Token result_token;
   FAXPP_Token token;
@@ -68,6 +88,22 @@ struct FAXPP_TokenizerEnv_s {
   uint8_t ncname_start_char;
   uint8_t ncname_char;
   uint8_t non_restricted_char;
+  uint8_t xml_char;
+
+  FAXPP_EntityInfo *entity;
+  struct FAXPP_TokenizerEnv_s *prev;
 };
+
+typedef enum {
+  ELEMENT_CONTENT_ENTITY,
+  ATTRIBUTE_VALUE_ENTITY,
+  INTERNAL_DTD_ENTITY,
+  EXTERNAL_PARSED_ENTITY
+} FAXPP_EntityParseState;
+
+FAXPP_Error FAXPP_sniff_encoding(FAXPP_Tokenizer *tokenizer);
+FAXPP_Error FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state,
+                                        void *buffer, unsigned int length, unsigned int done);
+FAXPP_Error FAXPP_pop_tokenizer(FAXPP_Tokenizer **list);
 
 #endif

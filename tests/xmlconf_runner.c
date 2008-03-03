@@ -54,6 +54,8 @@ void output_attr_value(const FAXPP_AttrValue *atval, FILE *stream)
       output_text(&atval->name, stream);
       fprintf(stream, ";");
       break;
+    case ENTITY_REFERENCE_START_EVENT:
+    case ENTITY_REFERENCE_END_EVENT:
     default:
       break;
     }
@@ -83,6 +85,31 @@ output_event(const FAXPP_Event *event, FILE *stream)
     }
     break;
   case END_DOCUMENT_EVENT:
+    break;
+  case DOCTYPE_EVENT:
+    fprintf(stream, "<!DOCTYPE ");
+
+    if(event->prefix.ptr != 0) {
+      output_text(&event->prefix, stream);
+      fprintf(stream, ":");
+    }
+    output_text(&event->name, stream);
+
+    if(event->system.ptr != 0) {
+      if(event->public.ptr != 0) {
+        fprintf(stream, " PUBLIC \"");
+        output_text(&event->public, stream);
+        fprintf(stream, "\" \"");
+        output_text(&event->system, stream);
+        fprintf(stream, "\"");
+      }
+      else {
+        fprintf(stream, " SYSTEM \"");
+        output_text(&event->system, stream);
+        fprintf(stream, "\"");
+      }
+    }
+    fprintf(stream, ">");
     break;
   case START_ELEMENT_EVENT:
   case SELF_CLOSING_ELEMENT_EVENT:
@@ -159,6 +186,10 @@ output_event(const FAXPP_Event *event, FILE *stream)
     output_text(&event->name, stream);
     fprintf(stream, ";");
     break;
+  case ENTITY_REFERENCE_START_EVENT:
+  case ENTITY_REFERENCE_END_EVENT:
+  case START_EXTERNAL_ENTITY_EVENT:
+  case END_EXTERNAL_ENTITY_EVENT:
   case NO_EVENT:
     break;
   }
@@ -167,9 +198,9 @@ output_event(const FAXPP_Event *event, FILE *stream)
 void error(FAXPP_Error err, unsigned int line, unsigned int column)
 {
   if(line != 0) {
-    printf("%03d:%03d FAXPP_Error: %s\n", line, column, FAXPP_err_to_string(err));
+    fprintf(stderr, "%03d:%03d FAXPP_Error: %s\n", line, column, FAXPP_err_to_string(err));
   } else {
-    printf("FAXPP_Error: %s\n", FAXPP_err_to_string(err));
+    fprintf(stderr, "FAXPP_Error: %s\n", FAXPP_err_to_string(err));
   }
   exit(1);
 }
@@ -214,15 +245,65 @@ void calculateBase(const char *testFile, const FAXPP_AttrValue *atval, char *out
   *ptr = 0;
 }
 
+char *resolve_paths(const char *base, const char *path, unsigned int path_len)
+{
+  unsigned int base_len = strlen(base);
+
+  char *result = malloc(base_len + path_len + 1);
+  char *ptr = result;
+
+  strcpy(ptr, base);
+  ptr += base_len - 1;
+
+  while(ptr >= result && *ptr != '/') {
+    --ptr;
+  }
+  ++ptr;
+
+  strncpy(ptr, path, path_len);
+  ptr += path_len;
+  *ptr = 0;
+
+  return result;
+}
+
+static unsigned int file_read_callback(void *userData, void *buffer, unsigned int length)
+{
+  unsigned int result = fread(buffer, 1, length, (FILE*)userData);
+  if(result < length) {
+    fclose((FILE*)userData);
+  }
+  return result;
+}
+
+static FAXPP_Error entity_callback(void *userData, FAXPP_Parser *parser,
+                                   const FAXPP_Text *system, const FAXPP_Text *public)
+{
+  FILE *file;
+  char *path;
+
+  path = resolve_paths((char*)userData, (char*)system->ptr, system->len);
+  file = fopen(path, "r");
+  if(file == 0) {
+    fprintf(stderr, "Open of '%s' failed: %s\n", path, strerror(errno));
+    return CANT_LOCATE_EXTERNAL_ENTITY;
+  }
+  free(path);
+
+  return FAXPP_parse_external_entity_callback(parser, file_read_callback, file);
+}
+
 FAXPP_Error run_test_case(const char *filename, unsigned int *errLine)
 {
-  FAXPP_Parser *testparser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_encode);
+  FAXPP_Parser *testparser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_transcoder);
 
   FILE *file = fopen(filename, "r");
   if(file == 0) {
     printf("Could not open xml file '%s': %s\n", filename, strerror(errno));
     exit(1);
   }
+
+  FAXPP_set_external_entity_callback(testparser, entity_callback, (void*)filename);
 
   FAXPP_Error err = FAXPP_init_parse_file(testparser, file);
   if(err == NO_ERROR) {
@@ -263,7 +344,7 @@ main(int argc, char **argv)
     exit(-1);
   }
 
-  FAXPP_Parser *parser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_encode);
+  FAXPP_Parser *parser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_transcoder);
 
   const char *testFile = argv[1];
 
@@ -272,6 +353,8 @@ main(int argc, char **argv)
     printf("Could not open test file: %s\n", strerror(errno));
     exit(1);
   }
+
+  FAXPP_set_external_entity_callback(parser, entity_callback, (void*)testFile);
 
   err = FAXPP_init_parse_file(parser, file);
   if(err != NO_ERROR) error(err, 0, 0);
@@ -308,6 +391,7 @@ main(int argc, char **argv)
       }
 
       else if(text_equal(event->name, "TEST")) {
+        // TBD Check output - jpcs
 /*         if(find_attribute(event, "OUTPUT")) { */
 /*           printf("^"); */
 /*           fflush(stdout); */
@@ -319,15 +403,29 @@ main(int argc, char **argv)
         calculateBase(base_buffer, &attr->value, file_buffer);
 
         result = run_test_case(file_buffer, &errLine);
-/*         if(result == DOCTYPE_NOT_IMPLEMENTED) { */
-/*           printf("^"); */
-/*           fflush(stdout); */
-/*           ++test_skips; */
-/*           break; */
-/*         } */
+
+        // Skip tests that require no namespaces
+        attr = find_attribute(event, "NAMESPACE");
+        if(attr && text_equal(attr->value.value, "no")) {
+          printf("^");
+          fflush(stdout);
+          ++test_skips;
+          break;
+        }
+
+        // Skip "error" type tests at the moment - since they
+        // probably need detailed inspection to see which ones
+        // ought to pass or fail
+        // TBD enable these tests - jpcs
+        attr = find_attribute(event, "TYPE");
+        if(text_equal(attr->value.value, "error")) {
+          printf("^");
+          fflush(stdout);
+          ++test_skips;
+          break;
+        }
 
         // @TYPE is not-wf, error, invalid, or valid
-        attr = find_attribute(event, "TYPE");
         if(text_equal(attr->value.value, "not-wf") ||
            text_equal(attr->value.value, "error")) {
           if(result != NO_ERROR) {

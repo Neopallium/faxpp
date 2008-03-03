@@ -26,6 +26,8 @@
 #define NON_RESTRICTED_CHAR10 0x10
 #define NON_RESTRICTED_CHAR11 0x20
 #define WHITESPACE_CHAR       0x40
+#define CHAR10                0x10
+#define CHAR11                0x80
 
 const char *FAXPP_char_flags_to_string(unsigned int flags);
 

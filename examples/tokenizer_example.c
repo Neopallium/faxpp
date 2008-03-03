@@ -52,7 +52,7 @@ main(int argc, char **argv)
     exit(-1);
   }
 
-  FAXPP_Tokenizer *tokenizer = FAXPP_create_tokenizer(FAXPP_utf8_encode);
+  FAXPP_Tokenizer *tokenizer = FAXPP_create_tokenizer(FAXPP_utf8_transcoder);
   if(tokenizer == 0) {
     printf("ERROR: out of memory\n");
     exit(1);
@@ -94,7 +94,7 @@ main(int argc, char **argv)
         }
         else length = 0;
 
-        length += fread(xml, 1, sizeof(xml) - length, file);
+        length += fread(xml + length, 1, sizeof(xml) - length, file);
 
         err = FAXPP_continue_tokenize(tokenizer, xml, length, length != sizeof(xml));
         if(err != NO_ERROR) {

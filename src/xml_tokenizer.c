@@ -18,6 +18,7 @@
 #include <stdlib.h>
 
 #include "xml_tokenizer.h"
+#include "xml_parser.h"
 #include "tokenizer_states.h"
 #include "char_classes.h"
 #include "config.h"
@@ -32,7 +33,7 @@
 #define INITIAL_TOKEN_BUFFER_SIZE 64
 
 FAXPP_Error
-sniff_encoding(FAXPP_TokenizerEnv *env)
+FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
 {
   // Make initial judgement on the encoding
   unsigned char *buf = (unsigned char*)env->position;
@@ -263,6 +264,8 @@ sniff_encoding(FAXPP_TokenizerEnv *env)
     // Default encoding is UTF-8
     FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
   }
+
+  token_start_position(env);
   return NO_ERROR;
 }
 
@@ -286,7 +289,7 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
      ) {
     tokenizer->decode = FAXPP_utf16_native_decode;
 
-    if(tokenizer->encode == FAXPP_utf16_native_encode)
+    if(tokenizer->transcoder.encode == FAXPP_utf16_native_encode)
       tokenizer->do_encode = 0;
 
     tokenizer->start_element_name_state = utf16_start_element_name_state;
@@ -295,7 +298,7 @@ FAXPP_set_tokenizer_decode(FAXPP_Tokenizer *tokenizer, FAXPP_DecodeFunction deco
   else if(decode == FAXPP_utf8_decode) {
     tokenizer->decode = FAXPP_utf8_decode;
 
-    if(tokenizer->encode == FAXPP_utf8_encode)
+    if(tokenizer->transcoder.encode == FAXPP_utf8_encode)
       tokenizer->do_encode = 0;
 
     tokenizer->start_element_name_state = utf8_start_element_name_state;
@@ -338,27 +341,16 @@ void change_token_buffer(void *userData, FAXPP_Buffer *buffer, void *newBuffer)
   env->token.value.ptr = newBuffer;
 }
 
-FAXPP_Error
-init_tokenizer_internal(FAXPP_TokenizerEnv *env, FAXPP_EncodeFunction encode)
-{
-  memset(env, 0, sizeof(FAXPP_TokenizerEnv));
-  env->encode = encode;
-  return FAXPP_init_buffer(&env->token_buffer, INITIAL_TOKEN_BUFFER_SIZE, change_token_buffer, env);
-}
-
-void
-free_tokenizer_internal(FAXPP_TokenizerEnv *env)
-{
-  FAXPP_free_buffer(&env->token_buffer);
-}
-
 FAXPP_Tokenizer *
-FAXPP_create_tokenizer(FAXPP_EncodeFunction encode)
+FAXPP_create_tokenizer(FAXPP_Transcoder encode)
 {
   FAXPP_TokenizerEnv *result = malloc(sizeof(FAXPP_TokenizerEnv));
   if(result == 0) return 0;
 
-  if(init_tokenizer_internal(result, encode) == OUT_OF_MEMORY) {
+  memset(result, 0, sizeof(FAXPP_TokenizerEnv));
+  result->transcoder = encode;
+  if(FAXPP_init_buffer(&result->token_buffer, INITIAL_TOKEN_BUFFER_SIZE,
+                       change_token_buffer, result) == OUT_OF_MEMORY) {
     free(result);
     return 0;
   }
@@ -366,20 +358,30 @@ FAXPP_create_tokenizer(FAXPP_EncodeFunction encode)
   return result;
 }
 
-void
-FAXPP_free_tokenizer(FAXPP_Tokenizer *tokenizer)
+static void free_tokenizer_internal(FAXPP_Tokenizer *tokenizer)
 {
+  if(tokenizer->read_buffer) free(tokenizer->read_buffer);
   FAXPP_free_buffer(&tokenizer->token_buffer);
   free(tokenizer);
 }
 
-FAXPP_Error
-FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, unsigned int done)
+void
+FAXPP_free_tokenizer(FAXPP_Tokenizer *tokenizer)
 {
-  env->buffer = buffer;
-  env->buffer_end = buffer + length;
+  FAXPP_Tokenizer *tmp;
 
-  env->position = buffer;
+  while(tokenizer) {
+    tmp = tokenizer;
+    tokenizer = tmp->prev;
+
+    if(tmp->read_buffer) free(tmp->read_buffer);
+    FAXPP_free_buffer(&tmp->token_buffer);
+    free(tmp);
+  }
+}
+
+static void init_tokenize_internal(FAXPP_Tokenizer *env)
+{
   env->current_char = 0;
   env->char_len = 0;
 
@@ -391,7 +393,13 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, uns
   env->seen_doctype = 0;
   env->in_internal_subset = 0;
   env->seen_doc_element = 0;
-  env->buffer_done = done;
+
+  env->element_entity = 0;
+  env->attr_entity = 0;
+  env->internal_dtd_entity = 0;
+  env->external_parsed_entity = 0;
+
+  env->no_pass_on_state = 0;
 
   env->decode = 0;
 
@@ -409,11 +417,125 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, uns
   env->ncname_start_char = NCNAME_START_CHAR10;
   env->ncname_char = NCNAME_CHAR10;
   env->non_restricted_char = NON_RESTRICTED_CHAR10;
+  env->xml_char = CHAR10;
+}
 
-  FAXPP_Error err = sniff_encoding(env);
+FAXPP_Error
+FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, unsigned int done)
+{
+  init_tokenize_internal(env);
+
+  env->buffer = buffer;
+  env->buffer_end = buffer + length;
+  env->position = buffer;
+
+  env->buffer_done = done;
+
+  FAXPP_Error err = FAXPP_sniff_encoding(env);
   if(err) return err;
 
+  return NO_ERROR;
+}
+
+FAXPP_Error
+FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state, void *buffer, unsigned int length, unsigned int done)
+{
+  FAXPP_Tokenizer *env = FAXPP_create_tokenizer((*list)->transcoder);
+  if(!env) return OUT_OF_MEMORY;
+
+  env->prev = *list;
+  *list = env;
+
+  init_tokenize_internal(env);
+
+  env->buffer = buffer;
+  env->buffer_end = buffer + length;
+  env->position = buffer;
+
+  env->buffer_done = done;
+
+  env->normalize_attrs = env->prev->normalize_attrs;
+  env->buffered_token = env->prev->buffered_token;
+  env->null_terminate = env->prev->null_terminate;
+
+  env->element_entity = state == ELEMENT_CONTENT_ENTITY;
+  env->attr_entity = state == ATTRIBUTE_VALUE_ENTITY;
+  env->internal_dtd_entity = state == INTERNAL_DTD_ENTITY;
+  env->external_parsed_entity = state == EXTERNAL_PARSED_ENTITY;
+
+  FAXPP_set_tokenizer_decode(env, env->prev->transcoder.decode);
+
+  switch(state) {
+  case ELEMENT_CONTENT_ENTITY:
+    env->state = parsed_entity_state;
+    break;
+  case ATTRIBUTE_VALUE_ENTITY:
+    if(env->transcoder.encode == FAXPP_utf8_encode)
+      env->state = utf8_attr_value_state_en;
+    else if(env->transcoder.encode == FAXPP_utf16_native_encode)
+      env->state = utf16_attr_value_state_en;
+    else
+      env->state = default_attr_value_state_en;
+    break;
+  case INTERNAL_DTD_ENTITY:
+    env->state = internal_subset_state_en;
+    break;
+  case EXTERNAL_PARSED_ENTITY:
+    env->state = initial_state;
+    break;
+  }
+
+  env->ncname_start_char = env->prev->ncname_start_char;
+  env->ncname_char = env->prev->ncname_char;
+  env->non_restricted_char = env->prev->non_restricted_char;
+  env->xml_char = env->prev->xml_char;
+
   token_start_position(env);
+
+  return NO_ERROR;
+}
+
+FAXPP_Error
+FAXPP_pop_tokenizer(FAXPP_Tokenizer **list)
+{
+  FAXPP_TokenizerEnv *env = *list;
+  *list = env->prev;
+
+  if(!env->no_pass_on_state) {
+    // Force the old tokenizer token to point into the token buffer
+    FAXPP_tokenizer_release_buffer(env, 0);
+
+    (*list)->token = env->token;
+
+    FAXPP_swap_buffer(&env->token_buffer, &(*list)->token_buffer);
+
+    (*list)->token_position1 = env->token_position1;
+    (*list)->token_position2 = env->token_position2;
+
+    // If the token is empty, set it to point to the correct tokenizer buffer
+    if((*list)->token.value.len == 0) {
+      token_start_position(*list);
+    }
+
+    (*list)->nesting_level += env->nesting_level;
+
+    (*list)->state = env->state;
+    (*list)->stored_state = env->stored_state;
+  }
+  else {
+    if(env->stored_state != 0 || env->nesting_level != 0 ||
+       (env->element_entity && env->state != parsed_entity_state &&
+        env->state != default_element_content_rsquare_state1 &&
+        env->state != default_element_content_rsquare_state2) ||
+       (env->internal_dtd_entity && env->state != internal_subset_state_en)
+       ) {
+      return INCOMPLETE_MARKUP_IN_ENTITY_VALUE;
+    }
+  }
+
+  (*list)->result_token.type = NO_TOKEN;
+
+  free_tokenizer_internal(env);
 
   return NO_ERROR;
 }

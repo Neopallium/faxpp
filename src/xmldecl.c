@@ -131,8 +131,7 @@ xml_decl_or_pi_state4(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   WHITESPACE:
-    env->stored_state = xml_decl_version_state1;
-    env->state = ws_state;
+    env->state = xml_decl_version_state1;
     token_end_position(env);
     next_char(env);
     break;
@@ -148,6 +147,32 @@ xml_decl_or_pi_state4(FAXPP_TokenizerEnv *env)
       return INVALID_CHAR_IN_PI_NAME;
     break;
   }
+  return NO_ERROR;
+}
+
+FAXPP_Error
+xml_decl_version_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    break;
+  case 'v':
+    env->state = xml_decl_version_state2;
+    break;
+  case 'e':
+    if(env->external_parsed_entity) {
+      env->state = xml_decl_encoding_state2;
+      break;
+    }
+    // Fall through
+  default:
+    next_char(env);
+    return INVALID_CHAR_IN_XML_DECL;
+  }
+
+  next_char(env);
   return NO_ERROR;
 }
 
@@ -171,7 +196,6 @@ name(FAXPP_TokenizerEnv *env) \
   return NO_ERROR; \
 }
 
-SINGLE_CHAR_STATE(xml_decl_version_state1, 'v', 0, xml_decl_version_state2, INVALID_CHAR_IN_XML_DECL)
 SINGLE_CHAR_STATE(xml_decl_version_state2, 'e', 0, xml_decl_version_state3, INVALID_CHAR_IN_XML_DECL)
 SINGLE_CHAR_STATE(xml_decl_version_state3, 'r', 0, xml_decl_version_state4, INVALID_CHAR_IN_XML_DECL)
 SINGLE_CHAR_STATE(xml_decl_version_state4, 's', 0, xml_decl_version_state5, INVALID_CHAR_IN_XML_DECL)
@@ -222,6 +246,7 @@ xml_decl_version_value_state4(FAXPP_TokenizerEnv *env)
     env->ncname_start_char = NCNAME_START_CHAR11;
     env->ncname_char = NCNAME_CHAR11;
     env->non_restricted_char = NON_RESTRICTED_CHAR11;
+    env->xml_char = CHAR11;
     break;
   default:
     retrieve_state(env);
@@ -301,25 +326,28 @@ xml_decl_encoding_state1(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   WHITESPACE:
-    next_char(env);
     break;
   case '?':
+    if(env->external_parsed_entity) goto invalid_char;
+
     env->state = xml_decl_seen_question_state;
     token_start_position(env);
-    next_char(env);
     break;
   case 's':
+    if(env->external_parsed_entity) goto invalid_char;
+
     env->state = xml_decl_standalone_state2;
-    next_char(env);
     break;
   case 'e':
     env->state = xml_decl_encoding_state2;
-    next_char(env);
     break;
   default:
+invalid_char:
     next_char(env);
     return INVALID_CHAR_IN_XML_DECL;
   }
+
+  next_char(env);
   return NO_ERROR;
 }
 
@@ -494,9 +522,12 @@ xml_decl_standalone_state1(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   case 's':
-    env->state = xml_decl_standalone_state2;
-    next_char(env);
-    break;
+    if(!env->external_parsed_entity) {
+      env->state = xml_decl_standalone_state2;
+      next_char(env);
+      break;
+    }
+    // Fall through
   default:
     next_char(env);
     return INVALID_CHAR_IN_XML_DECL;
@@ -672,7 +703,7 @@ xml_decl_seen_question_state(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case '>':
-    env->state = initial_misc_state;
+    base_state(env);
     report_empty_token(XML_DECL_END_TOKEN, env);
     next_char(env);
     token_start_position(env);

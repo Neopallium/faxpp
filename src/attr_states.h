@@ -367,3 +367,61 @@ PREFIX(attr_value_quot_state)(FAXPP_TokenizerEnv *env)
   return NO_ERROR;
 }
 
+// Special state for parsing the content of an entity reference
+// inside an attribute value
+FAXPP_Error
+PREFIX(attr_value_state_en)(FAXPP_TokenizerEnv *env)
+{
+  while(1) {
+    if(env->position >= env->buffer_end) {
+      if(env->token.value.ptr) {
+        token_end_position(env);
+        if(env->token.value.len != 0) {
+          report_token(ATTRIBUTE_VALUE_TOKEN, env);
+          return NO_ERROR;
+        }
+      }
+      token_start_position(env);
+      return PREMATURE_END_OF_BUFFER;
+    }
+
+    READ_CHAR;
+
+    switch(env->current_char) {
+    case '&':
+      store_state(env);
+      env->state = reference_state;
+      token_end_position(env);
+      report_token(ATTRIBUTE_VALUE_TOKEN, env);
+      next_char(env);
+      token_start_position(env);
+      return NO_ERROR;
+    case '<':
+      next_char(env);
+      return INVALID_CHAR_IN_ATTRIBUTE;
+    LINE_ENDINGS
+    case '\t': {
+      if(env->normalize_attrs) {
+        // Move the token to the buffer, to normalize it
+        FAXPP_Error err = FAXPP_tokenizer_release_buffer(env, 0);
+        if(err != NO_ERROR) return err;
+        env->current_char = ' ';
+      }
+      break;
+    }
+    default:
+      DEFAULT_CASE;
+
+      if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0) {
+        next_char(env);
+        return RESTRICTED_CHAR;
+      }
+      break;
+    }
+    next_char(env);
+  }
+
+  // Never happens
+  return NO_ERROR;
+}
+

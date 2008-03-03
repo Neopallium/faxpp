@@ -34,12 +34,12 @@ typedef struct FAXPP_TokenizerEnv_s FAXPP_Tokenizer;
 /**
  * Creates a tokenizer object
  *
- * \param encode The encoding function to use when encoding token values
+ * \param encode The transcoder to use when encoding token values
  * \return A pointer to the tokenizer object, or 0 if out of memory.
  *
  * \relatesalso FAXPP_Tokenizer
  */
-FAXPP_Tokenizer *FAXPP_create_tokenizer(FAXPP_EncodeFunction encode);
+FAXPP_Tokenizer *FAXPP_create_tokenizer(FAXPP_Transcoder encode);
 
 /**
  * Frees a tokenizer object

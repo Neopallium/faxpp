@@ -36,6 +36,26 @@ void FAXPP_free_buffer(FAXPP_Buffer *buffer)
   if(buffer->buffer) free(buffer->buffer);
 }
 
+void FAXPP_swap_buffer(FAXPP_Buffer *a, FAXPP_Buffer *b)
+{
+  void *p;
+  unsigned int i;
+
+  p = a->buffer;
+  a->buffer = b->buffer;
+  b->buffer = p;
+
+  i = a->length;
+  a->length = b->length;
+  b->length = i;
+
+  p = a->cursor;
+  a->cursor = b->cursor;
+  b->cursor = p;
+
+  // Don't swap the callback or user data
+}
+
 FAXPP_Error FAXPP_resize_buffer(FAXPP_Buffer *buffer, unsigned int minSize)
 {
   unsigned int newLength = buffer->length << 1;

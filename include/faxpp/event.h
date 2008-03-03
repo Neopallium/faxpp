@@ -24,6 +24,7 @@ typedef enum {
   NO_EVENT,
   START_DOCUMENT_EVENT,
   END_DOCUMENT_EVENT,
+  DOCTYPE_EVENT,
   START_ELEMENT_EVENT,
   SELF_CLOSING_ELEMENT_EVENT,
   END_ELEMENT_EVENT,
@@ -32,17 +33,26 @@ typedef enum {
   IGNORABLE_WHITESPACE_EVENT,
   COMMENT_EVENT,
   PI_EVENT,
-  ENTITY_REFERENCE_EVENT,
+  ENTITY_REFERENCE_EVENT,       ///< Reference to an external parsed entity that has not been parsed yet, or a built in entity
   DEC_CHAR_REFERENCE_EVENT,
-  HEX_CHAR_REFERENCE_EVENT
+  HEX_CHAR_REFERENCE_EVENT,
+  ENTITY_REFERENCE_START_EVENT, ///< Delimits the start of an expanded entity reference
+  ENTITY_REFERENCE_END_EVENT,   ///< Delimits the end of an expanded entity reference
+  START_EXTERNAL_ENTITY_EVENT,  ///< Occurs when an external entity parsed by the user starts
+  END_EXTERNAL_ENTITY_EVENT     ///< Occurs when an external entity parsed by the user ends
 } FAXPP_EventType;
 
 /// An item in a linked list of a FAXPP_Attribute object's value
 typedef struct FAXPP_AttrValue_s {
-  FAXPP_EventType type; ///< The type of the attribute value. Can be CHARACTERS_EVENT, ENTITY_REFERENCE_EVENT, DEC_CHAR_REFERENCE_EVENT, and HEX_CHAR_REFERENCE_EVENT
-  /// The name of the item in the attribute's value. \details Present for event types ENTITY_REFERENCE_EVENT, DEC_CHAR_REFERENCE_EVENT, and HEX_CHAR_REFERENCE_EVENT
+  /// The type of the attribute value. \details Can be CHARACTERS_EVENT, ENTITY_REFERENCE_EVENT, DEC_CHAR_REFERENCE_EVENT, HEX_CHAR_REFERENCE_EVENT,
+  /// ENTITY_REFERENCE_START_EVENT and ENTITY_REFERENCE_END_EVENT
+  FAXPP_EventType type;
+  /// The name of the item in the attribute's value. \details Present for event types ENTITY_REFERENCE_EVENT, DEC_CHAR_REFERENCE_EVENT,
+  /// HEX_CHAR_REFERENCE_EVENT and ENTITY_REFERENCE_START_EVENT
   FAXPP_Text name;
-  FAXPP_Text value; ///< The value of the item in the attribute's value. \details Present for all possible event types
+  /// The value of the item in the attribute's value. \details Present for all possible event types except ENTITY_REFERENCE_START_EVENT and
+  /// ENTITY_REFERENCE_END_EVENT
+  FAXPP_Text value;
 
   unsigned int line;   ///< The line the attribute value started on
   unsigned int column; ///< The column the attribute value started on
@@ -72,10 +82,10 @@ typedef struct {
 typedef struct {
   FAXPP_EventType type;    ///< The type of the event
 
-  FAXPP_Text prefix;       ///< The prefix of the event. \details Present for event types START_ELEMENT_EVENT, SELF_CLOSING_ELEMENT_EVENT, and END_ELEMENT_EVENT
+  FAXPP_Text prefix;       ///< The prefix of the event. \details Present for event types DOCTYPE_EVENT, START_ELEMENT_EVENT, SELF_CLOSING_ELEMENT_EVENT, and END_ELEMENT_EVENT
   FAXPP_Text uri;          ///< The URI of the event. \details Present for event types START_ELEMENT_EVENT, SELF_CLOSING_ELEMENT_EVENT, and END_ELEMENT_EVENT
-  /// The name of the event. \details Present for event types START_ELEMENT_EVENT, SELF_CLOSING_ELEMENT_EVENT, END_ELEMENT_EVENT, PI_EVENT, ENTITY_REFERENCE_EVENT,
-  /// DEC_CHAR_REFERENCE_EVENT, and HEX_CHAR_REFERENCE_EVENT
+  /// The name of the event. \details Present for event types DOCTYPE_EVENT, START_ELEMENT_EVENT, SELF_CLOSING_ELEMENT_EVENT, END_ELEMENT_EVENT, PI_EVENT,
+  /// ENTITY_REFERENCE_EVENT, DEC_CHAR_REFERENCE_EVENT, and HEX_CHAR_REFERENCE_EVENT
   FAXPP_Text name;
 
   /// The value of the event. \details Present for event types CHARACTERS_EVENT, CDATA_EVENT, IGNORABLE_WHITESPACE_EVENT, COMMENT_EVENT, PI_EVENT,
@@ -85,9 +95,12 @@ typedef struct {
   unsigned int attr_count; ///< The number of attributes in the event. \details Present for event types START_ELEMENT_EVENT, and SELF_CLOSING_ELEMENT_EVENT
   FAXPP_Attribute *attrs;  ///< Array of attributes. \details Present for event types START_ELEMENT_EVENT, and SELF_CLOSING_ELEMENT_EVENT
 
-  FAXPP_Text version;      ///< The version of the event. \details Present only for the START_DOCUMENT_EVENT event type
-  FAXPP_Text encoding;     ///< The version of the event. \details Present only for the START_DOCUMENT_EVENT event type
+  FAXPP_Text version;      ///< The version of the event. \details Present for event types START_DOCUMENT_EVENT and START_EXTERNAL_ENTITY_EVENT
+  FAXPP_Text encoding;     ///< The version of the event. \details Present for event types START_DOCUMENT_EVENT and START_EXTERNAL_ENTITY_EVENT
   FAXPP_Text standalone;   ///< The version of the event. \details Present only for the START_DOCUMENT_EVENT event type
+
+  FAXPP_Text system;       ///< The system literal of the event. \details Present for event types DOCTYPE_EVENT and ENTITY_REFERENCE_EVENT
+  FAXPP_Text public;       ///< The public ID literal of the event. \details Present for event types DOCTYPE_EVENT and ENTITY_REFERENCE_EVENT
 
   unsigned int line;       ///< The line number of the start of the event
   unsigned int column;     ///< The column number of the start of the event

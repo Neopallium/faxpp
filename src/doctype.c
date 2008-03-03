@@ -518,6 +518,32 @@ internal_subset_state(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Error
+internal_subset_state_en(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_state;
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  case '<':
+    env->state = internal_subset_markup_state;
+    break;
+  default:
+    next_char(env);
+    return INVALID_DOCTYPE_DECL;
+  }
+
+  next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
 internal_subset_markup_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);

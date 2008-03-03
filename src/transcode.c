@@ -437,7 +437,7 @@ FAXPP_utf8_encode(void *buffer, void *buffer_end, Char32 ch)
     /* 1110 aaaa 10bb bbbb 10cc cccc
        0000 0000 aaaa bbbb bbcc cccc */
     *buf++ = (ch >> 12) | 0xE0;
-    *buf++ = (ch >> 6) | 0x80;
+    *buf++ = ((ch >> 6) & 0x3F) | 0x80;
     *buf = (ch & 0x3F) | 0x80;
 		return 3;
   }
@@ -448,8 +448,8 @@ FAXPP_utf8_encode(void *buffer, void *buffer_end, Char32 ch)
   /* 1111 0aaa 10bb bbbb 10cc cccc 10dd dddd
      0000 0000 000a aabb bbbb cccc ccdd dddd */
   *buf++ = (ch >> 18) | 0xF0;
-  *buf++ = (ch >> 12) | 0x80;
-  *buf++ = (ch >> 6) | 0x80;
+  *buf++ = ((ch >> 12) & 0x3F) | 0x80;
+  *buf++ = ((ch >> 6) & 0x3F) | 0x80;
   *buf = (ch & 0x3F) | 0x80;
   return 4;
 }
@@ -477,3 +477,5 @@ FAXPP_utf16_native_encode(void *buffer, void *buffer_end, Char32 ch)
   }
 }
 
+const FAXPP_Transcoder FAXPP_utf8_transcoder = { FAXPP_utf8_decode, FAXPP_utf8_encode };
+const FAXPP_Transcoder FAXPP_utf16_native_transcoder = { FAXPP_utf16_native_decode, FAXPP_utf16_native_encode };

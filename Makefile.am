@@ -7,7 +7,7 @@ noinst_PROGRAMS = tokenizer_example parser_example xmlconf_runner
 lib_LTLIBRARIES = libfaxpp.la
 
 # Library version, see http://sourceware.org/autobook/autobook/autobook_91.html
-libfaxpp_la_LDFLAGS = -version-info 1:0:0 -no-undefined
+libfaxpp_la_LDFLAGS = -version-info 2:0:0 -no-undefined
 
 libfaxpp_la_SOURCES = \
 src/attr_states.h \

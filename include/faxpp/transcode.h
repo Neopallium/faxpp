@@ -65,6 +65,30 @@ typedef unsigned int (*FAXPP_EncodeFunction)
      (void *buffer, void *buffer_end, Char32 ch);
 
 /**
+ * Encapsulates the information needed to both decode and encode
+ * an encoding.
+ *
+ * \see FAXPP_utf8_transcoder, FAXPP_utf16_native_transcoder
+ */
+typedef struct {
+  FAXPP_DecodeFunction decode; ///< The decode function
+  FAXPP_EncodeFunction encode; ///< The encode function
+} FAXPP_Transcoder;
+
+/**
+ * Transcoder to and from UTF-8
+ *
+ * \see FAXPP_utf8_decode, FAXPP_utf8_encode
+ */
+const FAXPP_Transcoder FAXPP_utf8_transcoder;
+/**
+ * Transcoder to and from native endian UTF-16
+ *
+ * \see FAXPP_utf16_native_decode, FAXPP_utf16_native_encode
+ */
+const FAXPP_Transcoder FAXPP_utf16_native_transcoder;
+
+/**
  * Returns a string describing the given (built-in) decode function
  * \param t
  * \return a string

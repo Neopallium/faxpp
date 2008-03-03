@@ -49,22 +49,30 @@ typedef struct FAXPP_ElementInfo_s {
   struct FAXPP_ElementInfo_s *prev;
 } FAXPP_ElementInfo;
 
-typedef struct FAXPP_EntityValue_s {
+struct FAXPP_EntityValue_s {
   FAXPP_TokenType type;
   FAXPP_Text value;
+  FAXPP_EntityInfo *entity_ref;
 
-  struct FAXPP_EntityValue_s *next;
-} FAXPP_EntityValue;
+  unsigned int line;
+  unsigned int column;
 
-typedef struct FAXPP_EntityInfo_s {
+  FAXPP_EntityValue *prev;
+};
+
+struct FAXPP_EntityInfo_s {
   FAXPP_Text name;
 
-  FAXPP_EntityValue value;
+  FAXPP_EntityValue *value;
 
-  FAXPP_Buffer buffer;
+  unsigned int external:1;
+  unsigned int unparsed:1;
 
-  struct FAXPP_EntityInfo_s *prev;
-} FAXPP_EntityInfo;
+  unsigned int line;
+  unsigned int column;
+
+  FAXPP_EntityInfo *next;
+};
 
 typedef struct FAXPP_ParserEnv_s FAXPP_ParserEnv;
 
@@ -74,16 +82,10 @@ struct FAXPP_ParserEnv_s {
   FAXPP_NextEvent next_event;
   FAXPP_NextEvent main_next_event;
 
-  FAXPP_ReadCallback read;
-  void *read_user_data;
+  FAXPP_ExternalEntityCallback external_entity_callback;
+  void *external_entity_user_data;
 
-  void *read_buffer;
-  unsigned int read_buffer_length;
-
-  FAXPP_TokenizerEnv tenv;
-  unsigned int buffered_token:1;
-  unsigned int null_terminate:1;
-  unsigned int user_provided_decode:1;
+  FAXPP_TokenizerEnv *tenv;
 
   unsigned int err_line;
   unsigned int err_column;
@@ -93,6 +95,7 @@ struct FAXPP_ParserEnv_s {
   unsigned int max_attr_count;
   FAXPP_Attribute *attrs;
   FAXPP_Attribute *current_attr;
+  FAXPP_EntityInfo *current_entity;
 
   FAXPP_AttrValue *av_ptr;
   FAXPP_AttrValue *av_dealloc;
@@ -102,6 +105,10 @@ struct FAXPP_ParserEnv_s {
 
   FAXPP_ElementInfo *element_info_pool;
   FAXPP_NamespaceInfo *namespace_pool;
+
+  FAXPP_EntityInfo *general_entities;
+  FAXPP_EntityInfo *parameter_entities;
+  FAXPP_Buffer entity_buffer;
 
   FAXPP_Buffer event_buffer;
 };

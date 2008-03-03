@@ -36,6 +36,7 @@ struct FAXPP_Buffer_s {
 FAXPP_Error FAXPP_init_buffer(FAXPP_Buffer *buffer, unsigned int initialSize,
                               FAXPP_BufferResizeCallback callback, void *userData);
 void FAXPP_free_buffer(FAXPP_Buffer *buffer);
+void FAXPP_swap_buffer(FAXPP_Buffer *a, FAXPP_Buffer *b);
 
 #define FAXPP_reset_buffer(buf) (buf)->cursor = (buf)->buffer
 

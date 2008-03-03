@@ -24,6 +24,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "initial_state";
   else if(state == initial_misc_state)
     return "initial_misc_state";
+  else if(state == parsed_entity_state)
+    return "parsed_entity_state";
   else if(state == initial_markup_state)
     return "initial_markup_state";
   else if(state == end_of_buffer_state)
@@ -81,6 +83,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "default_attr_value_apos_state";
   else if(state == default_attr_value_quot_state)
     return "default_attr_value_quot_state";
+  else if(state == default_attr_value_state_en)
+    return "default_attr_value_state_en";
   else if(state == default_element_content_state)
     return "default_element_content_state";
   else if(state == default_element_content_rsquare_state1)
@@ -130,6 +134,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "utf8_attr_value_apos_state";
   else if(state == utf8_attr_value_quot_state)
     return "utf8_attr_value_quot_state";
+  else if(state == utf8_attr_value_state_en)
+    return "utf8_attr_value_state_en";
   else if(state == utf8_element_content_state)
     return "utf8_element_content_state";
   else if(state == utf8_element_content_rsquare_state1)
@@ -181,6 +187,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "utf16_attr_value_apos_state";
   else if(state == utf16_attr_value_quot_state)
     return "utf16_attr_value_quot_state";
+  else if(state == utf16_attr_value_state_en)
+    return "utf16_attr_value_state_en";
   else if(state == utf16_element_content_state)
     return "utf16_element_content_state";
   else if(state == utf16_element_content_rsquare_state1)
@@ -415,6 +423,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "doctype_internal_subset_start_state";
   else if(state == internal_subset_state)
     return "internal_subset_state";
+  else if(state == internal_subset_state_en)
+    return "internal_subset_state_en";
   else if(state == internal_subset_markup_state)
     return "internal_subset_markup_state";
   else if(state == internal_subset_decl_state)
@@ -653,36 +663,25 @@ equals_state(FAXPP_TokenizerEnv *env)
 FAXPP_Error
 initial_state(FAXPP_TokenizerEnv *env)
 {
-  if(env->position >= env->buffer_end) {
-    if(env->token.value.ptr) {
-      token_end_position(env);
-      if(env->token.value.len != 0) {
-        report_token(IGNORABLE_WHITESPACE_TOKEN, env);
-        return NO_ERROR;
-      }
-    }
-    token_start_position(env);
-    return PREMATURE_END_OF_BUFFER;
-  }
-
-  read_char_no_check(env);
+  read_char(env);
 
   switch(env->current_char) {
   case '<':
     env->state = xml_decl_or_markup_state;
-    token_end_position(env);
-    report_token(IGNORABLE_WHITESPACE_TOKEN, env);
-    next_char(env);
     break;
   WHITESPACE:
-    env->state = initial_misc_state;
-    next_char(env);
+    base_state(env);
     break;
   default:
-    env->state = initial_misc_state;
-    next_char(env);
-    return NON_WHITESPACE_OUTSIDE_DOC_ELEMENT;
+    base_state(env);
+    if(!env->external_parsed_entity) {
+      next_char(env);
+      return NON_WHITESPACE_OUTSIDE_DOC_ELEMENT;
+    }
+    break;
   }
+
+  next_char(env);
   return NO_ERROR;
 }
 
@@ -721,6 +720,54 @@ initial_misc_state(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Error
+parsed_entity_state(FAXPP_TokenizerEnv *env)
+{
+  if(env->position >= env->buffer_end) {
+    if(env->token.value.ptr) {
+      token_end_position(env);
+      if(env->token.value.len != 0) {
+        report_token(CHARACTERS_TOKEN, env);
+        return NO_ERROR;
+      }
+    }
+    token_start_position(env);
+    return PREMATURE_END_OF_BUFFER;
+  }
+
+  read_char_no_check(env);
+
+  switch(env->current_char) {
+  case '<':
+    env->state = initial_markup_state;
+    token_end_position(env);
+    report_token(CHARACTERS_TOKEN, env);
+    break;
+  case '&':
+    store_state(env);
+    env->state = reference_state;
+    token_end_position(env);
+    report_token(CHARACTERS_TOKEN, env);
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  case ']':
+    env->state = default_element_content_rsquare_state1;
+    break;
+  LINE_ENDINGS
+    break;
+  default:
+    if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0) {
+      next_char(env);
+      return RESTRICTED_CHAR;
+    }
+    break;
+  }
+
+  next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
 initial_markup_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
@@ -732,7 +779,9 @@ initial_markup_state(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     break;
   case '!':
-    if(env->seen_doctype)
+    if(env->external_parsed_entity || env->element_entity)
+      env->state = cdata_or_comment_state;
+    else if(env->seen_doctype)
       env->state = comment_start_state1;
     else env->state = doctype_or_comment_state;
     next_char(env);

@@ -331,7 +331,7 @@ PREFIX(element_content_rsquare_state1)(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   default:
-    env->state = PREFIX(element_content_state);
+    base_state(env);
     break;
   }
 
@@ -357,14 +357,14 @@ PREFIX(element_content_rsquare_state2)(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case '>':
-    env->state = PREFIX(element_content_state);
+    base_state(env);
     next_char(env);
-    return CDATA_END_IN_ELEMENT_CONTENT;;
+    return CDATA_END_IN_ELEMENT_CONTENT;
   case ']':
     next_char(env);
     break;
   default:
-    env->state = PREFIX(element_content_state);
+    base_state(env);
     break;;
   }
 

@@ -44,7 +44,31 @@ output_text(const FAXPP_Text *text, FILE *stream)
   }
 }
 
+void
+output_escaped_attr_text(const FAXPP_Text *text, FILE *stream)
+{
+  char *buffer = (char*)text->ptr;
+  char *buffer_end = buffer + text->len;
+
+  while(buffer < buffer_end) {
+    if(*buffer == '&') {
+      fprintf(stream, "&amp;");
+    }
+    else if(*buffer == '<') {
+      fprintf(stream, "&lt;");
+    }
+    else if(*buffer == '"') {
+      fprintf(stream, "&quot;");
+    }
+    else {
+      putc(*buffer, stream);
+    }
+    ++buffer;
+  }
+}
+
 #define SHOW_URIS 0
+#define SHOW_ENTITIES 0
 
 void
 output_event(const FAXPP_Event *event, FILE *stream)
@@ -69,6 +93,31 @@ output_event(const FAXPP_Event *event, FILE *stream)
     }
     break;
   case END_DOCUMENT_EVENT:
+    break;
+  case DOCTYPE_EVENT:
+    fprintf(stream, "<!DOCTYPE ");
+
+    if(event->prefix.ptr != 0) {
+      output_text(&event->prefix, stream);
+      fprintf(stream, ":");
+    }
+    output_text(&event->name, stream);
+
+    if(event->system.ptr != 0) {
+      if(event->public.ptr != 0) {
+        fprintf(stream, " PUBLIC \"");
+        output_text(&event->public, stream);
+        fprintf(stream, "\" \"");
+        output_text(&event->system, stream);
+        fprintf(stream, "\"");
+      }
+      else {
+        fprintf(stream, " SYSTEM \"");
+        output_text(&event->system, stream);
+        fprintf(stream, "\"");
+      }
+    }
+    fprintf(stream, ">");
     break;
   case START_ELEMENT_EVENT:
   case SELF_CLOSING_ELEMENT_EVENT:
@@ -106,7 +155,7 @@ output_event(const FAXPP_Event *event, FILE *stream)
       while(atval) {
         switch(atval->type) {
         case CHARACTERS_EVENT:
-          output_text(&atval->value, stream);
+          output_escaped_attr_text(&atval->value, stream);
           break;
         case ENTITY_REFERENCE_EVENT:
           fprintf(stream, "&");
@@ -122,6 +171,18 @@ output_event(const FAXPP_Event *event, FILE *stream)
           fprintf(stream, "&#x");
           output_text(&atval->name, stream);
           fprintf(stream, ";");
+          break;
+        case ENTITY_REFERENCE_START_EVENT:
+#if SHOW_ENTITIES
+          fprintf(stream, "&");
+          output_text(&atval->name, stream);
+          fprintf(stream, ";(");
+#endif
+          break;
+        case ENTITY_REFERENCE_END_EVENT:
+#if SHOW_ENTITIES
+          fprintf(stream, ")");
+#endif
           break;
         default:
           break;
@@ -193,9 +254,71 @@ output_event(const FAXPP_Event *event, FILE *stream)
     output_text(&event->name, stream);
     fprintf(stream, ";");
     break;
+  case ENTITY_REFERENCE_START_EVENT:
+#if SHOW_ENTITIES
+    fprintf(stream, "&");
+    output_text(&event->name, stream);
+    fprintf(stream, ";(");
+#endif
+    break;
+  case ENTITY_REFERENCE_END_EVENT:
+#if SHOW_ENTITIES
+    fprintf(stream, ")");
+#endif
+    break;
+  case START_EXTERNAL_ENTITY_EVENT:
+  case END_EXTERNAL_ENTITY_EVENT:
   case NO_EVENT:
     break;
   }
+}
+
+char *resolve_paths(const char *base, const char *path, unsigned int path_len)
+{
+  unsigned int base_len = strlen(base);
+
+  char *result = malloc(base_len + path_len + 1);
+  char *ptr = result;
+
+  strcpy(ptr, base);
+  ptr += base_len - 1;
+
+  while(ptr >= result && *ptr != '/') {
+    --ptr;
+  }
+  ++ptr;
+
+  strncpy(ptr, path, path_len);
+  ptr += path_len;
+  *ptr = 0;
+
+  return result;
+}
+
+static unsigned int file_read_callback(void *userData, void *buffer, unsigned int length)
+{
+  unsigned int result = fread(buffer, 1, length, (FILE*)userData);
+  if(result < length) {
+    fclose((FILE*)userData);
+  }
+  return result;
+}
+
+static FAXPP_Error entity_callback(void *userData, FAXPP_Parser *parser,
+                                   const FAXPP_Text *system, const FAXPP_Text *public)
+{
+  FILE *file;
+  char *path;
+
+  path = resolve_paths((char*)userData, (char*)system->ptr, system->len);
+  file = fopen(path, "r");
+  if(file == 0) {
+    printf("Open of '%s' failed: %s\n", path, strerror(errno));
+    return CANT_LOCATE_EXTERNAL_ENTITY;
+  }
+  free(path);
+
+  return FAXPP_parse_external_entity_callback(parser, file_read_callback, file);
 }
 
 int
@@ -211,7 +334,7 @@ main(int argc, char **argv)
     exit(-1);
   }
 
-  FAXPP_Parser *parser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_encode);
+  FAXPP_Parser *parser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_transcoder);
   if(parser == 0) {
     printf("ERROR: out of memory\n");
     exit(1);
@@ -219,15 +342,17 @@ main(int argc, char **argv)
 
   for(i = 1; i < argc; ++i) {
 
+    FAXPP_set_external_entity_callback(parser, entity_callback, argv[i]);
+
     startTime = getTime();
 
     file = fopen(argv[i], "r");
     if(file == 0) {
-      printf("Open failed: %s\n", strerror(errno));
+      printf("Open of '%s' failed: %s\n", argv[i], strerror(errno));
       exit(1);
     }
 
-    err = FAXPP_init_parse_file(parser, file);
+    err = FAXPP_init_parse_callback(parser, file_read_callback, file);
     if(err != NO_ERROR) {
       printf("ERROR: %s\n", FAXPP_err_to_string(err));
       exit(1);
@@ -244,8 +369,6 @@ main(int argc, char **argv)
       printf("%03d:%03d ERROR: %s\n", FAXPP_get_error_line(parser),
              FAXPP_get_error_column(parser), FAXPP_err_to_string(err));
     }
-
-    fclose(file);
 
     printf("Time taken: %gms\n", ((double)(getTime() - startTime) / MSECS_IN_SECS * 1000));
   }
