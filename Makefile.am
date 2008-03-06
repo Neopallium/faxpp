@@ -38,14 +38,20 @@ src/attlistdecl.c \
 src/notationdecl.c \
 src/entitydecl.c
 
-tokenizer_example_SOURCES = examples/tokenizer_example.c
 tokenizer_example_LDADD = libfaxpp.la
+tokenizer_example_SOURCES = examples/tokenizer_example.c
 
-parser_example_SOURCES = examples/parser_example.c
 parser_example_LDADD = libfaxpp.la
+parser_example_SOURCES = \
+examples/parser_example.c \
+examples/entity_resolver.c \
+examples/output_event.c
 
-xmlconf_runner_SOURCES = tests/xmlconf_runner.c
 xmlconf_runner_LDADD = libfaxpp.la
+xmlconf_runner_SOURCES = \
+tests/xmlconf_runner.c \
+examples/entity_resolver.c \
+examples/output_event.c
 
 EXTRA_DIST = \
 docs/Doxyfile.api \

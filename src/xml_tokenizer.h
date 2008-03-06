@@ -52,22 +52,24 @@ struct FAXPP_TokenizerEnv_s {
 
   unsigned int nesting_level;
   unsigned int do_encode:1;
-  unsigned int seen_doctype:1;
-  unsigned int in_internal_subset:1;
-  unsigned int seen_doc_element:1;
   unsigned int buffer_done:1;
+
+  unsigned int seen_doctype:1;
+  unsigned int internal_subset:1;
+  unsigned int external_subset:1;
+  unsigned int seen_doc_element:1;
+  unsigned int element_entity:1;
+  unsigned int attr_entity:1;
+  unsigned int internal_dtd_entity:1;
+  unsigned int external_parsed_entity:1;
 
   unsigned int normalize_attrs:1;
   unsigned int user_provided_decode:1;
   unsigned int buffered_token:1;
   unsigned int null_terminate:1;
 
-  unsigned int element_entity:1;
-  unsigned int attr_entity:1;
-  unsigned int internal_dtd_entity:1;
-  unsigned int external_parsed_entity:1;
-
-  unsigned int no_pass_on_state:1;
+  unsigned int start_of_entity:1;
+  unsigned int start_of_file:1;
 
   FAXPP_DecodeFunction decode;
   FAXPP_Transcoder transcoder;
@@ -90,15 +92,21 @@ struct FAXPP_TokenizerEnv_s {
   uint8_t non_restricted_char;
   uint8_t xml_char;
 
+  FAXPP_Text base_uri;
   FAXPP_EntityInfo *entity;
   struct FAXPP_TokenizerEnv_s *prev;
 };
 
+#define INTERNAL_DIFF 5
+
+// The first two values are the same as the values in FAXPP_EntityType
 typedef enum {
-  ELEMENT_CONTENT_ENTITY,
-  ATTRIBUTE_VALUE_ENTITY,
-  INTERNAL_DTD_ENTITY,
-  EXTERNAL_PARSED_ENTITY
+  EXTERNAL_PARSED_ENTITY2 = EXTERNAL_PARSED_ENTITY,
+  EXTERNAL_SUBSET_ENTITY2 = EXTERNAL_SUBSET_ENTITY,
+
+  ELEMENT_CONTENT_ENTITY  = EXTERNAL_PARSED_ENTITY + INTERNAL_DIFF,
+  INTERNAL_DTD_ENTITY     = EXTERNAL_SUBSET_ENTITY + INTERNAL_DIFF,
+  ATTRIBUTE_VALUE_ENTITY
 } FAXPP_EntityParseState;
 
 FAXPP_Error FAXPP_sniff_encoding(FAXPP_Tokenizer *tokenizer);

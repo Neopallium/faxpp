@@ -421,6 +421,9 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "doctype_after_name_state";
   else if(state == doctype_internal_subset_start_state)
     return "doctype_internal_subset_start_state";
+  else if(state == doctype_end_state)
+    return "doctype_end_state";
+
   else if(state == internal_subset_state)
     return "internal_subset_state";
   else if(state == internal_subset_state_en)
@@ -429,8 +432,13 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "internal_subset_markup_state";
   else if(state == internal_subset_decl_state)
     return "internal_subset_decl_state";
-  else if(state == doctype_end_state)
-    return "doctype_end_state";
+
+  else if(state == external_subset_state)
+    return "external_subset_state";
+  else if(state == external_subset_markup_state)
+    return "external_subset_markup_state";
+  else if(state == external_subset_decl_state)
+    return "external_subset_decl_state";
 
   else if(state == system_id_initial_state1)
     return "system_id_initial_state1";
@@ -668,20 +676,14 @@ initial_state(FAXPP_TokenizerEnv *env)
   switch(env->current_char) {
   case '<':
     env->state = xml_decl_or_markup_state;
-    break;
-  WHITESPACE:
-    base_state(env);
+    next_char(env);
     break;
   default:
     base_state(env);
-    if(!env->external_parsed_entity) {
-      next_char(env);
-      return NON_WHITESPACE_OUTSIDE_DOC_ELEMENT;
-    }
+    // No next_char
     break;
   }
 
-  next_char(env);
   return NO_ERROR;
 }
 

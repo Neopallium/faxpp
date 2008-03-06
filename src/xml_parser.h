@@ -62,6 +62,7 @@ struct FAXPP_EntityValue_s {
 
 struct FAXPP_EntityInfo_s {
   FAXPP_Text name;
+  FAXPP_Text base_uri;
 
   FAXPP_EntityValue *value;
 
@@ -91,6 +92,7 @@ struct FAXPP_ParserEnv_s {
   unsigned int err_column;
 
   FAXPP_Event event;
+  FAXPP_EntityInfo *event_entity;
 
   unsigned int max_attr_count;
   FAXPP_Attribute *attrs;

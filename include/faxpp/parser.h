@@ -90,6 +90,12 @@ typedef enum {
   WELL_FORMED_PARSE_MODE
 } FAXPP_ParseMode;
 
+/// The type of external entity to parse
+typedef enum {
+  EXTERNAL_PARSED_ENTITY = 0, ///< An external parsed entity
+  EXTERNAL_SUBSET_ENTITY = 1  ///< An external subset (DTD)
+} FAXPP_EntityType;
+
 /**
  * The function called when faxpp recieves a PREMATURE_END_OF_BUFFER error from the
  * tokenizer. The function should read the next chunk of input into the buffer provided,
@@ -105,20 +111,23 @@ typedef unsigned int (*FAXPP_ReadCallback)(void *userData, void *buffer, unsigne
 
 /**
  * The function called when faxpp finds a reference to an external parsed entity. The function should
- * lcoate the entity using it's system and public indentifiers and call FAXPP_parse_external_entity(),
+ * locate the entity using it's system and public indentifiers and call FAXPP_parse_external_entity(),
  * FAXPP_parse_external_entity_callback() or FAXPP_parse_external_entity_file() to parse the external
- * entity.
+ * entity. The base URI provided is the one supplied by the user using FAXPP_set_base_uri() or
+ * FAXPP_set_base_uri_str() for the file that the entity declaration was in.
  *
  * \param userData The user data supplied to the FAXPP_set_external_entity_callback() method
  * \param parser A pointer to the parser
- * \param system The entity's system identifier
- * \param public The entity's public identifier
+ * \param type The type of external entity to locate
+ * \param base_uri The base URI for the entity declaration
+ * \param system_id The entity's system identifier
+ * \param public_id The entity's public identifier
  *
  * \return NO_ERROR on success, DONT_PARSE_EXTERNAL_ENTITY to return an unexpanded ENTITY_REFERENCE_EVENT
  * event, otherwise another error code to halt parsing (most probably CANT_LOCATE_EXTERNAL_ENTITY).
  */
-typedef FAXPP_Error (*FAXPP_ExternalEntityCallback)(void *userData, FAXPP_Parser *parser,
-                                                    const FAXPP_Text *system, const FAXPP_Text *public);
+typedef FAXPP_Error (*FAXPP_ExternalEntityCallback)(void *userData, FAXPP_Parser *parser, FAXPP_EntityType type,
+                                                    const FAXPP_Text *base_uri, const FAXPP_Text *system_id, const FAXPP_Text *public_id);
 
 /**
  * Creates a parser object
@@ -221,6 +230,56 @@ FAXPP_DecodeFunction FAXPP_get_decode(const FAXPP_Parser *parser);
 void FAXPP_set_decode(FAXPP_Parser *parser, FAXPP_DecodeFunction decode);
 
 /**
+ * Gets the base URI for the file currently being parsed. This is set by the user
+ * using FAXPP_set_base_uri() or FAXPP_set_base_uri_str().
+ *
+ * The base URI returned will be in the encoding that it was provided in to the
+ * FAXPP_set_base_uri() function.
+ * 
+ * \param parser
+ * \return The current base URI
+ *
+ * \relatesalso FAXPP_Parser
+ */
+const FAXPP_Text *FAXPP_get_base_uri(const FAXPP_Parser *parser);
+
+/**
+ * Sets the base URI for the file currently being parsed. This is passed to the
+ * FAXPP_ExternalEntityCallback set using FAXPP_set_external_entity_callback().
+ *
+ * A copy of the base_uri will be kept internally, so neither the FAXPP_Text object
+ * nor the buffer it points to need exist after a call to FAXPP_set_base_uri(). The
+ * encoding of the base URI is irrelevent to FAXPP - the base URI will be in the
+ * same encoding when it is passed back to the FAXPP_ExternalEntityCallback.
+ * 
+ * \param parser
+ * \param base_uri The base URI
+ *
+ * \retval OUT_OF_MEMORY
+ * \retval NO_ERROR
+ *
+ * \relatesalso FAXPP_Parser
+ */
+FAXPP_Error FAXPP_set_base_uri(FAXPP_Parser *parser, const FAXPP_Text *base_uri);
+
+/**
+ * Sets the base URI for the file currently being parsed. This is passed to the
+ * FAXPP_ExternalEntityCallback set using FAXPP_set_external_entity_callback().
+ *
+ * A copy of the base_uri will be kept internally, so the string need not exist
+ * after a call to FAXPP_set_base_uri_str().
+ * 
+ * \param parser
+ * \param base_uri The base URI
+ *
+ * \retval OUT_OF_MEMORY
+ * \retval NO_ERROR
+ *
+ * \relatesalso FAXPP_Parser
+ */
+FAXPP_Error FAXPP_set_base_uri_str(FAXPP_Parser *parser, const char *base_uri);
+
+/**
  * Sets the FAXPP_ExternalEntityCallback that the parser will call when it
  * encounters a reference to an external parsed entity.
  * 
@@ -302,6 +361,7 @@ FAXPP_Error FAXPP_init_parse_callback(FAXPP_Parser *parser, FAXPP_ReadCallback c
  * responsible for deleting the buffer.
  *
  * \param parser The parser to use
+ * \param type The type of external entity to parse
  * \param buffer A pointer to the start of the buffer to parse
  * \param length The length of the given buffer
  * \param done Set to non-zero if this is the last buffer from the external entity
@@ -313,7 +373,7 @@ FAXPP_Error FAXPP_init_parse_callback(FAXPP_Parser *parser, FAXPP_ReadCallback c
  *
  * \relatesalso FAXPP_Parser
  */
-FAXPP_Error FAXPP_parse_external_entity(FAXPP_Parser *parser, void *buffer, unsigned int length, unsigned int done);
+FAXPP_Error FAXPP_parse_external_entity(FAXPP_Parser *parser, FAXPP_EntityType type, void *buffer, unsigned int length, unsigned int done);
 
 /**
  * Interrupts parsing to parse the external entity from the given file. Any parsing
@@ -326,6 +386,7 @@ FAXPP_Error FAXPP_parse_external_entity(FAXPP_Parser *parser, void *buffer, unsi
  * The user remains responsible for closing the file after parsing has ended.
  *
  * \param parser The parser to initialize
+ * \param type The type of external entity to parse
  * \param file The file descriptor of the file to parse
  *
  * \retval UNSUPPORTED_ENCODING If the encoding sniffing algorithm cannot recognize
@@ -335,7 +396,7 @@ FAXPP_Error FAXPP_parse_external_entity(FAXPP_Parser *parser, void *buffer, unsi
  *
  * \relatesalso FAXPP_Parser
  */
-FAXPP_Error FAXPP_parse_external_entity_file(FAXPP_Parser *parser, FILE *file);
+FAXPP_Error FAXPP_parse_external_entity_file(FAXPP_Parser *parser, FAXPP_EntityType type, FILE *file);
 
 /**
  * Interrupts parsing to parse the external entity using the given read callback. Any parsing
@@ -345,6 +406,7 @@ FAXPP_Error FAXPP_parse_external_entity_file(FAXPP_Parser *parser, FILE *file);
  * to.
  *
  * \param parser The parser to initialize
+ * \param type The type of external entity to parse
  * \param callback The read callback function to use to retrieve the parse input
  * \param userData The user data to be passed to the callback function when it is called
  *
@@ -355,7 +417,7 @@ FAXPP_Error FAXPP_parse_external_entity_file(FAXPP_Parser *parser, FILE *file);
  *
  * \relatesalso FAXPP_Parser
  */
-FAXPP_Error FAXPP_parse_external_entity_callback(FAXPP_Parser *parser, FAXPP_ReadCallback callback, void *userData);
+FAXPP_Error FAXPP_parse_external_entity_callback(FAXPP_Parser *parser, FAXPP_EntityType type, FAXPP_ReadCallback callback, void *userData);
 
 /**
  * Instructs the parser to release any dependencies it has on it's current buffer.

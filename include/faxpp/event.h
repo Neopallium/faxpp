@@ -99,8 +99,8 @@ typedef struct {
   FAXPP_Text encoding;     ///< The version of the event. \details Present for event types START_DOCUMENT_EVENT and START_EXTERNAL_ENTITY_EVENT
   FAXPP_Text standalone;   ///< The version of the event. \details Present only for the START_DOCUMENT_EVENT event type
 
-  FAXPP_Text system;       ///< The system literal of the event. \details Present for event types DOCTYPE_EVENT and ENTITY_REFERENCE_EVENT
-  FAXPP_Text public;       ///< The public ID literal of the event. \details Present for event types DOCTYPE_EVENT and ENTITY_REFERENCE_EVENT
+  FAXPP_Text system_id;    ///< The system literal of the event. \details Present for event types DOCTYPE_EVENT and ENTITY_REFERENCE_EVENT
+  FAXPP_Text public_id;    ///< The public ID literal of the event. \details Present for event types DOCTYPE_EVENT and ENTITY_REFERENCE_EVENT
 
   unsigned int line;       ///< The line number of the start of the event
   unsigned int column;     ///< The column number of the start of the event

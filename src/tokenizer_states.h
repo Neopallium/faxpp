@@ -258,11 +258,16 @@ FAXPP_Error doctype_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error doctype_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error doctype_after_name_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error doctype_internal_subset_start_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error doctype_end_state(FAXPP_TokenizerEnv *env);
+
 FAXPP_Error internal_subset_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_state_en(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_markup_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_decl_state(FAXPP_TokenizerEnv *env);
-FAXPP_Error doctype_end_state(FAXPP_TokenizerEnv *env);
+
+FAXPP_Error external_subset_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error external_subset_markup_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error external_subset_decl_state(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error system_id_initial_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error system_id_initial_state2(FAXPP_TokenizerEnv *env);
@@ -427,8 +432,10 @@ const char *state_to_string(FAXPP_StateFunction state);
     (env)->state = parsed_entity_state; \
   else if((env)->seen_doc_element) \
     (env)->state = final_state; \
-  else if((env)->in_internal_subset) \
+  else if((env)->internal_subset) \
     (env)->state = internal_subset_state; \
+  else if((env)->external_subset) \
+    (env)->state = external_subset_state; \
   else (env)->state = initial_misc_state; \
 }
 

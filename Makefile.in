@@ -70,13 +70,15 @@ libfaxpp_la_LINK = $(LIBTOOL) --tag=CC $(AM_LIBTOOLFLAGS) \
 	$(LIBTOOLFLAGS) --mode=link $(CCLD) $(AM_CFLAGS) $(CFLAGS) \
 	$(libfaxpp_la_LDFLAGS) $(LDFLAGS) -o $@
 PROGRAMS = $(noinst_PROGRAMS)
-am_parser_example_OBJECTS = parser_example.$(OBJEXT)
+am_parser_example_OBJECTS = parser_example.$(OBJEXT) \
+	entity_resolver.$(OBJEXT) output_event.$(OBJEXT)
 parser_example_OBJECTS = $(am_parser_example_OBJECTS)
 parser_example_DEPENDENCIES = libfaxpp.la
 am_tokenizer_example_OBJECTS = tokenizer_example.$(OBJEXT)
 tokenizer_example_OBJECTS = $(am_tokenizer_example_OBJECTS)
 tokenizer_example_DEPENDENCIES = libfaxpp.la
-am_xmlconf_runner_OBJECTS = xmlconf_runner.$(OBJEXT)
+am_xmlconf_runner_OBJECTS = xmlconf_runner.$(OBJEXT) \
+	entity_resolver.$(OBJEXT) output_event.$(OBJEXT)
 xmlconf_runner_OBJECTS = $(am_xmlconf_runner_OBJECTS)
 xmlconf_runner_DEPENDENCIES = libfaxpp.la
 DEFAULT_INCLUDES = -I. -I$(top_builddir)/src@am__isrc@
@@ -259,12 +261,20 @@ src/attlistdecl.c \
 src/notationdecl.c \
 src/entitydecl.c
 
-tokenizer_example_SOURCES = examples/tokenizer_example.c
 tokenizer_example_LDADD = libfaxpp.la
-parser_example_SOURCES = examples/parser_example.c
+tokenizer_example_SOURCES = examples/tokenizer_example.c
 parser_example_LDADD = libfaxpp.la
-xmlconf_runner_SOURCES = tests/xmlconf_runner.c
+parser_example_SOURCES = \
+examples/parser_example.c \
+examples/entity_resolver.c \
+examples/output_event.c
+
 xmlconf_runner_LDADD = libfaxpp.la
+xmlconf_runner_SOURCES = \
+tests/xmlconf_runner.c \
+examples/entity_resolver.c \
+examples/output_event.c
+
 EXTRA_DIST = \
 docs/Doxyfile.api \
 docs/header.html \
@@ -387,10 +397,12 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/doctype.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/element.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/elementdecl.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/entity_resolver.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/entitydecl.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/error.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/event.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/notationdecl.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/output_event.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/parser_example.Po@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/pi.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/reference.Plo@am__quote@
@@ -577,6 +589,34 @@ parser_example.obj: examples/parser_example.c
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/parser_example.c' object='parser_example.obj' libtool=no @AMDEPBACKSLASH@
 @AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
 @am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o parser_example.obj `if test -f 'examples/parser_example.c'; then $(CYGPATH_W) 'examples/parser_example.c'; else $(CYGPATH_W) '$(srcdir)/examples/parser_example.c'; fi`
+
+entity_resolver.o: examples/entity_resolver.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT entity_resolver.o -MD -MP -MF $(DEPDIR)/entity_resolver.Tpo -c -o entity_resolver.o `test -f 'examples/entity_resolver.c' || echo '$(srcdir)/'`examples/entity_resolver.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/entity_resolver.Tpo $(DEPDIR)/entity_resolver.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/entity_resolver.c' object='entity_resolver.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o entity_resolver.o `test -f 'examples/entity_resolver.c' || echo '$(srcdir)/'`examples/entity_resolver.c
+
+entity_resolver.obj: examples/entity_resolver.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT entity_resolver.obj -MD -MP -MF $(DEPDIR)/entity_resolver.Tpo -c -o entity_resolver.obj `if test -f 'examples/entity_resolver.c'; then $(CYGPATH_W) 'examples/entity_resolver.c'; else $(CYGPATH_W) '$(srcdir)/examples/entity_resolver.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/entity_resolver.Tpo $(DEPDIR)/entity_resolver.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/entity_resolver.c' object='entity_resolver.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o entity_resolver.obj `if test -f 'examples/entity_resolver.c'; then $(CYGPATH_W) 'examples/entity_resolver.c'; else $(CYGPATH_W) '$(srcdir)/examples/entity_resolver.c'; fi`
+
+output_event.o: examples/output_event.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT output_event.o -MD -MP -MF $(DEPDIR)/output_event.Tpo -c -o output_event.o `test -f 'examples/output_event.c' || echo '$(srcdir)/'`examples/output_event.c
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/output_event.Tpo $(DEPDIR)/output_event.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/output_event.c' object='output_event.o' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o output_event.o `test -f 'examples/output_event.c' || echo '$(srcdir)/'`examples/output_event.c
+
+output_event.obj: examples/output_event.c
+@am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT output_event.obj -MD -MP -MF $(DEPDIR)/output_event.Tpo -c -o output_event.obj `if test -f 'examples/output_event.c'; then $(CYGPATH_W) 'examples/output_event.c'; else $(CYGPATH_W) '$(srcdir)/examples/output_event.c'; fi`
+@am__fastdepCC_TRUE@	mv -f $(DEPDIR)/output_event.Tpo $(DEPDIR)/output_event.Po
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	source='examples/output_event.c' object='output_event.obj' libtool=no @AMDEPBACKSLASH@
+@AMDEP_TRUE@@am__fastdepCC_FALSE@	DEPDIR=$(DEPDIR) $(CCDEPMODE) $(depcomp) @AMDEPBACKSLASH@
+@am__fastdepCC_FALSE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -c -o output_event.obj `if test -f 'examples/output_event.c'; then $(CYGPATH_W) 'examples/output_event.c'; else $(CYGPATH_W) '$(srcdir)/examples/output_event.c'; fi`
 
 tokenizer_example.o: examples/tokenizer_example.c
 @am__fastdepCC_TRUE@	$(CC) $(DEFS) $(DEFAULT_INCLUDES) $(INCLUDES) $(AM_CPPFLAGS) $(CPPFLAGS) $(AM_CFLAGS) $(CFLAGS) -MT tokenizer_example.o -MD -MP -MF $(DEPDIR)/tokenizer_example.Tpo -c -o tokenizer_example.o `test -f 'examples/tokenizer_example.c' || echo '$(srcdir)/'`examples/tokenizer_example.c

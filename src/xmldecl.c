@@ -29,9 +29,11 @@ xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     break;
   case '!':
-    env->state = doctype_or_comment_state;
-    next_char(env);
-    token_start_position(env);
+    if(env->external_subset)
+      env->state = external_subset_markup_state;
+    else
+      env->state = initial_markup_state;
+    // No next_char
     break;
   LINE_ENDINGS
   default:
@@ -162,7 +164,7 @@ xml_decl_version_state1(FAXPP_TokenizerEnv *env)
     env->state = xml_decl_version_state2;
     break;
   case 'e':
-    if(env->external_parsed_entity) {
+    if(env->external_parsed_entity || env->external_subset) {
       env->state = xml_decl_encoding_state2;
       break;
     }
@@ -328,13 +330,13 @@ xml_decl_encoding_state1(FAXPP_TokenizerEnv *env)
   WHITESPACE:
     break;
   case '?':
-    if(env->external_parsed_entity) goto invalid_char;
+    if(env->external_parsed_entity || env->external_subset) goto invalid_char;
 
     env->state = xml_decl_seen_question_state;
     token_start_position(env);
     break;
   case 's':
-    if(env->external_parsed_entity) goto invalid_char;
+    if(env->external_parsed_entity || env->external_subset) goto invalid_char;
 
     env->state = xml_decl_standalone_state2;
     break;
@@ -522,7 +524,7 @@ xml_decl_standalone_state1(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   case 's':
-    if(!env->external_parsed_entity) {
+    if(!env->external_parsed_entity && !env->external_subset) {
       env->state = xml_decl_standalone_state2;
       next_char(env);
       break;

@@ -390,16 +390,18 @@ static void init_tokenize_internal(FAXPP_Tokenizer *env)
 
   env->nesting_level = 0;
   env->do_encode = 1;
-  env->seen_doctype = 0;
-  env->in_internal_subset = 0;
-  env->seen_doc_element = 0;
 
+  env->seen_doctype = 0;
+  env->internal_subset = 0;
+  env->external_subset = 0;
+  env->seen_doc_element = 0;
   env->element_entity = 0;
   env->attr_entity = 0;
   env->internal_dtd_entity = 0;
   env->external_parsed_entity = 0;
 
-  env->no_pass_on_state = 0;
+  env->start_of_entity = 0;
+  env->start_of_file = 0;
 
   env->decode = 0;
 
@@ -462,6 +464,7 @@ FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state
   env->attr_entity = state == ATTRIBUTE_VALUE_ENTITY;
   env->internal_dtd_entity = state == INTERNAL_DTD_ENTITY;
   env->external_parsed_entity = state == EXTERNAL_PARSED_ENTITY;
+  env->external_subset = state == EXTERNAL_SUBSET_ENTITY;
 
   FAXPP_set_tokenizer_decode(env, env->prev->transcoder.decode);
 
@@ -481,6 +484,7 @@ FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state
     env->state = internal_subset_state_en;
     break;
   case EXTERNAL_PARSED_ENTITY:
+  case EXTERNAL_SUBSET_ENTITY:
     env->state = initial_state;
     break;
   }
@@ -501,7 +505,17 @@ FAXPP_pop_tokenizer(FAXPP_Tokenizer **list)
   FAXPP_TokenizerEnv *env = *list;
   *list = env->prev;
 
-  if(!env->no_pass_on_state) {
+  if(env->start_of_entity) {
+    if(env->stored_state != 0 || env->nesting_level != 0 ||
+       (env->element_entity && env->state != parsed_entity_state &&
+        env->state != default_element_content_rsquare_state1 &&
+        env->state != default_element_content_rsquare_state2) ||
+       (env->internal_dtd_entity && env->state != internal_subset_state_en)
+       ) {
+      return INCOMPLETE_MARKUP_IN_ENTITY_VALUE;
+    }
+  }
+  else {
     // Force the old tokenizer token to point into the token buffer
     FAXPP_tokenizer_release_buffer(env, 0);
 
@@ -521,16 +535,6 @@ FAXPP_pop_tokenizer(FAXPP_Tokenizer **list)
 
     (*list)->state = env->state;
     (*list)->stored_state = env->stored_state;
-  }
-  else {
-    if(env->stored_state != 0 || env->nesting_level != 0 ||
-       (env->element_entity && env->state != parsed_entity_state &&
-        env->state != default_element_content_rsquare_state1 &&
-        env->state != default_element_content_rsquare_state2) ||
-       (env->internal_dtd_entity && env->state != internal_subset_state_en)
-       ) {
-      return INCOMPLETE_MARKUP_IN_ENTITY_VALUE;
-    }
   }
 
   (*list)->result_token.type = NO_TOKEN;

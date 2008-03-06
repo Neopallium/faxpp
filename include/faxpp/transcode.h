@@ -80,13 +80,13 @@ typedef struct {
  *
  * \see FAXPP_utf8_decode, FAXPP_utf8_encode
  */
-const FAXPP_Transcoder FAXPP_utf8_transcoder;
+extern const FAXPP_Transcoder FAXPP_utf8_transcoder;
 /**
  * Transcoder to and from native endian UTF-16
  *
  * \see FAXPP_utf16_native_decode, FAXPP_utf16_native_encode
  */
-const FAXPP_Transcoder FAXPP_utf16_native_transcoder;
+extern const FAXPP_Transcoder FAXPP_utf16_native_transcoder;
 
 /**
  * Returns a string describing the given (built-in) decode function

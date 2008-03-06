@@ -101,7 +101,7 @@ doctype_name_state2(FAXPP_TokenizerEnv *env)
       return NO_ERROR;
     case '[':
       env->state = internal_subset_state;
-      env->in_internal_subset = 1;
+      env->internal_subset = 1;
       token_end_position(env);
       report_token(DOCTYPE_NAME_TOKEN, env);
       next_char(env);
@@ -165,7 +165,7 @@ doctype_name_seen_colon_state2(FAXPP_TokenizerEnv *env)
       return NO_ERROR;
     case '[':
       env->state = internal_subset_state;
-      env->in_internal_subset = 1;
+      env->internal_subset = 1;
       token_end_position(env);
       report_token(DOCTYPE_NAME_TOKEN, env);
       next_char(env);
@@ -207,7 +207,7 @@ doctype_after_name_state(FAXPP_TokenizerEnv *env)
     break;
   case '[':
     env->state = internal_subset_state;
-    env->in_internal_subset = 1;
+    env->internal_subset = 1;
     break;
   case '>':
     base_state(env);
@@ -471,7 +471,7 @@ doctype_internal_subset_start_state(FAXPP_TokenizerEnv *env)
     break;
   case '[':
     env->state = internal_subset_state;
-    env->in_internal_subset = 1;
+    env->internal_subset = 1;
     break;
   case '>':
     base_state(env);
@@ -495,7 +495,7 @@ internal_subset_state(FAXPP_TokenizerEnv *env)
   switch(env->current_char) {
   case ']':
     env->state = doctype_end_state;
-    env->in_internal_subset = 0;
+    env->internal_subset = 0;
     break;
   WHITESPACE:
     break;
@@ -614,6 +614,87 @@ doctype_end_state(FAXPP_TokenizerEnv *env)
     next_char(env);
     return INVALID_DOCTYPE_DECL;
   }
+  return NO_ERROR;
+}
+
+FAXPP_Error
+external_subset_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_state;
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  case '<':
+    env->state = external_subset_markup_state;
+    break;
+  default:
+    next_char(env);
+    return INVALID_DOCTYPE_DECL;
+  }
+
+  next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+external_subset_markup_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case '?':
+    env->state = pi_name_start_state;
+    break;
+  case '!':
+    env->state = external_subset_decl_state;
+    break;
+  LINE_ENDINGS
+  default:
+    next_char(env);
+    return INVALID_DTD_DECL;
+  }
+
+  next_char(env);
+  token_start_position(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+external_subset_decl_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case '-':
+    env->state = comment_start_state2;
+    break;
+/*   // TBD conditional sections - jpcs */
+/*   case '[': */
+/*     break; */
+  case 'E':
+    env->state = elementdecl_or_entitydecl_state;
+    break;
+  case 'A':
+    env->state = attlistdecl_initial_state1;
+    break;
+  case 'N':
+    env->state = notationdecl_initial_state1;
+    break;
+  LINE_ENDINGS
+  default:
+    env->state = comment_content_state;
+    token_start_position(env);
+    next_char(env);
+    return INVALID_START_OF_COMMENT;
+  }
+  next_char(env);
   return NO_ERROR;
 }
 
