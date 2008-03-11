@@ -381,7 +381,7 @@ pubid_literal_apos_state(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     case '\'':
-      env->state = system_id_ws_state;
+      env->state = public_id_ws_state2;
       token_end_position(env);
       report_token(PUBID_LITERAL_TOKEN, env);
       next_char(env);
@@ -425,7 +425,7 @@ pubid_literal_quot_state(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     case '"':
-      env->state = system_id_ws_state;
+      env->state = public_id_ws_state2;
       token_end_position(env);
       report_token(PUBID_LITERAL_TOKEN, env);
       next_char(env);
@@ -458,6 +458,53 @@ pubid_literal_quot_state(FAXPP_TokenizerEnv *env)
   }
 
   // Never happens
+  return NO_ERROR;
+}
+
+FAXPP_Error
+public_id_ws_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    env->state = public_id_ws_state3;
+    next_char(env);
+    break;
+  case '>':
+    if(env->stored_state == notationdecl_end_state) {
+      // Notation decls can skip the system literal
+      retrieve_state(env);
+      return NO_ERROR;
+    }
+    // Fall through
+  default:
+    env->state = system_literal_start_state;
+    return EXPECTING_WHITESPACE;
+  }
+  return NO_ERROR;
+}
+
+FAXPP_Error
+public_id_ws_state3(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '>':
+    if(env->stored_state == notationdecl_end_state) {
+      // Notation decls can skip the system literal
+      retrieve_state(env);
+      return NO_ERROR;
+    }
+    // Fall through
+  default:
+    env->state = system_literal_start_state;
+    break;
+  }
   return NO_ERROR;
 }
 

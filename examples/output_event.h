@@ -23,5 +23,6 @@
 
 void output_event(const FAXPP_Event *event, FILE *stream);
 void output_attr_value(const FAXPP_AttrValue *atval, FILE *stream);
+void output_text(const FAXPP_Text *text, FILE *stream);
 
 #endif

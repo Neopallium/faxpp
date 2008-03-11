@@ -288,6 +288,8 @@ FAXPP_Error public_id_ws_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error pubid_literal_start_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error pubid_literal_apos_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error pubid_literal_quot_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error public_id_ws_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error public_id_ws_state3(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error elementdecl_or_entitydecl_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_initial_state1(FAXPP_TokenizerEnv *env);
@@ -311,7 +313,71 @@ FAXPP_Error attlistdecl_name_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error attlistdecl_name_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error attlistdecl_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error attlistdecl_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
-FAXPP_Error attlistdecl_content_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_attdef_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_attdef_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_attdef_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_attdef_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
+
+FAXPP_Error attlistdecl_atttype_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_cdata_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_cdata_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_cdata_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_cdata_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_id_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_id_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_idref_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_idref_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_idref_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_entity_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_entity_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_entity_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_entity_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_entity_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_entities_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_entities_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_nmtoken_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_nmtoken_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_nmtoken_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_nmtoken_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_nmtoken_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_nmtoken_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_nmtoken_state7(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_state7(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_notation_separator_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_enumeration_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_enumeration_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_atttype_enumeration_separator_state(FAXPP_TokenizerEnv *env);
+
+FAXPP_Error attlistdecl_default_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_implied_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_implied_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_implied_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_implied_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_implied_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_implied_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_required_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_required_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_required_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_required_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_required_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_required_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_required_state7(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_fixed_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_fixed_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_fixed_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_default_fixed_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_attvalue_start_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_attvalue_apos_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error attlistdecl_attvalue_quot_state(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error notationdecl_initial_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error notationdecl_initial_state2(FAXPP_TokenizerEnv *env);
@@ -323,6 +389,7 @@ FAXPP_Error notationdecl_initial_state7(FAXPP_TokenizerEnv *env);
 FAXPP_Error notationdecl_name_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error notationdecl_name_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error notationdecl_content_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error notationdecl_end_state(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error entitydecl_initial_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error entitydecl_initial_state2(FAXPP_TokenizerEnv *env);
@@ -385,15 +452,25 @@ const char *state_to_string(FAXPP_StateFunction state);
   read_char_no_check((env)); \
 }
 
+#define next_char_append(env) \
+{ \
+  FAXPP_Error err = FAXPP_buffer_append_ch(&(env)->token_buffer, (env)->transcoder.encode, (env)->current_char); \
+  if(err != 0) return err; \
+}
+
+#define next_char_position(env) \
+{ \
+  (env)->column += 1; \
+  (env)->position += (env)->char_len; \
+}
+
 #define next_char(env) \
 { \
   if((env)->token_buffer.cursor) { \
-    FAXPP_Error err = FAXPP_buffer_append_ch(&(env)->token_buffer, (env)->transcoder.encode, (env)->current_char); \
-    if(err != 0) return err; \
+    next_char_append((env)); \
   } \
 \
-  (env)->column += 1; \
-  (env)->position += (env)->char_len; \
+  next_char_position((env)); \
 }
 
 #define token_start_position(env) \
@@ -475,23 +552,25 @@ const char *state_to_string(FAXPP_StateFunction state);
   (env)->stored_state = 0; \
 }
 
-#define LINE_ENDINGS \
+#define LINE_ENDINGS_LABEL(label) \
   case '\r': { \
     Char32 next_char; \
     if((env)->position + (env)->char_len >= (env)->buffer_end || \
        (env)->decode((env)->position + (env)->char_len, (env)->buffer_end, &next_char) \
        == TRANSCODE_PREMATURE_END_OF_BUFFER) { \
       if(!(env)->buffer_done) return PREMATURE_END_OF_BUFFER; \
-      goto LINE_ENDINGS_INC; \
+      goto LINE_ENDINGS_INC ## label; \
     } \
-    else if(next_char != '\n') goto LINE_ENDINGS_INC; \
-    goto LINE_ENDINGS_END; \
+    else if(next_char != '\n') goto LINE_ENDINGS_INC ## label; \
+    goto LINE_ENDINGS_END ## label; \
   } \
   case '\n': \
-LINE_ENDINGS_INC: \
+LINE_ENDINGS_INC ## label: \
     (env)->line += 1; \
     (env)->column = (unsigned int)-1; \
-LINE_ENDINGS_END:
+LINE_ENDINGS_END ## label:
+
+#define LINE_ENDINGS LINE_ENDINGS_LABEL(0)
 
 /*
  * [3]     S    ::=    (#x20 | #x9 | #xD | #xA)+

@@ -248,7 +248,7 @@ FAXPP_Error
 PREFIX(attr_value_apos_state)(FAXPP_TokenizerEnv *env)
 {
   while(1) {
-    if(env->position >= env->buffer_end) {
+    END_CHECK_IF {
       if(env->token.value.ptr) {
         token_end_position(env);
         if(env->token.value.len != 0) {
@@ -309,7 +309,7 @@ FAXPP_Error
 PREFIX(attr_value_quot_state)(FAXPP_TokenizerEnv *env)
 {
   while(1) {
-    if(env->position >= env->buffer_end) {
+    END_CHECK_IF {
       if(env->token.value.ptr) {
         token_end_position(env);
         if(env->token.value.len != 0) {
@@ -373,7 +373,7 @@ FAXPP_Error
 PREFIX(attr_value_state_en)(FAXPP_TokenizerEnv *env)
 {
   while(1) {
-    if(env->position >= env->buffer_end) {
+    END_CHECK_IF {
       if(env->token.value.ptr) {
         token_end_position(env);
         if(env->token.value.len != 0) {

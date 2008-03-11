@@ -182,7 +182,10 @@ void FAXPP_set_decode(FAXPP_Parser *parser, FAXPP_DecodeFunction decode)
   FAXPP_set_tokenizer_decode(parser->tenv, decode);
   parser->tenv->user_provided_decode = 1;
   if(parser->next_event == nc_unsupported_encoding_next_event) {
-    parser->next_event = parser->main_next_event;
+    if(parser->tenv->external_subset)
+      parser->next_event = nc_dtd_next_event;
+    else
+      parser->next_event = parser->main_next_event;
   }
 }
 
@@ -325,14 +328,7 @@ FAXPP_Error FAXPP_parse_external_entity(FAXPP_Parser *env, FAXPP_EntityType type
   env->tenv->start_of_entity = 1;
   env->tenv->start_of_file = 1;
 
-  switch(type) {
-  case EXTERNAL_PARSED_ENTITY:
-    env->next_event = nc_start_document_next_event;
-    break;
-  case EXTERNAL_SUBSET_ENTITY:
-    env->next_event = nc_dtd_next_event;
-    break;
-  }
+  env->next_event = nc_start_document_next_event;
 
   return FAXPP_sniff_encoding(env->tenv);
 }
@@ -358,14 +354,7 @@ FAXPP_Error FAXPP_parse_external_entity_callback(FAXPP_Parser *env, FAXPP_Entity
   env->tenv->start_of_entity = 1;
   env->tenv->start_of_file = 1;
 
-  switch(type) {
-  case EXTERNAL_PARSED_ENTITY:
-    env->next_event = nc_start_document_next_event;
-    break;
-  case EXTERNAL_SUBSET_ENTITY:
-    env->next_event = nc_dtd_next_event;
-    break;
-  }
+  env->next_event = nc_start_document_next_event;
 
   unsigned int len = env->tenv->read(env->tenv->read_user_data, env->tenv->read_buffer, env->tenv->read_buffer_length);
 
@@ -655,8 +644,8 @@ FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *env, void *buffer,
       (err) = (env)->tenv->state((env)->tenv); \
       p_check_err((err), (env)); \
     } \
+/*     p_print_token(env); */ \
   } \
-/*   p_print_token(env); */ \
 }
 
 #define p_set_text_from_text(text, o) \
@@ -951,8 +940,12 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
   // Output the ENTITY_REFERENCE_END_EVENT
   if(env->tenv->start_of_entity) {
     if(env->tenv->attr_entity) {
-      err = p_set_attr_value_name_from_entity(env->current_attr, env, ENTITY_REFERENCE_END_EVENT, env->tenv->entity);
-      if(err) return err;
+      // TBD default attr values - jpcs
+      if(!env->tenv->prev->internal_subset && !env->tenv->prev->external_subset &&
+         !env->tenv->prev->internal_dtd_entity) {
+        err = p_set_attr_value_name_from_entity(env->current_attr, env, ENTITY_REFERENCE_END_EVENT, env->tenv->entity);
+        if(err) return err;
+      }
     }
     else if(env->tenv->element_entity) {
       p_reset_event(env);
@@ -965,8 +958,13 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
       env->event.type = END_EXTERNAL_ENTITY_EVENT;
     }
     else if(env->tenv->external_subset) {
-      // Go back to parsing the document content
-      env->next_event = env->main_next_event;
+      if(env->tenv->prev->internal_subset) {
+        env->next_event = nc_dtd_next_event;
+      }
+      else {
+        // Go back to parsing the document content
+        env->next_event = env->main_next_event;
+      }
     }
   }
 
@@ -1020,6 +1018,7 @@ static int p_case_insensitive_equals(const char *str, FAXPP_EncodeFunction encod
 
 static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
 {
+  FAXPP_NextEvent next;
   FAXPP_Error err = 0;
 
   env->event.type = NO_EVENT;
@@ -1040,36 +1039,39 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
       p_copy_text_from_token(&env->event.standalone, env, /*useTokenBuffer*/0);
       break;
     case XML_DECL_END_TOKEN:
+      env->next_event = nc_unsupported_encoding_next_event;
+
       if(env->tenv->external_subset) {
         // TBD event for start of external subset - jpcs
-        env->next_event = nc_dtd_next_event;
+        next = nc_dtd_next_event;
+      }
+      else if(env->tenv->external_parsed_entity) {
+        env->event.type = START_EXTERNAL_ENTITY_EVENT;
+        next = env->main_next_event;
       }
       else {
-        env->next_event = nc_unsupported_encoding_next_event;
-
-        if(env->tenv->external_parsed_entity)
-          env->event.type = START_EXTERNAL_ENTITY_EVENT;
-        else env->event.type = START_DOCUMENT_EVENT;
+        env->event.type = START_DOCUMENT_EVENT;
+        next = env->main_next_event;
       }
 
       // Check the encoding string against our internally supported encodings
       if(env->tenv->user_provided_decode || env->event.encoding.ptr == 0) {
-          env->next_event = env->main_next_event;
+          env->next_event = next;
       }
       else if(p_case_insensitive_equals("UTF-8", env->tenv->transcoder.encode, &env->event.encoding)) {
-        env->next_event = env->main_next_event;
+        env->next_event = next;
         if(env->tenv->decode != FAXPP_utf8_decode)
           return BAD_ENCODING;
       }
       else if(p_case_insensitive_equals("UTF-16", env->tenv->transcoder.encode, &env->event.encoding)) {
-        env->next_event = env->main_next_event;
+        env->next_event = next;
         if(env->tenv->decode != FAXPP_utf16_le_decode &&
            env->tenv->decode != FAXPP_utf16_be_decode &&
            env->tenv->decode != FAXPP_utf16_native_decode)
           return BAD_ENCODING;
       }
       else if(p_case_insensitive_equals("UTF-16LE", env->tenv->transcoder.encode, &env->event.encoding)) {
-        env->next_event = env->main_next_event;
+        env->next_event = next;
         if(env->tenv->decode != FAXPP_utf16_le_decode
 #ifndef WORDS_BIGENDIAN
            && env->tenv->decode != FAXPP_utf16_native_decode
@@ -1078,7 +1080,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
           return BAD_ENCODING;
       }
       else if(p_case_insensitive_equals("UTF-16BE", env->tenv->transcoder.encode, &env->event.encoding)) {
-        env->next_event = env->main_next_event;
+        env->next_event = next;
         if(env->tenv->decode != FAXPP_utf16_be_decode
 #ifdef WORDS_BIGENDIAN
            && env->tenv->decode != FAXPP_utf16_native_decode
@@ -1087,7 +1089,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
           return BAD_ENCODING;
       }
       else if(p_case_insensitive_equals("ISO-10646-UCS-4", env->tenv->transcoder.encode, &env->event.encoding)) {
-        env->next_event = env->main_next_event;
+        env->next_event = next;
         if(env->tenv->decode != FAXPP_ucs4_le_decode &&
            env->tenv->decode != FAXPP_ucs4_be_decode &&
            env->tenv->decode != FAXPP_ucs4_native_decode)
@@ -1101,10 +1103,18 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
     default:
       env->tenv->buffered_token = 1;
       p_reset_event(env);
-      if(env->tenv->external_parsed_entity)
+      if(env->tenv->external_subset) {
+        // TBD event for start of external subset - jpcs
+        env->next_event = nc_dtd_next_event;
+      }
+      else if(env->tenv->external_parsed_entity) {
         env->event.type = START_EXTERNAL_ENTITY_EVENT;
-      else env->event.type = START_DOCUMENT_EVENT;
-      env->next_event = env->main_next_event;
+        env->next_event = env->main_next_event;
+      }
+      else {
+        env->event.type = START_DOCUMENT_EVENT;
+        env->next_event = env->main_next_event;
+      }
       return NO_ERROR;
     }
   }
@@ -1304,6 +1314,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
 {
   FAXPP_EntityInfo *ent;
   FAXPP_EntityValue *entv;
+  FAXPP_Text bkup_system, bkup_public;
   Char32 ch;
   FAXPP_Error err = 0;
 
@@ -1341,6 +1352,9 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
 
         p_copy_text_from_token(&entv->value, env, /*useTokenBuffer*/0);
       }
+      else if(env->current_notation) {
+        // We're in a notation decl - which we don't store yet
+      }
       else {
         p_copy_text_from_token(&env->event.system_id, env, /*useTokenBuffer*/0);
       }
@@ -1353,6 +1367,9 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         if(!entv) goto out_of_memory;
 
         p_copy_text_from_token(&entv->value, env, /*useTokenBuffer*/0);
+      }
+      else if(env->current_notation) {
+        // We're in a notation decl - which we don't store yet
       }
       else {
         p_copy_text_from_token(&env->event.public_id, env, /*useTokenBuffer*/0);
@@ -1449,6 +1466,30 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
 
         entv->value.len = env->entity_buffer.cursor - entv->value.ptr;
       }
+      else if(env->current_attlist) {
+        ent = p_find_entity_info(&env->tenv->result_token.value, env->general_entities);
+        if(ent == 0) {
+          err = UNDEFINED_ENTITY;
+          goto error;
+        }
+        // [WFC: Parsed Entity]
+        if(ent->unparsed) {
+          err = REFERENCE_TO_UNPARSED_ENTITY;
+          goto error;
+        }
+
+        // [WFC: No External Entity References]
+        if(ent->external) {
+          err = REFERENCE_TO_EXTERNAL_ENTITY;
+          goto error;
+        }
+
+/*         err = p_set_attr_value_name_from_entity(env->current_attr, env, ENTITY_REFERENCE_START_EVENT, ent); */
+/*         if(err) goto error; */
+
+        err = p_parse_entity(env, ent, ATTRIBUTE_VALUE_ENTITY);
+        if(err) goto error;
+      }
       break;
     case PE_REFERENCE_TOKEN:
       // Parameter entity references cannot be forward references -
@@ -1474,15 +1515,35 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         entv->entity_ref = ent;
       }
       else {
+        p_set_text_from_text(&bkup_system, &env->event.system_id);
+        p_set_text_from_text(&bkup_public, &env->event.public_id);
+
         err = p_parse_entity(env, ent, INTERNAL_DTD_ENTITY);
+
+        p_set_text_from_text(&env->event.system_id, &bkup_system);
+        p_set_text_from_text(&env->event.public_id, &bkup_public);
+
         if(err) goto error;
       }
       break;
 
+    case ATTLISTDECL_PREFIX_TOKEN:
+    case ATTLISTDECL_NAME_TOKEN:
+      env->current_attlist = 1;
+      break;
+    case ATTLISTDECL_END_TOKEN:
+      env->current_attlist = 0;
+      break;
+    case NOTATIONDECL_NAME_TOKEN:
+      env->current_notation = 1;
+      break;
+    case NOTATIONDECL_END_TOKEN:
+      env->current_notation = 0;
+      break;
     case DOCTYPE_END_TOKEN:
       env->next_event = env->main_next_event;
 
-      if(env->external_entity_callback) {
+      if((env->event.system_id.ptr || env->event.public_id.ptr) && env->external_entity_callback) {
         err = env->external_entity_callback(env->external_entity_user_data, env, EXTERNAL_SUBSET_ENTITY,
                                             FAXPP_get_base_uri(env),
                                             &env->event.system_id, &env->event.public_id);
@@ -1502,11 +1563,10 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
     case ELEMENTDECL_PREFIX_TOKEN:
     case ELEMENTDECL_NAME_TOKEN:
     case ELEMENTDECL_CONTENT_TOKEN:
-    case ATTLISTDECL_PREFIX_TOKEN:
-    case ATTLISTDECL_NAME_TOKEN:
-    case ATTLISTDECL_CONTENT_TOKEN:
-    case NOTATIONDECL_NAME_TOKEN:
-    case NOTATIONDECL_CONTENT_TOKEN:
+    case ATTLISTDECL_ATTDEF_PREFIX_TOKEN:
+    case ATTLISTDECL_ATTDEF_NAME_TOKEN:
+    case ATTLISTDECL_NOTATION_NAME_TOKEN:
+    case ATTLISTDECL_ENUMERATION_NAME_TOKEN:
       // Ignore for now
       break;
     case COMMENT_TOKEN:
@@ -1558,9 +1618,13 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case ELEMENTDECL_CONTENT_TOKEN:
     case ATTLISTDECL_PREFIX_TOKEN:
     case ATTLISTDECL_NAME_TOKEN:
-    case ATTLISTDECL_CONTENT_TOKEN:
+    case ATTLISTDECL_ATTDEF_PREFIX_TOKEN:
+    case ATTLISTDECL_ATTDEF_NAME_TOKEN:
+    case ATTLISTDECL_NOTATION_NAME_TOKEN:
+    case ATTLISTDECL_ENUMERATION_NAME_TOKEN:
+    case ATTLISTDECL_END_TOKEN:
     case NOTATIONDECL_NAME_TOKEN:
-    case NOTATIONDECL_CONTENT_TOKEN:
+    case NOTATIONDECL_END_TOKEN:
     case ENTITYDECL_NAME_TOKEN:
     case ENTITYDECL_VALUE_TOKEN:
     case ENTITYDECL_END_TOKEN:

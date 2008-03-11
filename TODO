@@ -8,11 +8,10 @@ Handle "xml" namespace properly
 xml:space value checking
 Error for redefining "xml" namespace
 Error for defining "xmlns" namespace
+Parse element decls correctly
+Parse parameter entities in markup correctly
 
 Large tasks
 -----------
 
-Entity expansion framework
-DTD internal subset parsing
-DTD external subset parsing
 DTD validation

@@ -98,6 +98,8 @@ struct FAXPP_ParserEnv_s {
   FAXPP_Attribute *attrs;
   FAXPP_Attribute *current_attr;
   FAXPP_EntityInfo *current_entity;
+  unsigned int current_attlist:1;
+  unsigned int current_notation:1;
 
   FAXPP_AttrValue *av_ptr;
   FAXPP_AttrValue *av_dealloc;

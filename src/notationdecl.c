@@ -96,16 +96,42 @@ notationdecl_content_state(FAXPP_TokenizerEnv *env)
   read_char(env);
 
   switch(env->current_char) {
-  case '>':
-    base_state(env);
-    token_end_position(env);
-    report_token(NOTATIONDECL_CONTENT_TOKEN, env);
+  case 'S':
+    env->stored_state = notationdecl_end_state;
+    env->state = system_id_initial_state1;
+    break;
+  case 'P':
+    env->stored_state = notationdecl_end_state;
+    env->state = public_id_initial_state1;
     break;
   LINE_ENDINGS
   default:
-    break;
+    next_char(env);
+    return INVALID_DTD_DECL;
   }
   next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+notationdecl_end_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '>':
+    base_state(env);
+    report_empty_token(NOTATIONDECL_END_TOKEN, env);
+    next_char(env);
+    token_start_position(env);
+    break;
+  default:
+    next_char(env);
+    return INVALID_DTD_DECL;
+  }
   return NO_ERROR;
 }
 

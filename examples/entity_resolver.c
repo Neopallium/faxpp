@@ -60,7 +60,7 @@ FAXPP_Error entity_callback(void *userData, FAXPP_Parser *parser, FAXPP_EntityTy
 
   file = fopen(path, "r");
   if(file == 0) {
-    printf("Open of '%s' failed: %s\n", path, strerror(errno));
+/*     printf("Open of '%s' failed: %s\n", path, strerror(errno)); */
     return CANT_LOCATE_EXTERNAL_ENTITY;
   }
 

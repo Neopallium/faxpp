@@ -125,6 +125,10 @@ FAXPP_err_to_string(FAXPP_Error err)
     return "CANT_LOCATE_EXTERNAL_ENTITY";
   case DONT_PARSE_EXTERNAL_ENTITY:
     return "DONT_PARSE_EXTERNAL_ENTITY";
+  case INVALID_ATTRIBUTE_TYPE:
+    return "INVALID_ATTRIBUTE_TYPE";
+  case INVALID_DEFAULTDECL:
+    return "INVALID_DEFAULTDECL";
   case NO_ERROR:
     break;
   }

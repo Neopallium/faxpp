@@ -76,14 +76,15 @@ main(int argc, char **argv)
     }
 
     while((err = FAXPP_next_event(parser)) == 0) {
-      output_event(FAXPP_get_current_event(parser), stdout);
+/*       output_event(FAXPP_get_current_event(parser), stdout); */
 
       if(FAXPP_get_current_event(parser)->type == END_DOCUMENT_EVENT)
         break;
     }
 
     if(err != NO_ERROR) {
-      printf("%03d:%03d ERROR: %s\n", FAXPP_get_error_line(parser),
+      output_text(FAXPP_get_base_uri(parser), stdout);
+      printf(":%d:%d ERROR: %s\n", FAXPP_get_error_line(parser),
              FAXPP_get_error_column(parser), FAXPP_err_to_string(err));
     }
 

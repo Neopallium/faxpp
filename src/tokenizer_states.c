@@ -477,6 +477,10 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "pubid_literal_apos_state";
   else if(state == pubid_literal_quot_state)
     return "pubid_literal_quot_state";
+  else if(state == public_id_ws_state2)
+    return "public_id_ws_state2";
+  else if(state == public_id_ws_state3)
+    return "public_id_ws_state3";
 
   else if(state == elementdecl_or_entitydecl_state)
     return "elementdecl_or_entitydecl_state";
@@ -523,8 +527,133 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "attlistdecl_name_seen_colon_state1";
   else if(state == attlistdecl_name_seen_colon_state2)
     return "attlistdecl_name_seen_colon_state2";
-  else if(state == attlistdecl_content_state)
-    return "attlistdecl_content_state";
+  else if(state == attlistdecl_attdef_name_state1)
+    return "attlistdecl_attdef_name_state1";
+  else if(state == attlistdecl_attdef_name_state2)
+    return "attlistdecl_attdef_name_state2";
+  else if(state == attlistdecl_attdef_name_seen_colon_state1)
+    return "attlistdecl_attdef_name_seen_colon_state1";
+  else if(state == attlistdecl_attdef_name_seen_colon_state2)
+    return "attlistdecl_attdef_name_seen_colon_state2";
+  else if(state == attlistdecl_atttype_state)
+    return "attlistdecl_atttype_state";
+  else if(state == attlistdecl_atttype_cdata_state1)
+    return "attlistdecl_atttype_cdata_state1";
+  else if(state == attlistdecl_atttype_cdata_state2)
+    return "attlistdecl_atttype_cdata_state2";
+  else if(state == attlistdecl_atttype_cdata_state3)
+    return "attlistdecl_atttype_cdata_state3";
+  else if(state == attlistdecl_atttype_cdata_state4)
+    return "attlistdecl_atttype_cdata_state4";
+  else if(state == attlistdecl_atttype_id_state1)
+    return "attlistdecl_atttype_id_state1";
+  else if(state == attlistdecl_atttype_id_state2)
+    return "attlistdecl_atttype_id_state2";
+  else if(state == attlistdecl_atttype_idref_state1)
+    return "attlistdecl_atttype_idref_state1";
+  else if(state == attlistdecl_atttype_idref_state2)
+    return "attlistdecl_atttype_idref_state2";
+  else if(state == attlistdecl_atttype_idref_state3)
+    return "attlistdecl_atttype_idref_state3";
+  else if(state == attlistdecl_atttype_entity_state1)
+    return "attlistdecl_atttype_entity_state1";
+  else if(state == attlistdecl_atttype_entity_state2)
+    return "attlistdecl_atttype_entity_state2";
+  else if(state == attlistdecl_atttype_entity_state3)
+    return "attlistdecl_atttype_entity_state3";
+  else if(state == attlistdecl_atttype_entity_state4)
+    return "attlistdecl_atttype_entity_state4";
+  else if(state == attlistdecl_atttype_entity_state5)
+    return "attlistdecl_atttype_entity_state5";
+  else if(state == attlistdecl_atttype_entities_state1)
+    return "attlistdecl_atttype_entities_state1";
+  else if(state == attlistdecl_atttype_entities_state2)
+    return "attlistdecl_atttype_entities_state2";
+  else if(state == attlistdecl_atttype_nmtoken_state1)
+    return "attlistdecl_atttype_nmtoken_state1";
+  else if(state == attlistdecl_atttype_nmtoken_state2)
+    return "attlistdecl_atttype_nmtoken_state2";
+  else if(state == attlistdecl_atttype_nmtoken_state3)
+    return "attlistdecl_atttype_nmtoken_state3";
+  else if(state == attlistdecl_atttype_nmtoken_state4)
+    return "attlistdecl_atttype_nmtoken_state4";
+  else if(state == attlistdecl_atttype_nmtoken_state5)
+    return "attlistdecl_atttype_nmtoken_state5";
+  else if(state == attlistdecl_atttype_nmtoken_state6)
+    return "attlistdecl_atttype_nmtoken_state6";
+  else if(state == attlistdecl_atttype_nmtoken_state7)
+    return "attlistdecl_atttype_nmtoken_state7";
+  else if(state == attlistdecl_atttype_notation_state1)
+    return "attlistdecl_atttype_notation_state1";
+  else if(state == attlistdecl_atttype_notation_state2)
+    return "attlistdecl_atttype_notation_state2";
+  else if(state == attlistdecl_atttype_notation_state3)
+    return "attlistdecl_atttype_notation_state3";
+  else if(state == attlistdecl_atttype_notation_state4)
+    return "attlistdecl_atttype_notation_state4";
+  else if(state == attlistdecl_atttype_notation_state5)
+    return "attlistdecl_atttype_notation_state5";
+  else if(state == attlistdecl_atttype_notation_state6)
+    return "attlistdecl_atttype_notation_state6";
+  else if(state == attlistdecl_atttype_notation_state7)
+    return "attlistdecl_atttype_notation_state7";
+  else if(state == attlistdecl_atttype_notation_name_state1)
+    return "attlistdecl_atttype_notation_name_state1";
+  else if(state == attlistdecl_atttype_notation_name_state2)
+    return "attlistdecl_atttype_notation_name_state2";
+  else if(state == attlistdecl_atttype_notation_separator_state)
+    return "attlistdecl_atttype_notation_separator_state";
+  else if(state == attlistdecl_atttype_enumeration_name_state1)
+    return "attlistdecl_atttype_enumeration_name_state1";
+  else if(state == attlistdecl_atttype_enumeration_name_state2)
+    return "attlistdecl_atttype_enumeration_name_state2";
+  else if(state == attlistdecl_atttype_enumeration_separator_state)
+    return "attlistdecl_atttype_enumeration_separator_state";
+
+  else if(state == attlistdecl_default_state1)
+    return "attlistdecl_default_state1";
+  else if(state == attlistdecl_default_state2)
+    return "attlistdecl_default_state2";
+  else if(state == attlistdecl_default_implied_state1)
+    return "attlistdecl_default_implied_state1";
+  else if(state == attlistdecl_default_implied_state2)
+    return "attlistdecl_default_implied_state2";
+  else if(state == attlistdecl_default_implied_state3)
+    return "attlistdecl_default_implied_state3";
+  else if(state == attlistdecl_default_implied_state4)
+    return "attlistdecl_default_implied_state4";
+  else if(state == attlistdecl_default_implied_state5)
+    return "attlistdecl_default_implied_state5";
+  else if(state == attlistdecl_default_implied_state6)
+    return "attlistdecl_default_implied_state6";
+  else if(state == attlistdecl_default_required_state1)
+    return "attlistdecl_default_required_state1";
+  else if(state == attlistdecl_default_required_state2)
+    return "attlistdecl_default_required_state2";
+  else if(state == attlistdecl_default_required_state3)
+    return "attlistdecl_default_required_state3";
+  else if(state == attlistdecl_default_required_state4)
+    return "attlistdecl_default_required_state4";
+  else if(state == attlistdecl_default_required_state5)
+    return "attlistdecl_default_required_state5";
+  else if(state == attlistdecl_default_required_state6)
+    return "attlistdecl_default_required_state6";
+  else if(state == attlistdecl_default_required_state7)
+    return "attlistdecl_default_required_state7";
+  else if(state == attlistdecl_default_fixed_state1)
+    return "attlistdecl_default_fixed_state1";
+  else if(state == attlistdecl_default_fixed_state2)
+    return "attlistdecl_default_fixed_state2";
+  else if(state == attlistdecl_default_fixed_state3)
+    return "attlistdecl_default_fixed_state3";
+  else if(state == attlistdecl_default_fixed_state4)
+    return "attlistdecl_default_fixed_state4";
+  else if(state == attlistdecl_attvalue_start_state)
+    return "attlistdecl_attvalue_start_state";
+  else if(state == attlistdecl_attvalue_apos_state)
+    return "attlistdecl_attvalue_apos_state";
+  else if(state == attlistdecl_attvalue_quot_state)
+    return "attlistdecl_attvalue_quot_state";
 
   else if(state == notationdecl_initial_state1)
     return "notationdecl_initial_state1";
@@ -548,6 +677,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "notationdecl_name_state2";
   else if(state == notationdecl_content_state)
     return "notationdecl_content_state";
+  else if(state == notationdecl_end_state)
+    return "notationdecl_end_state";
 
   else if(state == entitydecl_initial_state1)
     return "entitydecl_initial_state1";
@@ -878,9 +1009,8 @@ end_of_buffer_state(FAXPP_TokenizerEnv *env)
 // Include the default states
 
 #define PREFIX(name) default_ ## name
-#define END_CHECK \
-  if((env)->position >= (env)->buffer_end) \
-    return PREMATURE_END_OF_BUFFER
+#define END_CHECK_IF if((env)->position >= (env)->buffer_end)
+#define END_CHECK END_CHECK_IF { return PREMATURE_END_OF_BUFFER; }
 #define READ_CHAR read_char_no_check(env)
 #define DEFAULT_CASE (void)0
 
@@ -890,14 +1020,14 @@ end_of_buffer_state(FAXPP_TokenizerEnv *env)
 #undef DEFAULT_CASE
 #undef READ_CHAR
 #undef END_CHECK
+#undef END_CHECK_IF
 #undef PREFIX
 
 // Include the utf8 states
 
 #define PREFIX(name) utf8_ ## name
-#define END_CHECK \
-  if((env)->position >= (env)->buffer_end) \
-    return PREMATURE_END_OF_BUFFER
+#define END_CHECK_IF if((env)->position >= (env)->buffer_end)
+#define END_CHECK END_CHECK_IF { return PREMATURE_END_OF_BUFFER; }
 #define READ_CHAR \
   /* Assume it's a one byte character for now */ \
   env->current_char = *(uint8_t*)env->position; \
@@ -923,14 +1053,14 @@ end_of_buffer_state(FAXPP_TokenizerEnv *env)
 #undef DEFAULT_CASE
 #undef READ_CHAR
 #undef END_CHECK
+#undef END_CHECK_IF
 #undef PREFIX
 
 // Include the utf16 states
 
 #define PREFIX(name) utf16_ ## name
-#define END_CHECK \
-  if((env)->position + 1 >= (env)->buffer_end) \
-    return PREMATURE_END_OF_BUFFER
+#define END_CHECK_IF if((env)->position + 1 >= (env)->buffer_end)
+#define END_CHECK END_CHECK_IF { return PREMATURE_END_OF_BUFFER; }
 #define READ_CHAR \
   /* Assume it's not a surrogate pair for now */ \
   env->current_char = *(uint16_t*)env->position; \
@@ -956,5 +1086,6 @@ end_of_buffer_state(FAXPP_TokenizerEnv *env)
 #undef DEFAULT_CASE
 #undef READ_CHAR
 #undef END_CHECK
+#undef END_CHECK_IF
 #undef PREFIX
 
