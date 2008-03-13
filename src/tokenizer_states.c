@@ -504,6 +504,62 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_name_seen_colon_state2";
   else if(state == elementdecl_content_state)
     return "elementdecl_content_state";
+  else if(state == elementdecl_empty_state1)
+    return "elementdecl_empty_state1";
+  else if(state == elementdecl_empty_state2)
+    return "elementdecl_empty_state2";
+  else if(state == elementdecl_empty_state3)
+    return "elementdecl_empty_state3";
+  else if(state == elementdecl_empty_state4)
+    return "elementdecl_empty_state4";
+  else if(state == elementdecl_any_state1)
+    return "elementdecl_any_state1";
+  else if(state == elementdecl_any_state2)
+    return "elementdecl_any_state2";
+  else if(state == elementdecl_mixed_or_children_state)
+    return "elementdecl_mixed_or_children_state";
+  else if(state == elementdecl_cp_name_state1)
+    return "elementdecl_cp_name_state1";
+  else if(state == elementdecl_cp_name_state2)
+    return "elementdecl_cp_name_state2";
+  else if(state == elementdecl_cp_name_seen_colon_state1)
+    return "elementdecl_cp_name_seen_colon_state1";
+  else if(state == elementdecl_cp_name_seen_colon_state2)
+    return "elementdecl_cp_name_seen_colon_state2";
+  else if(state == elementdecl_cp_cardinality_state)
+    return "elementdecl_cp_cardinality_state";
+  else if(state == elementdecl_cp_separator_or_end_state)
+    return "elementdecl_cp_separator_or_end_state";
+  else if(state == elementdecl_pcdata_state1)
+    return "elementdecl_pcdata_state1";
+  else if(state == elementdecl_pcdata_state2)
+    return "elementdecl_pcdata_state2";
+  else if(state == elementdecl_pcdata_state3)
+    return "elementdecl_pcdata_state3";
+  else if(state == elementdecl_pcdata_state4)
+    return "elementdecl_pcdata_state4";
+  else if(state == elementdecl_pcdata_state5)
+    return "elementdecl_pcdata_state5";
+  else if(state == elementdecl_pcdata_state6)
+    return "elementdecl_pcdata_state6";
+  else if(state == elementdecl_pcdata_end_or_names_state1)
+    return "elementdecl_pcdata_end_or_names_state1";
+  else if(state == elementdecl_pcdata_optional_star_state)
+    return "elementdecl_pcdata_optional_star_state";
+  else if(state == elementdecl_pcdata_end_or_names_state2)
+    return "elementdecl_pcdata_end_or_names_state2";
+  else if(state == elementdecl_pcdata_star_state)
+    return "elementdecl_pcdata_star_state";
+  else if(state == elementdecl_pcdata_name_state1)
+    return "elementdecl_pcdata_name_state1";
+  else if(state == elementdecl_pcdata_name_state2)
+    return "elementdecl_pcdata_name_state2";
+  else if(state == elementdecl_pcdata_name_seen_colon_state1)
+    return "elementdecl_pcdata_name_seen_colon_state1";
+  else if(state == elementdecl_pcdata_name_seen_colon_state2)
+    return "elementdecl_pcdata_name_seen_colon_state2";
+  else if(state == elementdecl_end_state)
+    return "elementdecl_end_state";
 
   else if(state == attlistdecl_initial_state1)
     return "attlistdecl_initial_state1";

@@ -302,6 +302,34 @@ FAXPP_Error elementdecl_name_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_content_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_empty_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_empty_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_empty_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_empty_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_any_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_any_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_mixed_or_children_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_cp_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_cp_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_cp_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_cp_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_cp_cardinality_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_cp_separator_or_end_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_state6(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_end_or_names_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_optional_star_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_end_or_names_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_star_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_name_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_name_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_pcdata_name_seen_colon_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_end_state(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error attlistdecl_initial_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error attlistdecl_initial_state2(FAXPP_TokenizerEnv *env);
@@ -426,7 +454,7 @@ FAXPP_Error paramentitydecl_end_state(FAXPP_TokenizerEnv *env);
  *********************/
 
 #ifdef DEBUG
-const char *state_to_string(FAXPP_StateFunction state);
+const char *FAXPP_state_to_string(FAXPP_StateFunction state);
 #endif
 
 #define read_char_no_check(env) \
@@ -441,7 +469,7 @@ const char *state_to_string(FAXPP_StateFunction state);
   } \
 \
 /*   printf("%03d:%03d State: %s, Byte: %c, Char: %08X\n", (env)->line, (env)->column, */ \
-/*          state_to_string((env)->state), *(unsigned char*)(env)->position, */ \
+/*          FAXPP_state_to_string((env)->state), *(unsigned char*)(env)->position, */ \
 /*          (env)->current_char); */ \
 }
 

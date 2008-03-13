@@ -129,6 +129,8 @@ FAXPP_err_to_string(FAXPP_Error err)
     return "INVALID_ATTRIBUTE_TYPE";
   case INVALID_DEFAULTDECL:
     return "INVALID_DEFAULTDECL";
+  case INVALID_ELEMENTDECL_CONTENT:
+    return "INVALID_ELEMENTDECL_CONTENT";
   case NO_ERROR:
     break;
   }

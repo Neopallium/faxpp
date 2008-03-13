@@ -23,10 +23,13 @@
 #include "../examples/entity_resolver.h"
 #include "../examples/output_event.h"
 
-void error(FAXPP_Error err, unsigned int line, unsigned int column)
+void error(const FAXPP_Parser *parser, FAXPP_Error err)
 {
+  unsigned int line = FAXPP_get_error_line(parser);
+
   if(line != 0) {
-    fprintf(stderr, "%03d:%03d FAXPP_Error: %s\n", line, column, FAXPP_err_to_string(err));
+    output_text(FAXPP_get_base_uri(parser), stderr);
+    fprintf(stderr, ":%03d:%03d FAXPP_Error: %s\n", line, FAXPP_get_error_column(parser), FAXPP_err_to_string(err));
   } else {
     fprintf(stderr, "FAXPP_Error: %s\n", FAXPP_err_to_string(err));
   }
@@ -140,10 +143,10 @@ main(int argc, char **argv)
   FAXPP_set_external_entity_callback(parser, entity_callback, 0);
 
   err = FAXPP_init_parse_file(parser, file);
-  if(err != NO_ERROR) error(err, 0, 0);
+  if(err != NO_ERROR) error(parser, err);
 
   err = FAXPP_set_base_uri_str(parser, testFile);
-  if(err != NO_ERROR) error(err, 0, 0);
+  if(err != NO_ERROR) error(parser, err);
 
   while((err = FAXPP_next_event(parser)) == 0) {
     event = FAXPP_get_current_event(parser);
@@ -275,8 +278,7 @@ main(int argc, char **argv)
     }
   }
 
-  if(err != NO_ERROR) error(err, FAXPP_get_error_line(parser),
-                            FAXPP_get_error_column(parser));
+  if(err != NO_ERROR) error(parser, err);
 
  cleanup:
   printf("\n\nTests run: %d, Tests passed: %d, Tests skipped: %d, Tests failed: %d (%.3f%%)\n", test_passes + test_failures + test_skips,
