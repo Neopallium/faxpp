@@ -36,7 +36,8 @@ src/doctype.c \
 src/elementdecl.c \
 src/attlistdecl.c \
 src/notationdecl.c \
-src/entitydecl.c
+src/entitydecl.c \
+src/conditional.c
 
 tokenizer_example_LDADD = libfaxpp.la
 tokenizer_example_SOURCES = examples/tokenizer_example.c

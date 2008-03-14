@@ -29,7 +29,7 @@ void error(const FAXPP_Parser *parser, FAXPP_Error err)
 
   if(line != 0) {
     output_text(FAXPP_get_base_uri(parser), stderr);
-    fprintf(stderr, ":%03d:%03d FAXPP_Error: %s\n", line, FAXPP_get_error_column(parser), FAXPP_err_to_string(err));
+    fprintf(stderr, ":%d:%d FAXPP_Error: %s\n", line, FAXPP_get_error_column(parser), FAXPP_err_to_string(err));
   } else {
     fprintf(stderr, "FAXPP_Error: %s\n", FAXPP_err_to_string(err));
   }
@@ -76,8 +76,11 @@ void calculateBase(const char *testFile, const FAXPP_AttrValue *atval, char *out
   *ptr = 0;
 }
 
-FAXPP_Error run_test_case(const char *filename, unsigned int *errLine)
+FAXPP_Error run_test_case(const char *filename, char *errFileBuffer, unsigned int bufLen, unsigned int *errLine, unsigned int *errColumn)
 {
+  const FAXPP_Text *text;
+  unsigned int len;
+
   FAXPP_Parser *testparser = FAXPP_create_parser(WELL_FORMED_PARSE_MODE, FAXPP_utf8_transcoder);
 
   FILE *file = fopen(filename, "r");
@@ -100,7 +103,13 @@ FAXPP_Error run_test_case(const char *filename, unsigned int *errLine)
   }
 
   if(err != NO_ERROR) {
+    text = FAXPP_get_base_uri(testparser);
+    len = text->len < bufLen - 1 ? text->len : bufLen - 1;
+    memcpy(errFileBuffer, text->ptr, len);
+    errFileBuffer[len] = 0;
+
     *errLine = FAXPP_get_error_line(testparser);
+    *errColumn = FAXPP_get_error_column(testparser);
   }
 
   fclose(file);
@@ -118,7 +127,9 @@ main(int argc, char **argv)
   char base_buffer[1024];
   char file_buffer[1024];
   FAXPP_Error result;
+  char errFileBuffer[1024];
   unsigned int errLine;
+  unsigned int errColumn;
   int output_events = 0;
 
   int test_failures = 0;
@@ -191,7 +202,7 @@ main(int argc, char **argv)
         attr = find_attribute(event, "URI");
         calculateBase(base_buffer, &attr->value, file_buffer);
 
-        result = run_test_case(file_buffer, &errLine);
+        result = run_test_case(file_buffer, errFileBuffer, sizeof(errFileBuffer), &errLine, &errColumn);
 
         // Skip tests that require no namespaces
         attr = find_attribute(event, "NAMESPACE");
@@ -251,7 +262,7 @@ main(int argc, char **argv)
         }
 
         if(result != NO_ERROR) {
-          fprintf(stderr, "\nError: %s:%i", FAXPP_err_to_string(result), errLine);
+          fprintf(stderr, "\nError: %s:%d:%d %s\n", errFileBuffer, errLine, errColumn, FAXPP_err_to_string(result));
         }
 
         fprintf(stderr, "\n");

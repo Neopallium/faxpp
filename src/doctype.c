@@ -557,7 +557,7 @@ internal_subset_state(FAXPP_TokenizerEnv *env)
     break;
   default:
     next_char(env);
-    return INVALID_DOCTYPE_DECL;
+    return INVALID_DTD_DECL;
   }
 
   next_char(env);
@@ -583,7 +583,7 @@ internal_subset_state_en(FAXPP_TokenizerEnv *env)
     break;
   default:
     next_char(env);
-    return INVALID_DOCTYPE_DECL;
+    return INVALID_DTD_DECL;
   }
 
   next_char(env);
@@ -681,9 +681,58 @@ external_subset_state(FAXPP_TokenizerEnv *env)
   case '<':
     env->state = external_subset_markup_state;
     break;
+  case ']':
+    // Check if we're in an include section
+    if(env->nesting_level != 0) {
+      env->state = external_subset_seen_rsquare_state1;
+      break;
+    }
+    // Fall through
   default:
     next_char(env);
-    return INVALID_DOCTYPE_DECL;
+    return INVALID_DTD_DECL;
+  }
+
+  next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+external_subset_seen_rsquare_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case ']':
+    env->state = external_subset_seen_rsquare_state2;
+    break;
+  default:
+    base_state(env);
+    // No next_char
+    return INVALID_DTD_DECL;
+  }
+
+  next_char(env);
+  return NO_ERROR;
+}
+
+FAXPP_Error
+external_subset_seen_rsquare_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case ']':
+    next_char(env);
+    return INVALID_DTD_DECL;
+  case '>':
+    env->nesting_level -= 1;
+    base_state(env);
+    break;
+  default:
+    base_state(env);
+    // No next_char
+    return INVALID_DTD_DECL;
   }
 
   next_char(env);
@@ -722,9 +771,10 @@ external_subset_decl_state(FAXPP_TokenizerEnv *env)
   case '-':
     env->state = comment_start_state2;
     break;
-/*   // TBD conditional sections - jpcs */
-/*   case '[': */
-/*     break; */
+  case '[':
+    env->stored_state = conditional_state1;
+    env->state = ws_state;
+    break;
   case 'E':
     env->state = elementdecl_or_entitydecl_state;
     break;

@@ -266,6 +266,8 @@ FAXPP_Error internal_subset_markup_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error internal_subset_decl_state(FAXPP_TokenizerEnv *env);
 
 FAXPP_Error external_subset_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error external_subset_seen_rsquare_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error external_subset_seen_rsquare_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error external_subset_markup_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error external_subset_decl_state(FAXPP_TokenizerEnv *env);
 
@@ -446,6 +448,25 @@ FAXPP_Error paramentitydecl_value_apos_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error paramentitydecl_value_quot_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error paramentitydecl_end_state(FAXPP_TokenizerEnv *env);
 
+FAXPP_Error conditional_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error conditional_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_content_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_content_seen_lt_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_content_seen_bang_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_content_seen_rsquare_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error ignore_content_seen_rsquare_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error include_state1(FAXPP_TokenizerEnv *env);
+FAXPP_Error include_state2(FAXPP_TokenizerEnv *env);
+FAXPP_Error include_state3(FAXPP_TokenizerEnv *env);
+FAXPP_Error include_state4(FAXPP_TokenizerEnv *env);
+FAXPP_Error include_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error include_state6(FAXPP_TokenizerEnv *env);
+
 
 /*********************
  *
@@ -527,20 +548,18 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state);
 
 #define base_state(env) \
 { \
-  if((env)->nesting_level != 0) \
+  if((env)->external_subset || (env)->external_dtd_entity) \
+    (env)->state = external_subset_state; \
+  else if((env)->nesting_level != 0) \
     (env)->state = (env)->element_content_state; \
-  else if((env)->element_entity) \
-    (env)->state = parsed_entity_state; \
   else if((env)->internal_dtd_entity) \
     (env)->state = internal_subset_state_en; \
-  else if((env)->external_parsed_entity) \
+  else if((env)->element_entity || (env)->external_parsed_entity) \
     (env)->state = parsed_entity_state; \
   else if((env)->seen_doc_element) \
     (env)->state = final_state; \
   else if((env)->internal_subset) \
     (env)->state = internal_subset_state; \
-  else if((env)->external_subset) \
-    (env)->state = external_subset_state; \
   else (env)->state = initial_misc_state; \
 }
 

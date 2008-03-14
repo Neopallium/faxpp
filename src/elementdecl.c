@@ -178,7 +178,7 @@ elementdecl_content_state(FAXPP_TokenizerEnv *env)
     env->state = elementdecl_any_state1;
     break;
   case '(':
-    env->nesting_level += 1;
+    env->elemdecl_content_level += 1;
     env->stored_state = elementdecl_mixed_or_children_state;
     env->state = ws_state;
     report_empty_token(ELEMENTDECL_LPAR_TOKEN, env);
@@ -226,7 +226,7 @@ elementdecl_cp_name_state1(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case '(':
-    env->nesting_level += 1;
+    env->elemdecl_content_level += 1;
     env->stored_state = elementdecl_cp_name_state1;
     env->state = ws_state;
     report_empty_token(ELEMENTDECL_LPAR_TOKEN, env);
@@ -359,7 +359,7 @@ elementdecl_cp_cardinality_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
-  if(env->nesting_level == 0)
+  if(env->elemdecl_content_level == 0)
     env->stored_state = elementdecl_end_state;
   else
     env->stored_state = elementdecl_cp_separator_or_end_state;
@@ -401,7 +401,7 @@ elementdecl_cp_separator_or_end_state(FAXPP_TokenizerEnv *env)
     report_empty_token(ELEMENTDECL_COMMA_TOKEN, env);
     break;
   case ')':
-    env->nesting_level -= 1;
+    env->elemdecl_content_level -= 1;
     env->state = elementdecl_cp_cardinality_state;
     report_empty_token(ELEMENTDECL_RPAR_TOKEN, env);
     break;
@@ -428,7 +428,7 @@ elementdecl_pcdata_end_or_names_state1(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case ')':
-    env->nesting_level -= 1;
+    env->elemdecl_content_level -= 1;
     env->state = elementdecl_pcdata_optional_star_state;
     report_empty_token(ELEMENTDECL_RPAR_TOKEN, env);
     break;
@@ -471,7 +471,7 @@ elementdecl_pcdata_end_or_names_state2(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case ')':
-    env->nesting_level -= 1;
+    env->elemdecl_content_level -= 1;
     env->state = elementdecl_pcdata_star_state;
     report_empty_token(ELEMENTDECL_RPAR_TOKEN, env);
     break;

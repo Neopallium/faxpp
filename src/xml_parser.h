@@ -75,6 +75,19 @@ struct FAXPP_EntityInfo_s {
   FAXPP_EntityInfo *next;
 };
 
+typedef enum {
+  CONTENTSPEC_NONE = 0,
+  CONTENTSPEC_SEQUENCE,
+  CONTENTSPEC_CHOICE
+} FAXPP_ContentSpecType;
+
+typedef struct FAXPP_ContentSpec_s FAXPP_ContentSpec;
+
+struct FAXPP_ContentSpec_s {
+  FAXPP_ContentSpecType type;
+  FAXPP_ContentSpec *parent;
+};
+
 typedef struct FAXPP_ParserEnv_s FAXPP_ParserEnv;
 
 typedef FAXPP_Error (*FAXPP_NextEvent)(FAXPP_ParserEnv *env);
@@ -96,8 +109,10 @@ struct FAXPP_ParserEnv_s {
 
   unsigned int max_attr_count;
   FAXPP_Attribute *attrs;
+
   FAXPP_Attribute *current_attr;
   FAXPP_EntityInfo *current_entity;
+  FAXPP_ContentSpec *current_elementdecl;
   unsigned int current_attlist:1;
   unsigned int current_notation:1;
 

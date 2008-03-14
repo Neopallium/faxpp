@@ -111,8 +111,15 @@ void FAXPP_free_parser(FAXPP_Parser *env)
   FAXPP_AttrValue *at;
   FAXPP_ElementInfo *el;
   FAXPP_NamespaceInfo *ns;
+  FAXPP_ContentSpec *cs;
 
   if(env->attrs) free(env->attrs);
+
+  while(env->current_elementdecl) {
+    cs = env->current_elementdecl;
+    env->current_elementdecl = cs->parent;
+    free(cs);
+  }
 
   while(env->av_dealloc) {
     at = env->av_dealloc;
@@ -248,9 +255,22 @@ static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env)
 {
   FAXPP_ElementInfo *el;
   FAXPP_NamespaceInfo *ns;
+  FAXPP_ContentSpec *cs;
 
   env->tenv->buffered_token = 0;
   env->tenv->user_provided_decode = 0;
+
+  // Free the elementdecl stack
+  while(env->current_elementdecl) {
+    cs = env->current_elementdecl;
+    env->current_elementdecl = cs->parent;
+    free(cs);
+  }
+
+  env->current_attr = 0;
+  env->current_entity = 0;
+  env->current_attlist = 0;
+  env->current_notation = 0;
 
   // Put the element info objects back in the pool
   while(env->element_info_stack) {
@@ -408,12 +428,14 @@ unsigned int FAXPP_get_error_column(const FAXPP_Parser *parser)
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////
 
-static void p_text_change_buffer(FAXPP_Buffer *buffer, void *newBuffer, FAXPP_Text *text)
+static void p_change_buffer(FAXPP_Buffer *buffer, void *newBuffer, void **text)
 {
-  if(text->ptr >= buffer->buffer && text->ptr < (buffer->buffer + buffer->length)) {
-    text->ptr += newBuffer - buffer->buffer;
+  if(*text >= buffer->buffer && *text < (buffer->buffer + buffer->length)) {
+    *text += newBuffer - buffer->buffer;
   }
 }
+
+#define p_text_change_buffer(buffer, newBuffer, text) p_change_buffer((buffer), (newBuffer), &(text)->ptr)
 
 static void p_change_event_buffer(void *userData, FAXPP_Buffer *buffer, void *newBuffer)
 {
@@ -487,13 +509,19 @@ static void p_change_entity_buffer(void *userData, FAXPP_Buffer *buffer, void *n
   while(tokenizer) {
     p_text_change_buffer(buffer, newBuffer, &tokenizer->base_uri);
 
+    // The tokenizer buffer can also point into the entity_buffer, so change that too
+    p_change_buffer(buffer, newBuffer, &tokenizer->buffer);
+    p_change_buffer(buffer, newBuffer, &tokenizer->buffer_end);
+    p_change_buffer(buffer, newBuffer, &tokenizer->position);
+
     tokenizer = tokenizer->prev;
   }
 }
 
 #define p_move_text_to_buffer(env, text, buf) \
 { \
-  if((text)->ptr >= (env)->tenv->buffer && (text)->ptr < (env)->tenv->buffer_end) { \
+  if((text)->ptr >= (env)->tenv->buffer && (text)->ptr < (env)->tenv->buffer_end && \
+     ((text)->ptr < (buf)->buffer || (text)->ptr >= ((buf)->buffer + (buf)->length))) { \
     void *newPtr = (buf)->cursor; \
     FAXPP_Error err = FAXPP_buffer_append((buf), (text)->ptr, (text)->len); \
     if((env)->tenv->null_terminate && err == 0) \
@@ -915,10 +943,10 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
   unsigned int readlen;
   FAXPP_Error err;
 
-  if(env->tenv->read && !env->tenv->buffer_done) {
-    err = FAXPP_release_buffer(env, 0);
-    if(err != 0) return err;
+  err = FAXPP_release_buffer(env, 0);
+  if(err != 0) return err;
 
+  if(env->tenv->read && !env->tenv->buffer_done) {
     if(env->tenv->position < env->tenv->buffer_end) {
       // We're half way through a charcter, so we need to copy
       // the partial char to the begining of the buffer to keep
@@ -942,7 +970,7 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
     if(env->tenv->attr_entity) {
       // TBD default attr values - jpcs
       if(!env->tenv->prev->internal_subset && !env->tenv->prev->external_subset &&
-         !env->tenv->prev->internal_dtd_entity) {
+         !env->tenv->prev->internal_dtd_entity && !env->tenv->prev->external_dtd_entity) {
         err = p_set_attr_value_name_from_entity(env->current_attr, env, ENTITY_REFERENCE_END_EVENT, env->tenv->entity);
         if(err) return err;
       }
@@ -1266,7 +1294,14 @@ static FAXPP_Error p_parse_entity(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, F
   }
 
   if(ent->external) {
-    return p_parse_external_entity(env, ent, state - INTERNAL_DIFF);
+    switch(state) {
+    case ELEMENT_CONTENT_ENTITY: state = EXTERNAL_PARSED_ENTITY; break;
+    case INTERNAL_DTD_ENTITY: state = EXTERNAL_SUBSET_ENTITY; break;
+    case EXTERNAL_DTD_ENTITY: state = EXTERNAL_SUBSET_ENTITY; break;
+    default: break;
+    }
+
+    return p_parse_external_entity(env, ent, state);
   }
 
   return p_parse_internal_entity(env, ent, state, &ent);
@@ -1314,6 +1349,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
 {
   FAXPP_EntityInfo *ent;
   FAXPP_EntityValue *entv;
+  FAXPP_ContentSpec *cs;
   FAXPP_Text bkup_system, bkup_public;
   Char32 ch;
   FAXPP_Error err = 0;
@@ -1467,6 +1503,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         entv->value.len = env->entity_buffer.cursor - entv->value.ptr;
       }
       else if(env->current_attlist) {
+        // General entities in ATTLIST values should be looked up straight away
         ent = p_find_entity_info(&env->tenv->result_token.value, env->general_entities);
         if(ent == 0) {
           err = UNDEFINED_ENTITY;
@@ -1518,12 +1555,42 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         p_set_text_from_text(&bkup_system, &env->event.system_id);
         p_set_text_from_text(&bkup_public, &env->event.public_id);
 
-        err = p_parse_entity(env, ent, INTERNAL_DTD_ENTITY);
+        err = p_parse_entity(env, ent, env->tenv->internal_subset ? INTERNAL_DTD_ENTITY : EXTERNAL_DTD_ENTITY);
 
         p_set_text_from_text(&env->event.system_id, &bkup_system);
         p_set_text_from_text(&env->event.public_id, &bkup_public);
 
         if(err) goto error;
+      }
+      break;
+
+    case ELEMENTDECL_LPAR_TOKEN:
+      cs = (FAXPP_ContentSpec*)malloc(sizeof(FAXPP_ContentSpec));
+      memset(cs, 0, sizeof(FAXPP_ContentSpec));
+      cs->parent = env->current_elementdecl;
+      env->current_elementdecl = cs;
+      break;
+    case ELEMENTDECL_RPAR_TOKEN:
+      cs = env->current_elementdecl;
+      env->current_elementdecl = cs->parent;
+      free(cs);
+      break;
+    case ELEMENTDECL_BAR_TOKEN:
+      if(env->current_elementdecl->type == CONTENTSPEC_NONE) {
+        env->current_elementdecl->type = CONTENTSPEC_CHOICE;
+      }
+      else if(env->current_elementdecl->type != CONTENTSPEC_CHOICE) {
+        err = INVALID_ELEMENTDECL_CONTENT;
+        goto error;
+      }
+      break;
+    case ELEMENTDECL_COMMA_TOKEN:
+      if(env->current_elementdecl->type == CONTENTSPEC_NONE) {
+        env->current_elementdecl->type = CONTENTSPEC_SEQUENCE;
+      }
+      else if(env->current_elementdecl->type != CONTENTSPEC_SEQUENCE) {
+        err = INVALID_ELEMENTDECL_CONTENT;
+        goto error;
       }
       break;
 
@@ -1560,24 +1627,32 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
     case DOCTYPE_NAME_TOKEN:
       p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/0);
       break;
+
     case ELEMENTDECL_PREFIX_TOKEN:
     case ELEMENTDECL_NAME_TOKEN:
     case ELEMENTDECL_EMPTY_TOKEN:
     case ELEMENTDECL_ANY_TOKEN:
     case ELEMENTDECL_PCDATA_TOKEN:
-    case ELEMENTDECL_LPAR_TOKEN:
-    case ELEMENTDECL_RPAR_TOKEN:
     case ELEMENTDECL_QUESTION_TOKEN:
     case ELEMENTDECL_STAR_TOKEN:
     case ELEMENTDECL_PLUS_TOKEN:
-    case ELEMENTDECL_BAR_TOKEN:
-    case ELEMENTDECL_COMMA_TOKEN:
     case ELEMENTDECL_END_TOKEN:
 
     case ATTLISTDECL_ATTDEF_PREFIX_TOKEN:
     case ATTLISTDECL_ATTDEF_NAME_TOKEN:
+    case ATTLISTDECL_ATTTYPE_ENTITY_TOKEN:
+    case ATTLISTDECL_ATTTYPE_ENTITIES_TOKEN:
+    case ATTLISTDECL_ATTTYPE_NMTOKEN_TOKEN:
+    case ATTLISTDECL_ATTTYPE_NMTOKENS_TOKEN:
+    case ATTLISTDECL_ATTTYPE_ID_TOKEN:
+    case ATTLISTDECL_ATTTYPE_IDREF_TOKEN:
+    case ATTLISTDECL_ATTTYPE_IDREFS_TOKEN:
+    case ATTLISTDECL_ATTTYPE_CDATA_TOKEN:
     case ATTLISTDECL_NOTATION_NAME_TOKEN:
     case ATTLISTDECL_ENUMERATION_NAME_TOKEN:
+    case ATTLISTDECL_DEFAULT_IMPLIED_TOKEN:
+    case ATTLISTDECL_DEFAULT_REQUIRED_TOKEN:
+    case ATTLISTDECL_DEFAULT_FIXED_TOKEN:
       // Ignore for now
       break;
     case COMMENT_TOKEN:
@@ -1641,8 +1716,19 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case ATTLISTDECL_NAME_TOKEN:
     case ATTLISTDECL_ATTDEF_PREFIX_TOKEN:
     case ATTLISTDECL_ATTDEF_NAME_TOKEN:
+    case ATTLISTDECL_ATTTYPE_ENTITY_TOKEN:
+    case ATTLISTDECL_ATTTYPE_ENTITIES_TOKEN:
+    case ATTLISTDECL_ATTTYPE_NMTOKEN_TOKEN:
+    case ATTLISTDECL_ATTTYPE_NMTOKENS_TOKEN:
+    case ATTLISTDECL_ATTTYPE_ID_TOKEN:
+    case ATTLISTDECL_ATTTYPE_IDREF_TOKEN:
+    case ATTLISTDECL_ATTTYPE_IDREFS_TOKEN:
+    case ATTLISTDECL_ATTTYPE_CDATA_TOKEN:
     case ATTLISTDECL_NOTATION_NAME_TOKEN:
     case ATTLISTDECL_ENUMERATION_NAME_TOKEN:
+    case ATTLISTDECL_DEFAULT_IMPLIED_TOKEN:
+    case ATTLISTDECL_DEFAULT_REQUIRED_TOKEN:
+    case ATTLISTDECL_DEFAULT_FIXED_TOKEN:
     case ATTLISTDECL_END_TOKEN:
     case NOTATIONDECL_NAME_TOKEN:
     case NOTATIONDECL_END_TOKEN:

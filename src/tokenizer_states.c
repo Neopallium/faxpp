@@ -435,6 +435,10 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
 
   else if(state == external_subset_state)
     return "external_subset_state";
+  else if(state == external_subset_seen_rsquare_state1)
+    return "external_subset_seen_rsquare_state1";
+  else if(state == external_subset_seen_rsquare_state2)
+    return "external_subset_seen_rsquare_state2";
   else if(state == external_subset_markup_state)
     return "external_subset_markup_state";
   else if(state == external_subset_decl_state)
@@ -788,6 +792,43 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "paramentitydecl_value_quot_state";
   else if(state == paramentitydecl_end_state)
     return "paramentitydecl_end_state";
+
+  else if(state == conditional_state1)
+    return "conditional_state1";
+  else if(state == conditional_state2)
+    return "conditional_state2";
+  else if(state == ignore_state1)
+    return "ignore_state1";
+  else if(state == ignore_state2)
+    return "ignore_state2";
+  else if(state == ignore_state3)
+    return "ignore_state3";
+  else if(state == ignore_state4)
+    return "ignore_state4";
+  else if(state == ignore_state5)
+    return "ignore_state5";
+  else if(state == ignore_content_state)
+    return "ignore_content_state";
+  else if(state == ignore_content_seen_lt_state)
+    return "ignore_content_seen_lt_state";
+  else if(state == ignore_content_seen_bang_state)
+    return "ignore_content_seen_bang_state";
+  else if(state == ignore_content_seen_rsquare_state1)
+    return "ignore_content_seen_rsquare_state1";
+  else if(state == ignore_content_seen_rsquare_state2)
+    return "ignore_content_seen_rsquare_state2";
+  else if(state == include_state1)
+    return "include_state1";
+  else if(state == include_state2)
+    return "include_state2";
+  else if(state == include_state3)
+    return "include_state3";
+  else if(state == include_state4)
+    return "include_state4";
+  else if(state == include_state5)
+    return "include_state5";
+  else if(state == include_state6)
+    return "include_state6";
 
   return "unknown";
 }

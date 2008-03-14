@@ -32,6 +32,8 @@
 
 #define INITIAL_TOKEN_BUFFER_SIZE 64
 
+#define SNIFF_NEXT_CHAR(buf) (((buf) < (unsigned char*)env->buffer_end) ? *(buf)++ : 0x100)
+
 FAXPP_Error
 FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
 {
@@ -41,13 +43,13 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
 /*   printf("First bytes: %02X %02X %02X %02X\n", *buf, *(buf + 1), */
 /*          *(buf + 2), *(buf + 3)); */
 
-  switch(*buf++) {
+  switch(SNIFF_NEXT_CHAR(buf)) {
   case 0x00:
-    switch(*buf++) {
+    switch(SNIFF_NEXT_CHAR(buf)) {
     case 0x00:
-      switch(*buf++) {
+      switch(SNIFF_NEXT_CHAR(buf)) {
       case 0x00:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x3C:
           /* 00 00 00 3C  UCS-4, big-endian machine (1234 order) */
 #ifdef WORDS_BIGENDIAN
@@ -59,14 +61,14 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
         }
         break;
       case 0x3C:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x00:
           /* 00 00 3C 00  UCS-4, unusual octet order (2143) */
           return UNSUPPORTED_ENCODING;
         }
         break;
       case 0xFE:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0xFF:
           /* 00 00 FE FF  UCS-4, big-endian machine (1234 order) */
 #ifdef WORDS_BIGENDIAN
@@ -80,7 +82,7 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
         }
         break;
       case 0xFF:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0xFE:
           /* 00 00 FF FE  UCS-4, unusual octet order (2143) */
           return UNSUPPORTED_ENCODING;
@@ -89,9 +91,9 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
       }
       break;
     case 0x3C:
-      switch(*buf++) {
+      switch(SNIFF_NEXT_CHAR(buf)) {
       case 0x00:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x00:
           /* 00 3C 00 00  UCS-4, unusual octet order (3412) */
           return UNSUPPORTED_ENCODING;
@@ -110,11 +112,11 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
     }
     break;
   case 0x3C:
-    switch(*buf++) {
+    switch(SNIFF_NEXT_CHAR(buf)) {
     case 0x00:
-      switch(*buf++) {
+      switch(SNIFF_NEXT_CHAR(buf)) {
       case 0x00:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x00:
           /* 3C 00 00 00  UCS-4, little-endian machine (4321 order) */
 #ifdef WORDS_BIGENDIAN
@@ -126,7 +128,7 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
         }
         break;
       case 0x3F:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x00:
           /* 3C 00 3F 00  UTF-16, little-endian */
 #ifdef WORDS_BIGENDIAN
@@ -140,9 +142,9 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
       }
       break;
     case 0x3F:
-      switch(*buf++) {
+      switch(SNIFF_NEXT_CHAR(buf)) {
       case 0x78:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x6D:
           /* 3C 3F 78 6D  UTF-8, ISO 646, ASCII, some part of ISO 8859, Shift-JIS, EUC, etc. */
           FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
@@ -154,11 +156,11 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
     }
     break;
   case 0x4C:
-    switch(*buf++) {
+    switch(SNIFF_NEXT_CHAR(buf)) {
     case 0x6F:
-      switch(*buf++) {
+      switch(SNIFF_NEXT_CHAR(buf)) {
       case 0xA7:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x94:
           /* 4C 6F A7 94 EBCDIC */
           return UNSUPPORTED_ENCODING;
@@ -169,9 +171,9 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
     }
     break;
   case 0xEF:
-    switch(*buf++) {
+    switch(SNIFF_NEXT_CHAR(buf)) {
     case 0xBB:
-      switch(*buf++) {
+      switch(SNIFF_NEXT_CHAR(buf)) {
       case 0xBF:
         /* EF BB BF  UTF-8 with byte order mark */
         FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
@@ -182,11 +184,11 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
     }
     break;
   case 0xFE:
-    switch(*buf++) {
+    switch(SNIFF_NEXT_CHAR(buf)) {
     case 0xFF:
-      switch(*buf++) {
+      switch(SNIFF_NEXT_CHAR(buf)) {
       case 0x00:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x00:
           /* FE FF 00 00  UCS-4, unusual octet order (3412) */
           return UNSUPPORTED_ENCODING;
@@ -217,11 +219,11 @@ FAXPP_sniff_encoding(FAXPP_Tokenizer *env)
     }
     break;
   case 0xFF:
-    switch(*buf++) {
+    switch(SNIFF_NEXT_CHAR(buf)) {
     case 0xFE:
-      switch(*buf++) {
+      switch(SNIFF_NEXT_CHAR(buf)) {
       case 0x00:
-        switch(*buf) {
+        switch(SNIFF_NEXT_CHAR(buf)) {
         case 0x00:
           /* FF FE 00 00  UCS-4, little-endian machine (4321 order) */
 #ifdef WORDS_BIGENDIAN
@@ -389,6 +391,7 @@ static void init_tokenize_internal(FAXPP_Tokenizer *env)
   env->column = 0;
 
   env->nesting_level = 0;
+  env->elemdecl_content_level = 0;
   env->do_encode = 1;
 
   env->seen_doctype = 0;
@@ -398,6 +401,7 @@ static void init_tokenize_internal(FAXPP_Tokenizer *env)
   env->element_entity = 0;
   env->attr_entity = 0;
   env->internal_dtd_entity = 0;
+  env->external_dtd_entity = 0;
   env->external_parsed_entity = 0;
 
   env->start_of_entity = 0;
@@ -463,6 +467,7 @@ FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state
   env->element_entity = state == ELEMENT_CONTENT_ENTITY;
   env->attr_entity = state == ATTRIBUTE_VALUE_ENTITY;
   env->internal_dtd_entity = state == INTERNAL_DTD_ENTITY;
+  env->external_dtd_entity = state == EXTERNAL_DTD_ENTITY;
   env->external_parsed_entity = state == EXTERNAL_PARSED_ENTITY;
   env->external_subset = state == EXTERNAL_SUBSET_ENTITY;
 
@@ -483,6 +488,9 @@ FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state
   case INTERNAL_DTD_ENTITY:
     env->state = internal_subset_state_en;
     break;
+  case EXTERNAL_DTD_ENTITY:
+    env->state = external_subset_state;
+    break;
   case EXTERNAL_PARSED_ENTITY:
   case EXTERNAL_SUBSET_ENTITY:
     env->state = initial_state;
@@ -502,17 +510,21 @@ FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state
 FAXPP_Error
 FAXPP_pop_tokenizer(FAXPP_Tokenizer **list)
 {
+  FAXPP_Error err = NO_ERROR;
   FAXPP_TokenizerEnv *env = *list;
   *list = env->prev;
 
   if(env->start_of_entity) {
-    if(env->stored_state != 0 || env->nesting_level != 0 ||
+    if(env->stored_state != 0 || env->nesting_level != 0 || env->elemdecl_content_level != 0 ||
        (env->element_entity && env->state != parsed_entity_state &&
         env->state != default_element_content_rsquare_state1 &&
         env->state != default_element_content_rsquare_state2) ||
-       (env->internal_dtd_entity && env->state != internal_subset_state_en)
+       (env->internal_dtd_entity && env->state != internal_subset_state_en) ||
+       (env->external_dtd_entity && env->state != external_subset_state &&
+        env->state != external_subset_seen_rsquare_state1 &&
+        env->state != external_subset_seen_rsquare_state2)
        ) {
-      return INCOMPLETE_MARKUP_IN_ENTITY_VALUE;
+      err = INCOMPLETE_MARKUP_IN_ENTITY_VALUE;
     }
   }
   else {
@@ -532,6 +544,7 @@ FAXPP_pop_tokenizer(FAXPP_Tokenizer **list)
     }
 
     (*list)->nesting_level += env->nesting_level;
+    (*list)->elemdecl_content_level += env->elemdecl_content_level;
 
     (*list)->state = env->state;
     (*list)->stored_state = env->stored_state;
@@ -541,7 +554,7 @@ FAXPP_pop_tokenizer(FAXPP_Tokenizer **list)
 
   free_tokenizer_internal(env);
 
-  return NO_ERROR;
+  return err;
 }
 
 FAXPP_Error

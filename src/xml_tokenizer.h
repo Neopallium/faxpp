@@ -51,6 +51,7 @@ struct FAXPP_TokenizerEnv_s {
   unsigned int column;
 
   unsigned int nesting_level;
+  unsigned int elemdecl_content_level;
   unsigned int do_encode:1;
   unsigned int buffer_done:1;
 
@@ -61,6 +62,7 @@ struct FAXPP_TokenizerEnv_s {
   unsigned int element_entity:1;
   unsigned int attr_entity:1;
   unsigned int internal_dtd_entity:1;
+  unsigned int external_dtd_entity:1;
   unsigned int external_parsed_entity:1;
 
   unsigned int normalize_attrs:1;
@@ -97,15 +99,14 @@ struct FAXPP_TokenizerEnv_s {
   struct FAXPP_TokenizerEnv_s *prev;
 };
 
-#define INTERNAL_DIFF 5
-
 // The first two values are the same as the values in FAXPP_EntityType
 typedef enum {
   EXTERNAL_PARSED_ENTITY2 = EXTERNAL_PARSED_ENTITY,
   EXTERNAL_SUBSET_ENTITY2 = EXTERNAL_SUBSET_ENTITY,
 
-  ELEMENT_CONTENT_ENTITY  = EXTERNAL_PARSED_ENTITY + INTERNAL_DIFF,
-  INTERNAL_DTD_ENTITY     = EXTERNAL_SUBSET_ENTITY + INTERNAL_DIFF,
+  ELEMENT_CONTENT_ENTITY,
+  INTERNAL_DTD_ENTITY,
+  EXTERNAL_DTD_ENTITY,
   ATTRIBUTE_VALUE_ENTITY
 } FAXPP_EntityParseState;
 

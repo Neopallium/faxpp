@@ -17,7 +17,7 @@
 #include "tokenizer_states.h"
 #include "char_classes.h"
 
-#define SINGLE_CHAR_STATE(name, ch, next_stored_state, next_state, error) \
+#define SINGLE_CHAR_STATE_RETURN(name, ch, next_stored_state, next_state, error, return_token) \
 FAXPP_Error \
 name(FAXPP_TokenizerEnv *env) \
 { \
@@ -27,6 +27,7 @@ name(FAXPP_TokenizerEnv *env) \
   case (ch): \
     if((next_stored_state) != 0) env->stored_state = (next_stored_state); \
     env->state = (next_state); \
+    if((return_token) != NO_TOKEN) { report_empty_token((return_token), env); } \
     next_char(env); \
     break; \
   LINE_ENDINGS \
@@ -36,6 +37,8 @@ name(FAXPP_TokenizerEnv *env) \
   } \
   return NO_ERROR; \
 }
+
+#define SINGLE_CHAR_STATE(name, ch, next_stored_state, next_state, error) SINGLE_CHAR_STATE_RETURN(name, ch, next_stored_state, next_state, error, NO_TOKEN)
 
 SINGLE_CHAR_STATE(attlistdecl_initial_state1, 'T', 0, attlistdecl_initial_state2, INVALID_DTD_DECL)
 SINGLE_CHAR_STATE(attlistdecl_initial_state2, 'T', 0, attlistdecl_initial_state3, INVALID_DTD_DECL)
@@ -316,9 +319,9 @@ attlistdecl_atttype_entity_state5(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case 'Y':
-    // TBD Tokens for these - jpcs
     env->stored_state = attlistdecl_default_state1;
     env->state = ws_state;
+    report_empty_token(ATTLISTDECL_ATTTYPE_ENTITY_TOKEN, env);
     break;
   case 'I':
     env->state = attlistdecl_atttype_entities_state1;
@@ -333,10 +336,8 @@ attlistdecl_atttype_entity_state5(FAXPP_TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-// TBD Tokens for these - jpcs
-
 SINGLE_CHAR_STATE(attlistdecl_atttype_entities_state1, 'E', 0, attlistdecl_atttype_entities_state2, INVALID_ATTRIBUTE_TYPE)
-SINGLE_CHAR_STATE(attlistdecl_atttype_entities_state2, 'S', attlistdecl_default_state1, ws_plus_state, INVALID_ATTRIBUTE_TYPE)
+SINGLE_CHAR_STATE_RETURN(attlistdecl_atttype_entities_state2, 'S', attlistdecl_default_state1, ws_plus_state, INVALID_ATTRIBUTE_TYPE, ATTLISTDECL_ATTTYPE_ENTITIES_TOKEN)
 
 FAXPP_Error
 attlistdecl_atttype_nmtoken_state1(FAXPP_TokenizerEnv *env)
@@ -373,14 +374,14 @@ attlistdecl_atttype_nmtoken_state7(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   WHITESPACE:
-    // TBD Tokens for these - jpcs
     env->stored_state = attlistdecl_default_state1;
     env->state = ws_state;
+    report_empty_token(ATTLISTDECL_ATTTYPE_NMTOKEN_TOKEN, env);
     break;
   case 'S':
-    // TBD Tokens for these - jpcs
     env->stored_state = attlistdecl_default_state1;
     env->state = ws_plus_state;
+    report_empty_token(ATTLISTDECL_ATTTYPE_NMTOKENS_TOKEN, env);
     break;
   default:
     next_char(env);
@@ -390,8 +391,6 @@ attlistdecl_atttype_nmtoken_state7(FAXPP_TokenizerEnv *env)
   next_char(env);
   return NO_ERROR;  
 }
-
-// TBD Tokens for these - jpcs
 
 SINGLE_CHAR_STATE(attlistdecl_atttype_notation_state1, 'T', 0, attlistdecl_atttype_notation_state2, INVALID_ATTRIBUTE_TYPE)
 SINGLE_CHAR_STATE(attlistdecl_atttype_notation_state2, 'A', 0, attlistdecl_atttype_notation_state3, INVALID_ATTRIBUTE_TYPE)
@@ -504,9 +503,9 @@ attlistdecl_atttype_id_state2(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   WHITESPACE:
-    // TBD Tokens for these - jpcs
     env->stored_state = attlistdecl_default_state1;
     env->state = ws_state;
+    report_empty_token(ATTLISTDECL_ATTTYPE_ID_TOKEN, env);
     break;
   case 'R':
     env->state = attlistdecl_atttype_idref_state1;
@@ -530,14 +529,14 @@ attlistdecl_atttype_idref_state3(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   WHITESPACE:
-    // TBD Tokens for these - jpcs
     env->stored_state = attlistdecl_default_state1;
     env->state = ws_state;
+    report_empty_token(ATTLISTDECL_ATTTYPE_IDREF_TOKEN, env);
     break;
   case 'S':
-    // TBD Tokens for these - jpcs
     env->stored_state = attlistdecl_default_state1;
     env->state = ws_plus_state;
+    report_empty_token(ATTLISTDECL_ATTTYPE_IDREFS_TOKEN, env);
     break;
   default:
     next_char(env);
@@ -548,12 +547,10 @@ attlistdecl_atttype_idref_state3(FAXPP_TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-// TBD Tokens for these - jpcs
-
 SINGLE_CHAR_STATE(attlistdecl_atttype_cdata_state1, 'D', 0, attlistdecl_atttype_cdata_state2, INVALID_ATTRIBUTE_TYPE)
 SINGLE_CHAR_STATE(attlistdecl_atttype_cdata_state2, 'A', 0, attlistdecl_atttype_cdata_state3, INVALID_ATTRIBUTE_TYPE)
 SINGLE_CHAR_STATE(attlistdecl_atttype_cdata_state3, 'T', 0, attlistdecl_atttype_cdata_state4, INVALID_ATTRIBUTE_TYPE)
-SINGLE_CHAR_STATE(attlistdecl_atttype_cdata_state4, 'A', attlistdecl_default_state1, ws_plus_state, INVALID_ATTRIBUTE_TYPE)
+SINGLE_CHAR_STATE_RETURN(attlistdecl_atttype_cdata_state4, 'A', attlistdecl_default_state1, ws_plus_state, INVALID_ATTRIBUTE_TYPE, ATTLISTDECL_ATTTYPE_CDATA_TOKEN)
 
 FAXPP_Error
 attlistdecl_atttype_enumeration_name_state1(FAXPP_TokenizerEnv *env)
@@ -688,14 +685,12 @@ attlistdecl_default_state2(FAXPP_TokenizerEnv *env)
   return NO_ERROR;  
 }
 
-// TBD Tokens for these - jpcs
-
 SINGLE_CHAR_STATE(attlistdecl_default_implied_state1, 'M', 0, attlistdecl_default_implied_state2, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_implied_state2, 'P', 0, attlistdecl_default_implied_state3, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_implied_state3, 'L', 0, attlistdecl_default_implied_state4, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_implied_state4, 'I', 0, attlistdecl_default_implied_state5, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_implied_state5, 'E', 0, attlistdecl_default_implied_state6, INVALID_DEFAULTDECL)
-SINGLE_CHAR_STATE(attlistdecl_default_implied_state6, 'D', 0, attlistdecl_attdef_name_state1, INVALID_DEFAULTDECL)
+SINGLE_CHAR_STATE_RETURN(attlistdecl_default_implied_state6, 'D', 0, attlistdecl_attdef_name_state1, INVALID_DEFAULTDECL, ATTLISTDECL_DEFAULT_IMPLIED_TOKEN)
 
 SINGLE_CHAR_STATE(attlistdecl_default_required_state1, 'E', 0, attlistdecl_default_required_state2, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_required_state2, 'Q', 0, attlistdecl_default_required_state3, INVALID_DEFAULTDECL)
@@ -703,12 +698,12 @@ SINGLE_CHAR_STATE(attlistdecl_default_required_state3, 'U', 0, attlistdecl_defau
 SINGLE_CHAR_STATE(attlistdecl_default_required_state4, 'I', 0, attlistdecl_default_required_state5, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_required_state5, 'R', 0, attlistdecl_default_required_state6, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_required_state6, 'E', 0, attlistdecl_default_required_state7, INVALID_DEFAULTDECL)
-SINGLE_CHAR_STATE(attlistdecl_default_required_state7, 'D', 0, attlistdecl_attdef_name_state1, INVALID_DEFAULTDECL)
+SINGLE_CHAR_STATE_RETURN(attlistdecl_default_required_state7, 'D', 0, attlistdecl_attdef_name_state1, INVALID_DEFAULTDECL, ATTLISTDECL_DEFAULT_REQUIRED_TOKEN)
 
 SINGLE_CHAR_STATE(attlistdecl_default_fixed_state1, 'I', 0, attlistdecl_default_fixed_state2, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_fixed_state2, 'X', 0, attlistdecl_default_fixed_state3, INVALID_DEFAULTDECL)
 SINGLE_CHAR_STATE(attlistdecl_default_fixed_state3, 'E', 0, attlistdecl_default_fixed_state4, INVALID_DEFAULTDECL)
-SINGLE_CHAR_STATE(attlistdecl_default_fixed_state4, 'D', attlistdecl_attvalue_start_state, ws_plus_state, INVALID_DEFAULTDECL)
+SINGLE_CHAR_STATE_RETURN(attlistdecl_default_fixed_state4, 'D', attlistdecl_attvalue_start_state, ws_plus_state, INVALID_DEFAULTDECL, ATTLISTDECL_DEFAULT_FIXED_TOKEN)
 
 FAXPP_Error
 attlistdecl_attvalue_start_state(FAXPP_TokenizerEnv *env)
