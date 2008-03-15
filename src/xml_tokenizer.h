@@ -52,6 +52,7 @@ struct FAXPP_TokenizerEnv_s {
 
   unsigned int nesting_level;
   unsigned int elemdecl_content_level;
+  unsigned int ignore_start_level;
   unsigned int do_encode:1;
   unsigned int buffer_done:1;
 
@@ -64,6 +65,7 @@ struct FAXPP_TokenizerEnv_s {
   unsigned int internal_dtd_entity:1;
   unsigned int external_dtd_entity:1;
   unsigned int external_parsed_entity:1;
+  unsigned int in_markup_entity:1;
 
   unsigned int normalize_attrs:1;
   unsigned int user_provided_decode:1;
@@ -99,14 +101,16 @@ struct FAXPP_TokenizerEnv_s {
   struct FAXPP_TokenizerEnv_s *prev;
 };
 
-// The first two values are the same as the values in FAXPP_EntityType
+// The first three values are the same as the values in FAXPP_EntityType
 typedef enum {
   EXTERNAL_PARSED_ENTITY2 = EXTERNAL_PARSED_ENTITY,
   EXTERNAL_SUBSET_ENTITY2 = EXTERNAL_SUBSET_ENTITY,
+  EXTERNAL_IN_MARKUP_ENTITY2 = EXTERNAL_IN_MARKUP_ENTITY,
 
   ELEMENT_CONTENT_ENTITY,
   INTERNAL_DTD_ENTITY,
   EXTERNAL_DTD_ENTITY,
+  IN_MARKUP_ENTITY,
   ATTRIBUTE_VALUE_ENTITY
 } FAXPP_EntityParseState;
 

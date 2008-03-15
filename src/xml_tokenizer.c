@@ -392,6 +392,7 @@ static void init_tokenize_internal(FAXPP_Tokenizer *env)
 
   env->nesting_level = 0;
   env->elemdecl_content_level = 0;
+  env->ignore_start_level = 0;
   env->do_encode = 1;
 
   env->seen_doctype = 0;
@@ -403,6 +404,7 @@ static void init_tokenize_internal(FAXPP_Tokenizer *env)
   env->internal_dtd_entity = 0;
   env->external_dtd_entity = 0;
   env->external_parsed_entity = 0;
+  env->in_markup_entity = 0;
 
   env->start_of_entity = 0;
   env->start_of_file = 0;
@@ -470,6 +472,7 @@ FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state
   env->external_dtd_entity = state == EXTERNAL_DTD_ENTITY;
   env->external_parsed_entity = state == EXTERNAL_PARSED_ENTITY;
   env->external_subset = state == EXTERNAL_SUBSET_ENTITY;
+  env->in_markup_entity = state == IN_MARKUP_ENTITY || state == EXTERNAL_IN_MARKUP_ENTITY;
 
   FAXPP_set_tokenizer_decode(env, env->prev->transcoder.decode);
 
@@ -491,8 +494,12 @@ FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state
   case EXTERNAL_DTD_ENTITY:
     env->state = external_subset_state;
     break;
+  case IN_MARKUP_ENTITY:
+    env->state = env->prev->state;
+    break;
   case EXTERNAL_PARSED_ENTITY:
   case EXTERNAL_SUBSET_ENTITY:
+  case EXTERNAL_IN_MARKUP_ENTITY:
     env->state = initial_state;
     break;
   }
@@ -515,7 +522,11 @@ FAXPP_pop_tokenizer(FAXPP_Tokenizer **list)
   *list = env->prev;
 
   if(env->start_of_entity) {
-    if(env->stored_state != 0 || env->nesting_level != 0 || env->elemdecl_content_level != 0 ||
+    if(env->in_markup_entity) {
+      if(env->nesting_level != 0 || env->elemdecl_content_level != 0)
+        err = IMPROPER_NESTING_OF_ENTITY;
+    }
+    else if(env->stored_state != 0 || env->nesting_level != 0 || env->elemdecl_content_level != 0 ||
        (env->element_entity && env->state != parsed_entity_state &&
         env->state != default_element_content_rsquare_state1 &&
         env->state != default_element_content_rsquare_state2) ||
@@ -527,7 +538,8 @@ FAXPP_pop_tokenizer(FAXPP_Tokenizer **list)
       err = INCOMPLETE_MARKUP_IN_ENTITY_VALUE;
     }
   }
-  else {
+
+  if(env->in_markup_entity || !env->start_of_entity) {
     // Force the old tokenizer token to point into the token buffer
     FAXPP_tokenizer_release_buffer(env, 0);
 

@@ -172,6 +172,7 @@ FAXPP_Error quot_entity_reference_state3(FAXPP_TokenizerEnv *env);
 FAXPP_Error quot_entity_reference_state4(FAXPP_TokenizerEnv *env);
 FAXPP_Error entity_reference_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error parameter_entity_reference_state(FAXPP_TokenizerEnv *env);
+FAXPP_Error parameter_entity_reference_in_markup_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error char_reference_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error dec_char_reference_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error hex_char_reference_state1(FAXPP_TokenizerEnv *env);
@@ -299,6 +300,7 @@ FAXPP_Error elementdecl_initial_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_initial_state3(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_initial_state4(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_initial_state5(FAXPP_TokenizerEnv *env);
+FAXPP_Error elementdecl_name_ws_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_name_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_name_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error elementdecl_name_seen_colon_state1(FAXPP_TokenizerEnv *env);
@@ -448,6 +450,7 @@ FAXPP_Error paramentitydecl_value_apos_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error paramentitydecl_value_quot_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error paramentitydecl_end_state(FAXPP_TokenizerEnv *env);
 
+FAXPP_Error conditional_ws_state(FAXPP_TokenizerEnv *env);
 FAXPP_Error conditional_state1(FAXPP_TokenizerEnv *env);
 FAXPP_Error conditional_state2(FAXPP_TokenizerEnv *env);
 FAXPP_Error ignore_state1(FAXPP_TokenizerEnv *env);
@@ -489,8 +492,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state);
     return BAD_ENCODING; \
   } \
 \
-/*   printf("%03d:%03d State: %s, Byte: %c, Char: %08X\n", (env)->line, (env)->column, */ \
-/*          FAXPP_state_to_string((env)->state), *(unsigned char*)(env)->position, */ \
+/*   printf("%03d:%03d Tok:%p L:%03d State: %s, Byte: %c, Char: %08X\n", (env)->line, (env)->column, */ \
+/*          (env), (env)->nesting_level, FAXPP_state_to_string((env)->state), *(unsigned char*)(env)->position, */ \
 /*          (env)->current_char); */ \
 }
 
@@ -560,6 +563,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state);
     (env)->state = final_state; \
   else if((env)->internal_subset) \
     (env)->state = internal_subset_state; \
+  else if((env)->in_markup_entity) \
+    (env)->state = (env)->prev->state; \
   else (env)->state = initial_misc_state; \
 }
 

@@ -92,8 +92,9 @@ typedef enum {
 
 /// The type of external entity to parse
 typedef enum {
-  EXTERNAL_PARSED_ENTITY = 0, ///< An external parsed entity
-  EXTERNAL_SUBSET_ENTITY = 1  ///< An external subset (DTD)
+  EXTERNAL_PARSED_ENTITY    = 0, ///< An external parsed entity
+  EXTERNAL_SUBSET_ENTITY    = 1, ///< An external subset (DTD)
+  EXTERNAL_IN_MARKUP_ENTITY = 2  ///< An external entity inside DTD markup
 } FAXPP_EntityType;
 
 /**

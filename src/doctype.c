@@ -726,7 +726,7 @@ external_subset_seen_rsquare_state2(FAXPP_TokenizerEnv *env)
     next_char(env);
     return INVALID_DTD_DECL;
   case '>':
-    env->nesting_level -= 1;
+    env->nesting_level -= 2;
     base_state(env);
     break;
   default:
@@ -772,8 +772,8 @@ external_subset_decl_state(FAXPP_TokenizerEnv *env)
     env->state = comment_start_state2;
     break;
   case '[':
-    env->stored_state = conditional_state1;
-    env->state = ws_state;
+    env->nesting_level += 1;
+    env->state = conditional_ws_state;
     break;
   case 'E':
     env->state = elementdecl_or_entitydecl_state;

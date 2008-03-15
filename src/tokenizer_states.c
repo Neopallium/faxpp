@@ -256,6 +256,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "entity_reference_state";
   else if(state == parameter_entity_reference_state)
     return "parameter_entity_reference_state";
+  else if(state == parameter_entity_reference_in_markup_state)
+    return "parameter_entity_reference_in_markup_state";
   else if(state == char_reference_state)
     return "char_reference_state";
   else if(state == dec_char_reference_state)
@@ -498,6 +500,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_initial_state4";
   else if(state == elementdecl_initial_state5)
     return "elementdecl_initial_state5";
+  else if(state == elementdecl_name_ws_state)
+    return "elementdecl_name_ws_state";
   else if(state == elementdecl_name_state1)
     return "elementdecl_name_state1";
   else if(state == elementdecl_name_state2)
@@ -793,6 +797,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
   else if(state == paramentitydecl_end_state)
     return "paramentitydecl_end_state";
 
+  else if(state == conditional_ws_state)
+    return "conditional_ws_state";
   else if(state == conditional_state1)
     return "conditional_state1";
   else if(state == conditional_state2)

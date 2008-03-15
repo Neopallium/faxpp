@@ -76,7 +76,7 @@ main(int argc, char **argv)
     }
 
     while((err = FAXPP_next_event(parser)) == 0) {
-/*       output_event(FAXPP_get_current_event(parser), stdout); */
+      output_event(FAXPP_get_current_event(parser), stdout);
 
       if(FAXPP_get_current_event(parser)->type == END_DOCUMENT_EVENT)
         break;

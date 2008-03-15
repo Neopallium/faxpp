@@ -1069,7 +1069,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
     case XML_DECL_END_TOKEN:
       env->next_event = nc_unsupported_encoding_next_event;
 
-      if(env->tenv->external_subset) {
+      if(env->tenv->external_subset || env->tenv->in_markup_entity) {
         // TBD event for start of external subset - jpcs
         next = nc_dtd_next_event;
       }
@@ -1131,7 +1131,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
     default:
       env->tenv->buffered_token = 1;
       p_reset_event(env);
-      if(env->tenv->external_subset) {
+      if(env->tenv->external_subset || env->tenv->in_markup_entity) {
         // TBD event for start of external subset - jpcs
         env->next_event = nc_dtd_next_event;
       }
@@ -1201,14 +1201,6 @@ static FAXPP_EntityValue *p_add_entity_value(FAXPP_ParserEnv *env)
 
 #define p_compare_text(a, b) (((a)->len == (b)->len) ? memcmp((a)->ptr, (b)->ptr, (a)->len) : ((a)->len - (b)->len))
 
-/* static int p_compare_text(const FAXPP_Text *a, const FAXPP_Text *b) */
-/* { */
-/*   int cmp = a->len - b->len; */
-/*   if(cmp != 0) return cmp; */
-
-/*   return memcmp(a->ptr, b->ptr, a->len); */
-/* } */
-
 static FAXPP_EntityInfo *p_find_entity_info(const FAXPP_Text *name, FAXPP_EntityInfo *list)
 {
   while(list) {
@@ -1237,9 +1229,6 @@ static FAXPP_Error p_parse_internal_entity(FAXPP_ParserEnv *env, FAXPP_EntityInf
 
       env->tenv->line = entv->line;
       env->tenv->column = entv->column;
-
-      if(state == EXTERNAL_PARSED_ENTITY)
-        env->next_event = nc_start_document_next_event;
 
       // Set the entity on the first new tokenizer
       if(*initial_entity) {
@@ -1282,8 +1271,13 @@ static FAXPP_Error p_parse_external_entity(FAXPP_ParserEnv *env, FAXPP_EntityInf
   return err;
 }
 
+static const char single_space[] = {' '};
+
 static FAXPP_Error p_parse_entity(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, FAXPP_EntityParseState state)
 {
+  FAXPP_Error err;
+  FAXPP_EntityInfo *tmp;
+
   // Check for a recursive entity
   FAXPP_TokenizerEnv *tokenizer = env->tenv;
   while(tokenizer) {
@@ -1293,18 +1287,47 @@ static FAXPP_Error p_parse_entity(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, F
     tokenizer = tokenizer->prev;
   }
 
+  if(state == IN_MARKUP_ENTITY || state == EXTERNAL_IN_MARKUP_ENTITY) {
+    // Add a space after the entity inside DTD markup
+    err = FAXPP_push_entity_tokenizer(&env->tenv, IN_MARKUP_ENTITY, (void*)single_space, 1, /*done*/1);
+    if(err) return err;
+
+    env->tenv->line = ent->line;
+    env->tenv->column = ent->column;
+
+    FAXPP_set_tokenizer_decode(env->tenv, FAXPP_utf8_decode);
+  }
+
   if(ent->external) {
     switch(state) {
     case ELEMENT_CONTENT_ENTITY: state = EXTERNAL_PARSED_ENTITY; break;
     case INTERNAL_DTD_ENTITY: state = EXTERNAL_SUBSET_ENTITY; break;
     case EXTERNAL_DTD_ENTITY: state = EXTERNAL_SUBSET_ENTITY; break;
+    case IN_MARKUP_ENTITY: state = EXTERNAL_IN_MARKUP_ENTITY; break;
     default: break;
     }
 
-    return p_parse_external_entity(env, ent, state);
+    err = p_parse_external_entity(env, ent, state);
+    if(err) return err;
+  }
+  else {
+    tmp = ent;
+    err = p_parse_internal_entity(env, ent, state, &tmp);
+    if(err) return err;
+
+    if(state == IN_MARKUP_ENTITY || state == EXTERNAL_IN_MARKUP_ENTITY) {
+      // Add a space before the entity inside DTD markup
+      err = FAXPP_push_entity_tokenizer(&env->tenv, IN_MARKUP_ENTITY, (void*)single_space, 1, /*done*/1);
+      if(err) return err;
+
+      env->tenv->line = ent->line;
+      env->tenv->column = ent->column;
+
+      FAXPP_set_tokenizer_decode(env->tenv, FAXPP_utf8_decode);
+    }
   }
 
-  return p_parse_internal_entity(env, ent, state, &ent);
+  return NO_ERROR;
 }
 
 static Char32 p_dec_char_ref_value(const FAXPP_Text *text, FAXPP_ParserEnv *env)
@@ -1563,6 +1586,26 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         if(err) goto error;
       }
       break;
+    case PE_REFERENCE_IN_MARKUP_TOKEN:
+      // Parameter entity references cannot be forward references -
+      // so we go ahead and look them up straight away
+      ent = p_find_entity_info(&env->tenv->result_token.value, env->parameter_entities);
+      // [VC: Entity Declared]
+      if(ent == 0) {
+        err = UNDEFINED_ENTITY;
+        goto error;
+      }
+
+      p_set_text_from_text(&bkup_system, &env->event.system_id);
+      p_set_text_from_text(&bkup_public, &env->event.public_id);
+
+      err = p_parse_entity(env, ent, IN_MARKUP_ENTITY);
+
+      p_set_text_from_text(&env->event.system_id, &bkup_system);
+      p_set_text_from_text(&env->event.public_id, &bkup_public);
+
+      if(err) goto error;
+      break;
 
     case ELEMENTDECL_LPAR_TOKEN:
       cs = (FAXPP_ContentSpec*)malloc(sizeof(FAXPP_ContentSpec));
@@ -1699,6 +1742,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case PUBID_LITERAL_TOKEN:
     case NDATA_NAME_TOKEN:
     case PE_REFERENCE_TOKEN:
+    case PE_REFERENCE_IN_MARKUP_TOKEN:
     case ELEMENTDECL_PREFIX_TOKEN:
     case ELEMENTDECL_NAME_TOKEN:
     case ELEMENTDECL_EMPTY_TOKEN:

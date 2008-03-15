@@ -37,6 +37,29 @@ name(FAXPP_TokenizerEnv *env) \
   return NO_ERROR; \
 }
 
+FAXPP_Error
+conditional_ws_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  default:
+    env->state = conditional_state1;
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
+}
+
 SINGLE_CHAR_STATE(conditional_state1, 'I', 0, conditional_state2, INVALID_CONDITIONAL_SECTION)
 
 FAXPP_Error
@@ -47,11 +70,9 @@ conditional_state2(FAXPP_TokenizerEnv *env)
   switch(env->current_char) {
   case 'N':
     env->state = include_state1;
-    env->nesting_level += 1;
     break;
   case 'G':
     env->state = ignore_state1;
-    env->nesting_level += 1;
     break;
   LINE_ENDINGS
   default:
@@ -66,7 +87,26 @@ SINGLE_CHAR_STATE(ignore_state1, 'N', 0, ignore_state2, INVALID_CONDITIONAL_SECT
 SINGLE_CHAR_STATE(ignore_state2, 'O', 0, ignore_state3, INVALID_CONDITIONAL_SECTION)
 SINGLE_CHAR_STATE(ignore_state3, 'R', 0, ignore_state4, INVALID_CONDITIONAL_SECTION)
 SINGLE_CHAR_STATE(ignore_state4, 'E', ignore_state5, ws_state, INVALID_CONDITIONAL_SECTION)
-SINGLE_CHAR_STATE(ignore_state5, '[', 0, ignore_content_state, INVALID_CONDITIONAL_SECTION)
+
+FAXPP_Error
+ignore_state5(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case '[':
+    env->ignore_start_level = env->nesting_level;
+    env->nesting_level += 1;
+    env->state = ignore_content_state;
+    next_char(env);
+    break;
+  LINE_ENDINGS
+  default:
+    next_char(env);
+    return INVALID_CONDITIONAL_SECTION;
+  }
+  return NO_ERROR;
+}
 
 FAXPP_Error
 ignore_content_state(FAXPP_TokenizerEnv *env)
@@ -169,7 +209,8 @@ ignore_content_seen_rsquare_state2(FAXPP_TokenizerEnv *env)
     break;
   case '>':
     env->nesting_level -= 1;
-    if(env->nesting_level == 0) {
+    if(env->nesting_level == env->ignore_start_level) {
+      env->nesting_level -= 1;
       base_state(env);
     }
     else {
@@ -194,4 +235,23 @@ SINGLE_CHAR_STATE(include_state2, 'L', 0, include_state3, INVALID_CONDITIONAL_SE
 SINGLE_CHAR_STATE(include_state3, 'U', 0, include_state4, INVALID_CONDITIONAL_SECTION)
 SINGLE_CHAR_STATE(include_state4, 'D', 0, include_state5, INVALID_CONDITIONAL_SECTION)
 SINGLE_CHAR_STATE(include_state5, 'E', include_state6, ws_state, INVALID_CONDITIONAL_SECTION)
-SINGLE_CHAR_STATE(include_state6, '[', 0, external_subset_state, INVALID_CONDITIONAL_SECTION)
+
+FAXPP_Error
+include_state6(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  case '[':
+    env->nesting_level += 1;
+    env->state = external_subset_state;
+    next_char(env);
+    break;
+  LINE_ENDINGS
+  default:
+    next_char(env);
+    return INVALID_CONDITIONAL_SECTION;
+  }
+  return NO_ERROR;
+}
+

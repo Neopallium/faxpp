@@ -24,6 +24,7 @@ elementdecl_or_entitydecl_state(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case 'L':
+    env->nesting_level += 1;
     env->state = elementdecl_initial_state1;
     next_char(env);
     break;
@@ -66,7 +67,32 @@ SINGLE_CHAR_STATE(elementdecl_initial_state1, 'E', 0, elementdecl_initial_state2
 SINGLE_CHAR_STATE(elementdecl_initial_state2, 'M', 0, elementdecl_initial_state3, INVALID_DTD_DECL)
 SINGLE_CHAR_STATE(elementdecl_initial_state3, 'E', 0, elementdecl_initial_state4, INVALID_DTD_DECL)
 SINGLE_CHAR_STATE(elementdecl_initial_state4, 'N', 0, elementdecl_initial_state5, INVALID_DTD_DECL)
-SINGLE_CHAR_STATE(elementdecl_initial_state5, 'T', elementdecl_name_state1, ws_plus_state, INVALID_DTD_DECL)
+SINGLE_CHAR_STATE(elementdecl_initial_state5, 'T', 0, elementdecl_name_ws_state, INVALID_DTD_DECL)
+
+FAXPP_Error
+elementdecl_name_ws_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    // TBD only for external subset - jpcs
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    return NO_ERROR;
+  default:
+    env->state = elementdecl_name_state1;
+    token_start_position(env);
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
+}
 
 FAXPP_Error
 elementdecl_name_state1(FAXPP_TokenizerEnv *env)
@@ -624,6 +650,7 @@ elementdecl_end_state(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case '>':
+    env->nesting_level -= 1;
     base_state(env);
     report_empty_token(ELEMENTDECL_END_TOKEN, env);
     break;

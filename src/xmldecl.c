@@ -16,6 +16,7 @@
 
 #include "tokenizer_states.h"
 #include "char_classes.h"
+#include "xml_parser.h"
 
 FAXPP_Error
 xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
@@ -29,7 +30,10 @@ xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     break;
   case '!':
-    if(env->external_subset)
+    // TBD Do this in all other places where it's not an XMLDecl - jpcs
+    if(env->in_markup_entity)
+      return INVALID_DTD_DECL; // TBD is this right? - jpcs
+    else if(env->external_subset)
       env->state = external_subset_markup_state;
     else
       env->state = initial_markup_state;
@@ -164,7 +168,7 @@ xml_decl_version_state1(FAXPP_TokenizerEnv *env)
     env->state = xml_decl_version_state2;
     break;
   case 'e':
-    if(env->external_parsed_entity || env->external_subset) {
+    if(env->external_parsed_entity || env->external_subset || env->in_markup_entity) {
       env->state = xml_decl_encoding_state2;
       break;
     }
@@ -330,13 +334,13 @@ xml_decl_encoding_state1(FAXPP_TokenizerEnv *env)
   WHITESPACE:
     break;
   case '?':
-    if(env->external_parsed_entity || env->external_subset) goto invalid_char;
+    if(env->external_parsed_entity || env->external_subset || env->in_markup_entity) goto invalid_char;
 
     env->state = xml_decl_seen_question_state;
     token_start_position(env);
     break;
   case 's':
-    if(env->external_parsed_entity || env->external_subset) goto invalid_char;
+    if(env->external_parsed_entity || env->external_subset || env->in_markup_entity) goto invalid_char;
 
     env->state = xml_decl_standalone_state2;
     break;
@@ -524,7 +528,7 @@ xml_decl_standalone_state1(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   case 's':
-    if(!env->external_parsed_entity && !env->external_subset) {
+    if(!env->external_parsed_entity && !env->external_subset && !env->in_markup_entity) {
       env->state = xml_decl_standalone_state2;
       next_char(env);
       break;
@@ -698,17 +702,42 @@ xml_decl_question_state(FAXPP_TokenizerEnv *env)
   return NO_ERROR;
 }
 
+static const char single_space[] = {' '};
+
 FAXPP_Error
 xml_decl_seen_question_state(FAXPP_TokenizerEnv *env)
 {
+  FAXPP_Error err;
+  FAXPP_TokenizerEnv *tok;
+
   read_char(env);
 
   switch(env->current_char) {
   case '>':
     base_state(env);
+
     report_empty_token(XML_DECL_END_TOKEN, env);
     next_char(env);
     token_start_position(env);
+
+    if(env->in_markup_entity) {
+      // Add a space before the entity inside DTD markup
+      err = FAXPP_push_entity_tokenizer(&env, IN_MARKUP_ENTITY, (void*)single_space, 1, /*done*/1);
+      if(err) return err;
+
+      tok = env;
+      while(tok && tok->entity == 0) {
+        tok = tok->prev;
+      }
+
+      if(tok) {
+        env->line = tok->entity->line;
+        env->column = tok->entity->column;
+      }
+
+      FAXPP_set_tokenizer_decode(env, FAXPP_utf8_decode);
+    }
+
     break;
   LINE_ENDINGS
   default:
