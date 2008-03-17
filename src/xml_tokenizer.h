@@ -51,8 +51,9 @@ struct FAXPP_TokenizerEnv_s {
   unsigned int column;
 
   unsigned int nesting_level;
-  unsigned int elemdecl_content_level;
   unsigned int ignore_start_level;
+  unsigned int elemdecl_content_level;
+  unsigned int elemdecl_content_start_level;
   unsigned int do_encode:1;
   unsigned int buffer_done:1;
 
@@ -66,6 +67,7 @@ struct FAXPP_TokenizerEnv_s {
   unsigned int external_dtd_entity:1;
   unsigned int external_parsed_entity:1;
   unsigned int in_markup_entity:1;
+  unsigned int external_in_markup_entity:1;
 
   unsigned int normalize_attrs:1;
   unsigned int user_provided_decode:1;

@@ -30,9 +30,10 @@ xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     break;
   case '!':
-    // TBD Do this in all other places where it's not an XMLDecl - jpcs
-    if(env->in_markup_entity)
-      return INVALID_DTD_DECL; // TBD is this right? - jpcs
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     else if(env->external_subset)
       env->state = external_subset_markup_state;
     else
@@ -41,6 +42,10 @@ xml_decl_or_markup_state(FAXPP_TokenizerEnv *env)
     break;
   LINE_ENDINGS
   default:
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = (env)->start_element_name_state;
     env->seen_doc_element = 1;
     token_start_position(env);
@@ -64,6 +69,10 @@ xml_decl_or_pi_state1(FAXPP_TokenizerEnv *env)
     break;
   LINE_ENDINGS
   default:
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = pi_name_start_state;
     break;
   }
@@ -81,12 +90,20 @@ xml_decl_or_pi_state2(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   WHITESPACE:
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = pi_ws_state;
     token_end_position(env);
     report_token(PI_NAME_TOKEN, env);
     next_char(env);
     break;
   case '?':
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = pi_content_seen_question_state;
     token_end_position(env);
     report_token(PI_NAME_TOKEN, env);
@@ -94,6 +111,10 @@ xml_decl_or_pi_state2(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   default:
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = pi_name_x_state;
     break;
   }
@@ -111,12 +132,20 @@ xml_decl_or_pi_state3(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   WHITESPACE:
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = pi_ws_state;
     token_end_position(env);
     report_token(PI_NAME_TOKEN, env);
     next_char(env);
     break;
   case '?':
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = pi_content_seen_question_state;
     token_end_position(env);
     report_token(PI_NAME_TOKEN, env);
@@ -124,6 +153,10 @@ xml_decl_or_pi_state3(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   default:
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = pi_name_m_state;
     break;
   }
@@ -147,6 +180,10 @@ xml_decl_or_pi_state4(FAXPP_TokenizerEnv *env)
     next_char(env);
     return INVALID_CHAR_IN_XML_DECL;
   default:
+    if(env->external_in_markup_entity) {
+      base_state(env);
+      return INVALID_DTD_DECL;
+    }
     env->state = pi_name_state;
     next_char(env);
     if((FAXPP_char_flags(env->current_char) & env->ncname_char) == 0)
@@ -168,7 +205,7 @@ xml_decl_version_state1(FAXPP_TokenizerEnv *env)
     env->state = xml_decl_version_state2;
     break;
   case 'e':
-    if(env->external_parsed_entity || env->external_subset || env->in_markup_entity) {
+    if(env->external_parsed_entity || env->external_subset || env->external_in_markup_entity) {
       env->state = xml_decl_encoding_state2;
       break;
     }
@@ -314,11 +351,14 @@ xml_decl_encoding_ws_state(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   case '?':
+    if(env->external_parsed_entity || env->external_subset || env->external_in_markup_entity) goto invalid_char;
+
     env->state = xml_decl_seen_question_state;
     token_start_position(env);
     next_char(env);
     break;
   default:
+invalid_char:
     next_char(env);
     return INVALID_CHAR_IN_XML_DECL;
   }
@@ -334,13 +374,13 @@ xml_decl_encoding_state1(FAXPP_TokenizerEnv *env)
   WHITESPACE:
     break;
   case '?':
-    if(env->external_parsed_entity || env->external_subset || env->in_markup_entity) goto invalid_char;
+    if(env->external_parsed_entity || env->external_subset || env->external_in_markup_entity) goto invalid_char;
 
     env->state = xml_decl_seen_question_state;
     token_start_position(env);
     break;
   case 's':
-    if(env->external_parsed_entity || env->external_subset || env->in_markup_entity) goto invalid_char;
+    if(env->external_parsed_entity || env->external_subset || env->external_in_markup_entity) goto invalid_char;
 
     env->state = xml_decl_standalone_state2;
     break;
@@ -528,7 +568,7 @@ xml_decl_standalone_state1(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   case 's':
-    if(!env->external_parsed_entity && !env->external_subset && !env->in_markup_entity) {
+    if(!env->external_parsed_entity && !env->external_subset && !env->external_in_markup_entity) {
       env->state = xml_decl_standalone_state2;
       next_char(env);
       break;
@@ -720,7 +760,7 @@ xml_decl_seen_question_state(FAXPP_TokenizerEnv *env)
     next_char(env);
     token_start_position(env);
 
-    if(env->in_markup_entity) {
+    if(env->external_in_markup_entity) {
       // Add a space before the entity inside DTD markup
       err = FAXPP_push_entity_tokenizer(&env, IN_MARKUP_ENTITY, (void*)single_space, 1, /*done*/1);
       if(err) return err;

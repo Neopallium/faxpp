@@ -500,8 +500,10 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_initial_state4";
   else if(state == elementdecl_initial_state5)
     return "elementdecl_initial_state5";
-  else if(state == elementdecl_name_ws_state)
-    return "elementdecl_name_ws_state";
+  else if(state == elementdecl_name_ws_state1)
+    return "elementdecl_name_ws_state1";
+  else if(state == elementdecl_name_ws_state2)
+    return "elementdecl_name_ws_state2";
   else if(state == elementdecl_name_state1)
     return "elementdecl_name_state1";
   else if(state == elementdecl_name_state2)
@@ -510,6 +512,10 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_name_seen_colon_state1";
   else if(state == elementdecl_name_seen_colon_state2)
     return "elementdecl_name_seen_colon_state2";
+  else if(state == elementdecl_content_ws_state1)
+    return "elementdecl_content_ws_state1";
+  else if(state == elementdecl_content_ws_state2)
+    return "elementdecl_content_ws_state2";
   else if(state == elementdecl_content_state)
     return "elementdecl_content_state";
   else if(state == elementdecl_empty_state1)
@@ -524,8 +530,12 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_any_state1";
   else if(state == elementdecl_any_state2)
     return "elementdecl_any_state2";
+  else if(state == elementdecl_mixed_or_children_ws_state)
+    return "elementdecl_mixed_or_children_ws_state";
   else if(state == elementdecl_mixed_or_children_state)
     return "elementdecl_mixed_or_children_state";
+  else if(state == elementdecl_cp_name_ws_state)
+    return "elementdecl_cp_name_ws_state";
   else if(state == elementdecl_cp_name_state1)
     return "elementdecl_cp_name_state1";
   else if(state == elementdecl_cp_name_state2)
@@ -536,6 +546,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_cp_name_seen_colon_state2";
   else if(state == elementdecl_cp_cardinality_state)
     return "elementdecl_cp_cardinality_state";
+  else if(state == elementdecl_cp_separator_or_end_ws_state)
+    return "elementdecl_cp_separator_or_end_ws_state";
   else if(state == elementdecl_cp_separator_or_end_state)
     return "elementdecl_cp_separator_or_end_state";
   else if(state == elementdecl_pcdata_state1)
@@ -550,14 +562,20 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_pcdata_state5";
   else if(state == elementdecl_pcdata_state6)
     return "elementdecl_pcdata_state6";
+  else if(state == elementdecl_pcdata_end_or_names_ws_state1)
+    return "elementdecl_pcdata_end_or_names_ws_state1";
   else if(state == elementdecl_pcdata_end_or_names_state1)
     return "elementdecl_pcdata_end_or_names_state1";
   else if(state == elementdecl_pcdata_optional_star_state)
     return "elementdecl_pcdata_optional_star_state";
+  else if(state == elementdecl_pcdata_end_or_names_ws_state2)
+    return "elementdecl_pcdata_end_or_names_ws_state2";
   else if(state == elementdecl_pcdata_end_or_names_state2)
     return "elementdecl_pcdata_end_or_names_state2";
   else if(state == elementdecl_pcdata_star_state)
     return "elementdecl_pcdata_star_state";
+  else if(state == elementdecl_pcdata_name_ws_state)
+    return "elementdecl_pcdata_name_ws_state";
   else if(state == elementdecl_pcdata_name_state1)
     return "elementdecl_pcdata_name_state1";
   else if(state == elementdecl_pcdata_name_state2)
@@ -566,6 +584,8 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "elementdecl_pcdata_name_seen_colon_state1";
   else if(state == elementdecl_pcdata_name_seen_colon_state2)
     return "elementdecl_pcdata_name_seen_colon_state2";
+  else if(state == elementdecl_end_ws_state)
+    return "elementdecl_end_ws_state";
   else if(state == elementdecl_end_state)
     return "elementdecl_end_state";
 
@@ -583,6 +603,10 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "attlistdecl_initial_state5";
   else if(state == attlistdecl_initial_state6)
     return "attlistdecl_initial_state6";
+  else if(state == attlistdecl_name_ws_state1)
+    return "attlistdecl_name_ws_state1";
+  else if(state == attlistdecl_name_ws_state2)
+    return "attlistdecl_name_ws_state2";
   else if(state == attlistdecl_name_state1)
     return "attlistdecl_name_state1";
   else if(state == attlistdecl_name_state2)
@@ -591,6 +615,10 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "attlistdecl_name_seen_colon_state1";
   else if(state == attlistdecl_name_seen_colon_state2)
     return "attlistdecl_name_seen_colon_state2";
+  else if(state == attlistdecl_attdef_name_ws_state1)
+    return "attlistdecl_attdef_name_ws_state1";
+  else if(state == attlistdecl_attdef_name_ws_state2)
+    return "attlistdecl_attdef_name_ws_state2";
   else if(state == attlistdecl_attdef_name_state1)
     return "attlistdecl_attdef_name_state1";
   else if(state == attlistdecl_attdef_name_state2)
@@ -599,6 +627,11 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "attlistdecl_attdef_name_seen_colon_state1";
   else if(state == attlistdecl_attdef_name_seen_colon_state2)
     return "attlistdecl_attdef_name_seen_colon_state2";
+
+  else if(state == attlistdecl_atttype_ws_state1)
+    return "attlistdecl_atttype_ws_state1";
+  else if(state == attlistdecl_atttype_ws_state2)
+    return "attlistdecl_atttype_ws_state2";
   else if(state == attlistdecl_atttype_state)
     return "attlistdecl_atttype_state";
   else if(state == attlistdecl_atttype_cdata_state1)
@@ -659,21 +692,37 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "attlistdecl_atttype_notation_state5";
   else if(state == attlistdecl_atttype_notation_state6)
     return "attlistdecl_atttype_notation_state6";
-  else if(state == attlistdecl_atttype_notation_state7)
-    return "attlistdecl_atttype_notation_state7";
+  else if(state == attlistdecl_atttype_notation_ws_state1)
+    return "attlistdecl_atttype_notation_ws_state1";
+  else if(state == attlistdecl_atttype_notation_ws_state2)
+    return "attlistdecl_atttype_notation_ws_state2";
+  else if(state == attlistdecl_atttype_notation_lpar_state)
+    return "attlistdecl_atttype_notation_lpar_state";
+  else if(state == attlistdecl_atttype_notation_name_ws_state)
+    return "attlistdecl_atttype_notation_name_ws_state";
   else if(state == attlistdecl_atttype_notation_name_state1)
     return "attlistdecl_atttype_notation_name_state1";
   else if(state == attlistdecl_atttype_notation_name_state2)
     return "attlistdecl_atttype_notation_name_state2";
+  else if(state == attlistdecl_atttype_notation_separator_ws_state)
+    return "attlistdecl_atttype_notation_separator_ws_state";
   else if(state == attlistdecl_atttype_notation_separator_state)
     return "attlistdecl_atttype_notation_separator_state";
+  else if(state == attlistdecl_atttype_enumeration_name_ws_state)
+    return "attlistdecl_atttype_enumeration_name_ws_state";
   else if(state == attlistdecl_atttype_enumeration_name_state1)
     return "attlistdecl_atttype_enumeration_name_state1";
   else if(state == attlistdecl_atttype_enumeration_name_state2)
     return "attlistdecl_atttype_enumeration_name_state2";
+  else if(state == attlistdecl_atttype_enumeration_separator_ws_state)
+    return "attlistdecl_atttype_enumeration_separator_ws_state";
   else if(state == attlistdecl_atttype_enumeration_separator_state)
     return "attlistdecl_atttype_enumeration_separator_state";
 
+  else if(state == attlistdecl_default_ws_state1)
+    return "attlistdecl_default_ws_state1";
+  else if(state == attlistdecl_default_ws_state2)
+    return "attlistdecl_default_ws_state2";
   else if(state == attlistdecl_default_state1)
     return "attlistdecl_default_state1";
   else if(state == attlistdecl_default_state2)

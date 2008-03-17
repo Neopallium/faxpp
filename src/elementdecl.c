@@ -67,10 +67,37 @@ SINGLE_CHAR_STATE(elementdecl_initial_state1, 'E', 0, elementdecl_initial_state2
 SINGLE_CHAR_STATE(elementdecl_initial_state2, 'M', 0, elementdecl_initial_state3, INVALID_DTD_DECL)
 SINGLE_CHAR_STATE(elementdecl_initial_state3, 'E', 0, elementdecl_initial_state4, INVALID_DTD_DECL)
 SINGLE_CHAR_STATE(elementdecl_initial_state4, 'N', 0, elementdecl_initial_state5, INVALID_DTD_DECL)
-SINGLE_CHAR_STATE(elementdecl_initial_state5, 'T', 0, elementdecl_name_ws_state, INVALID_DTD_DECL)
+SINGLE_CHAR_STATE(elementdecl_initial_state5, 'T', 0, elementdecl_name_ws_state1, INVALID_DTD_DECL)
 
 FAXPP_Error
-elementdecl_name_ws_state(FAXPP_TokenizerEnv *env)
+elementdecl_name_ws_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    env->state = elementdecl_name_ws_state2;
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_name_state1;
+    token_start_position(env);
+    // No next_char
+    return EXPECTING_WHITESPACE;
+  }
+  return NO_ERROR;
+}
+
+FAXPP_Error
+elementdecl_name_ws_state2(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
@@ -79,12 +106,13 @@ elementdecl_name_ws_state(FAXPP_TokenizerEnv *env)
     next_char(env);
     break;
   case '%':
-    // TBD only for external subset - jpcs
     store_state(env);
     env->state = parameter_entity_reference_in_markup_state;
     next_char(env);
     token_start_position(env);
-    return NO_ERROR;
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
   default:
     env->state = elementdecl_name_state1;
     token_start_position(env);
@@ -120,11 +148,11 @@ elementdecl_name_state2(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     WHITESPACE:
-      env->stored_state = elementdecl_content_state;
-      env->state = ws_state;
+    case '%':
+      env->state = elementdecl_content_ws_state1;
       token_end_position(env);
       report_token(ELEMENTDECL_NAME_TOKEN, env);
-      next_char(env);
+      // No next_char
       return NO_ERROR;
     case ':':
       env->state = elementdecl_name_seen_colon_state1;
@@ -172,11 +200,11 @@ elementdecl_name_seen_colon_state2(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     WHITESPACE:
-      env->stored_state = elementdecl_content_state;
-      env->state = ws_state;
+    case '%':
+      env->state = elementdecl_content_ws_state1;
       token_end_position(env);
       report_token(ELEMENTDECL_NAME_TOKEN, env);
-      next_char(env);
+      // No next_char
       return NO_ERROR;
     default:
       break;
@@ -189,6 +217,59 @@ elementdecl_name_seen_colon_state2(FAXPP_TokenizerEnv *env)
 
   // Never happens
   return NO_ERROR;  
+}
+
+FAXPP_Error
+elementdecl_content_ws_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    env->state = elementdecl_content_ws_state2;
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_content_state;
+    token_start_position(env);
+    // No next_char
+    return EXPECTING_WHITESPACE;
+  }
+  return NO_ERROR;
+}
+
+FAXPP_Error
+elementdecl_content_ws_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_content_state;
+    token_start_position(env);
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
 }
 
 FAXPP_Error
@@ -205,8 +286,7 @@ elementdecl_content_state(FAXPP_TokenizerEnv *env)
     break;
   case '(':
     env->elemdecl_content_level += 1;
-    env->stored_state = elementdecl_mixed_or_children_state;
-    env->state = ws_state;
+    env->state = elementdecl_mixed_or_children_ws_state;
     report_empty_token(ELEMENTDECL_LPAR_TOKEN, env);
     break;
   LINE_ENDINGS
@@ -221,10 +301,36 @@ elementdecl_content_state(FAXPP_TokenizerEnv *env)
 SINGLE_CHAR_STATE(elementdecl_empty_state1, 'M', 0, elementdecl_empty_state2, INVALID_ELEMENTDECL_CONTENT)
 SINGLE_CHAR_STATE(elementdecl_empty_state2, 'P', 0, elementdecl_empty_state3, INVALID_ELEMENTDECL_CONTENT)
 SINGLE_CHAR_STATE(elementdecl_empty_state3, 'T', 0, elementdecl_empty_state4, INVALID_ELEMENTDECL_CONTENT)
-SINGLE_CHAR_STATE_RETURN(elementdecl_empty_state4, 'Y', elementdecl_end_state, ws_state, INVALID_ELEMENTDECL_CONTENT, ELEMENTDECL_EMPTY_TOKEN)
+SINGLE_CHAR_STATE_RETURN(elementdecl_empty_state4, 'Y', 0, elementdecl_end_ws_state, INVALID_ELEMENTDECL_CONTENT, ELEMENTDECL_EMPTY_TOKEN)
 
 SINGLE_CHAR_STATE(elementdecl_any_state1, 'N', 0, elementdecl_any_state2, INVALID_ELEMENTDECL_CONTENT)
-SINGLE_CHAR_STATE_RETURN(elementdecl_any_state2, 'Y', elementdecl_end_state, ws_state, INVALID_ELEMENTDECL_CONTENT, ELEMENTDECL_ANY_TOKEN)
+SINGLE_CHAR_STATE_RETURN(elementdecl_any_state2, 'Y', 0, elementdecl_end_ws_state, INVALID_ELEMENTDECL_CONTENT, ELEMENTDECL_ANY_TOKEN)
+
+FAXPP_Error
+elementdecl_mixed_or_children_ws_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_mixed_or_children_state;
+    token_start_position(env);
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
+}
 
 FAXPP_Error
 elementdecl_mixed_or_children_state(FAXPP_TokenizerEnv *env)
@@ -246,6 +352,32 @@ elementdecl_mixed_or_children_state(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Error
+elementdecl_cp_name_ws_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_cp_name_state1;
+    token_start_position(env);
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
+}
+
+FAXPP_Error
 elementdecl_cp_name_state1(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
@@ -253,8 +385,7 @@ elementdecl_cp_name_state1(FAXPP_TokenizerEnv *env)
   switch(env->current_char) {
   case '(':
     env->elemdecl_content_level += 1;
-    env->stored_state = elementdecl_cp_name_state1;
-    env->state = ws_state;
+    env->state = elementdecl_cp_name_ws_state;
     report_empty_token(ELEMENTDECL_LPAR_TOKEN, env);
     next_char(env);
     break;
@@ -277,11 +408,11 @@ elementdecl_cp_name_state2(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     WHITESPACE:
-      env->stored_state = elementdecl_cp_separator_or_end_state;
-      env->state = ws_state;
+    case '%':
+      env->state = elementdecl_cp_separator_or_end_ws_state;
       token_end_position(env);
       report_token(ELEMENTDECL_NAME_TOKEN, env);
-      next_char(env);
+      // No next_char
       return NO_ERROR;
     case '?':
     case '*':
@@ -345,11 +476,11 @@ elementdecl_cp_name_seen_colon_state2(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     WHITESPACE:
-      env->stored_state = elementdecl_cp_separator_or_end_state;
-      env->state = ws_state;
+    case '%':
+      env->state = elementdecl_cp_separator_or_end_ws_state;
       token_end_position(env);
       report_token(ELEMENTDECL_NAME_TOKEN, env);
-      next_char(env);
+      // No next_char
       return NO_ERROR;
     case '?':
     case '*':
@@ -385,11 +516,12 @@ elementdecl_cp_cardinality_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
-  if(env->elemdecl_content_level == 0)
-    env->stored_state = elementdecl_end_state;
-  else
-    env->stored_state = elementdecl_cp_separator_or_end_state;
-  env->state = ws_state;
+  if(env->elemdecl_content_level == 0) {
+    env->state = elementdecl_end_ws_state;
+  }
+  else {
+    env->state = elementdecl_cp_separator_or_end_ws_state;
+  }
 
   switch(env->current_char) {
   case '?':
@@ -411,19 +543,43 @@ elementdecl_cp_cardinality_state(FAXPP_TokenizerEnv *env)
 }
 
 FAXPP_Error
+elementdecl_cp_separator_or_end_ws_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_cp_separator_or_end_state;
+    token_start_position(env);
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
+}
+
+FAXPP_Error
 elementdecl_cp_separator_or_end_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
   switch(env->current_char) {
   case '|':
-    env->stored_state = elementdecl_cp_name_state1;
-    env->state = ws_state;
+    env->state = elementdecl_cp_name_ws_state;
     report_empty_token(ELEMENTDECL_BAR_TOKEN, env);
     break;
   case ',':
-    env->stored_state = elementdecl_cp_name_state1;
-    env->state = ws_state;
+    env->state = elementdecl_cp_name_ws_state;
     report_empty_token(ELEMENTDECL_COMMA_TOKEN, env);
     break;
   case ')':
@@ -445,7 +601,33 @@ SINGLE_CHAR_STATE(elementdecl_pcdata_state2, 'C', 0, elementdecl_pcdata_state3, 
 SINGLE_CHAR_STATE(elementdecl_pcdata_state3, 'D', 0, elementdecl_pcdata_state4, INVALID_ELEMENTDECL_CONTENT)
 SINGLE_CHAR_STATE(elementdecl_pcdata_state4, 'A', 0, elementdecl_pcdata_state5, INVALID_ELEMENTDECL_CONTENT)
 SINGLE_CHAR_STATE(elementdecl_pcdata_state5, 'T', 0, elementdecl_pcdata_state6, INVALID_ELEMENTDECL_CONTENT)
-SINGLE_CHAR_STATE_RETURN(elementdecl_pcdata_state6, 'A', elementdecl_pcdata_end_or_names_state1, ws_state, INVALID_ELEMENTDECL_CONTENT, ELEMENTDECL_PCDATA_TOKEN)
+SINGLE_CHAR_STATE_RETURN(elementdecl_pcdata_state6, 'A', 0, elementdecl_pcdata_end_or_names_ws_state1, INVALID_ELEMENTDECL_CONTENT, ELEMENTDECL_PCDATA_TOKEN)
+
+FAXPP_Error
+elementdecl_pcdata_end_or_names_ws_state1(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_pcdata_end_or_names_state1;
+    token_start_position(env);
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
+}
 
 FAXPP_Error
 elementdecl_pcdata_end_or_names_state1(FAXPP_TokenizerEnv *env)
@@ -459,8 +641,7 @@ elementdecl_pcdata_end_or_names_state1(FAXPP_TokenizerEnv *env)
     report_empty_token(ELEMENTDECL_RPAR_TOKEN, env);
     break;
   case '|':
-    env->stored_state = elementdecl_pcdata_name_state1;
-    env->state = ws_state;
+    env->state = elementdecl_pcdata_name_ws_state;
     report_empty_token(ELEMENTDECL_BAR_TOKEN, env);
     break;
   default:
@@ -482,8 +663,33 @@ elementdecl_pcdata_optional_star_state(FAXPP_TokenizerEnv *env)
     next_char(env);
     // Fall through
   default:
-    env->stored_state = elementdecl_end_state;
-    env->state = ws_state;
+    env->state = elementdecl_end_ws_state;
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
+}
+
+FAXPP_Error
+elementdecl_pcdata_end_or_names_ws_state2(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_pcdata_end_or_names_state2;
+    token_start_position(env);
     // No next_char
     break;
   }
@@ -502,8 +708,7 @@ elementdecl_pcdata_end_or_names_state2(FAXPP_TokenizerEnv *env)
     report_empty_token(ELEMENTDECL_RPAR_TOKEN, env);
     break;
   case '|':
-    env->stored_state = elementdecl_pcdata_name_state1;
-    env->state = ws_state;
+    env->state = elementdecl_pcdata_name_ws_state;
     report_empty_token(ELEMENTDECL_BAR_TOKEN, env);
     break;
   default:
@@ -519,8 +724,7 @@ elementdecl_pcdata_star_state(FAXPP_TokenizerEnv *env)
 {
   read_char(env);
 
-  env->stored_state = elementdecl_end_state;
-  env->state = ws_state;
+  env->state = elementdecl_end_ws_state;
 
   switch(env->current_char) {
   case '*':
@@ -530,6 +734,32 @@ elementdecl_pcdata_star_state(FAXPP_TokenizerEnv *env)
   default:
     next_char(env);
     return INVALID_ELEMENTDECL_CONTENT;
+  }
+  return NO_ERROR;
+}
+
+FAXPP_Error
+elementdecl_pcdata_name_ws_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_pcdata_name_state1;
+    token_start_position(env);
+    // No next_char
+    break;
   }
   return NO_ERROR;
 }
@@ -560,13 +790,14 @@ elementdecl_pcdata_name_state2(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     WHITESPACE:
-      env->stored_state = elementdecl_pcdata_end_or_names_state2;
-      env->state = ws_state;
+    case '%':
+      env->state = elementdecl_pcdata_end_or_names_ws_state2;
       token_end_position(env);
       report_token(ELEMENTDECL_NAME_TOKEN, env);
-      next_char(env);
+      // No next_char
       return NO_ERROR;
     case ')':
+    case '|':
       env->state = elementdecl_pcdata_end_or_names_state2;
       token_end_position(env);
       report_token(ELEMENTDECL_NAME_TOKEN, env);
@@ -618,13 +849,14 @@ elementdecl_pcdata_name_seen_colon_state2(FAXPP_TokenizerEnv *env)
 
     switch(env->current_char) {
     WHITESPACE:
-      env->stored_state = elementdecl_pcdata_end_or_names_state2;
-      env->state = ws_state;
+    case '%':
+      env->state = elementdecl_pcdata_end_or_names_ws_state2;
       token_end_position(env);
       report_token(ELEMENTDECL_NAME_TOKEN, env);
-      next_char(env);
+      // No next_char
       return NO_ERROR;
     case ')':
+    case '|':
       env->state = elementdecl_pcdata_end_or_names_state2;
       token_end_position(env);
       report_token(ELEMENTDECL_NAME_TOKEN, env);
@@ -641,6 +873,32 @@ elementdecl_pcdata_name_seen_colon_state2(FAXPP_TokenizerEnv *env)
 
   // Never happens
   return NO_ERROR;  
+}
+
+FAXPP_Error
+elementdecl_end_ws_state(FAXPP_TokenizerEnv *env)
+{
+  read_char(env);
+
+  switch(env->current_char) {
+  WHITESPACE:
+    next_char(env);
+    break;
+  case '%':
+    store_state(env);
+    env->state = parameter_entity_reference_in_markup_state;
+    next_char(env);
+    token_start_position(env);
+    if(env->external_subset || env->external_dtd_entity || env->external_in_markup_entity)
+      return NO_ERROR;
+    return PARAMETER_ENTITY_IN_INTERNAL_SUBSET;
+  default:
+    env->state = elementdecl_end_state;
+    token_start_position(env);
+    // No next_char
+    break;
+  }
+  return NO_ERROR;
 }
 
 FAXPP_Error

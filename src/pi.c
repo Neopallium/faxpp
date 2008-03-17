@@ -138,9 +138,7 @@ pi_ws_state(FAXPP_TokenizerEnv *env)
   default:
     env->state = pi_content_state;
     token_start_position(env);
-    next_char(env);
-    if((FAXPP_char_flags(env->current_char) & env->non_restricted_char) == 0)
-      return RESTRICTED_CHAR;
+    // No next_char
     break;
   }
   return NO_ERROR;

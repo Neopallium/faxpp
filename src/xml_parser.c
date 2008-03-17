@@ -430,7 +430,7 @@ unsigned int FAXPP_get_error_column(const FAXPP_Parser *parser)
 
 static void p_change_buffer(FAXPP_Buffer *buffer, void *newBuffer, void **text)
 {
-  if(*text >= buffer->buffer && *text < (buffer->buffer + buffer->length)) {
+  if(*text >= buffer->buffer && *text <= (buffer->buffer + buffer->length)) {
     *text += newBuffer - buffer->buffer;
   }
 }
@@ -514,6 +514,11 @@ static void p_change_entity_buffer(void *userData, FAXPP_Buffer *buffer, void *n
     p_change_buffer(buffer, newBuffer, &tokenizer->buffer_end);
     p_change_buffer(buffer, newBuffer, &tokenizer->position);
 
+    p_change_buffer(buffer, newBuffer, &tokenizer->result_token.value.ptr);
+    p_change_buffer(buffer, newBuffer, &tokenizer->token.value.ptr);
+    p_change_buffer(buffer, newBuffer, &tokenizer->token_position1);
+    p_change_buffer(buffer, newBuffer, &tokenizer->token_position2);
+
     tokenizer = tokenizer->prev;
   }
 }
@@ -585,37 +590,6 @@ FAXPP_Error FAXPP_release_buffer(FAXPP_Parser *env, void **buffer_position)
     el = el->prev;
   }
 
-  // Copy any strings in the entity lists which point to the old buffer
-  // into the entity buffer
-  FAXPP_EntityInfo *ent;
-  FAXPP_EntityValue *entv;
-
-  ent = env->general_entities;
-  while(ent) {
-    p_move_text_to_buffer(env, &ent->name, &env->entity_buffer);
-
-    entv = ent->value;
-    while(entv) {
-      p_move_text_to_buffer(env, &entv->value, &env->entity_buffer);
-      entv = entv->prev;
-    }
-
-    ent = ent->next;
-  }
-
-  ent = env->parameter_entities;
-  while(ent) {
-    p_move_text_to_buffer(env, &ent->name, &env->entity_buffer);
-
-    entv = ent->value;
-    while(entv) {
-      p_move_text_to_buffer(env, &entv->value, &env->entity_buffer);
-      entv = entv->prev;
-    }
-
-    ent = ent->next;
-  }
-
   return NO_ERROR;
 }
 
@@ -654,10 +628,12 @@ FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *env, void *buffer,
 /*       strncpy(buf, env->tenv->result_token.value.ptr, env->tenv->result_token.value.len); */
 /*       buf[env->tenv->result_token.value.len] = 0; */
 /*     } */
-/*     printf("%03d:%03d Token ID: %s, Token: \"%s\"\n", env->tenv->result_token.line, env->tenv->result_token.column, FAXPP_token_to_string(env->tenv->result_token.type), buf); */
+/*     printf("%03d:%03d Token ID: %s, Token: \"%s\"\n", env->tenv->result_token.line, */
+/*            env->tenv->result_token.column, FAXPP_token_to_string(env->tenv->result_token.type), buf); */
 /*   } */
 /*   else { */
-/*     printf("%03d:%03d Token ID: %s\n", env->tenv->result_token.line, env->tenv->result_token.column, FAXPP_token_to_string(env->tenv->result_token.type)); */
+/*     printf("%03d:%03d Token ID: %s\n", env->tenv->result_token.line, env->tenv->result_token.column, */
+/*            FAXPP_token_to_string(env->tenv->result_token.type)); */
 /*   } */
 /* } */
 
@@ -729,9 +705,18 @@ FAXPP_Error p_normalize_attr_value(FAXPP_Text *text, FAXPP_Buffer *buffer, const
   return NO_ERROR;
 }
 
+#define p_force_copy_text_from_token(text, env, buf) \
+{ \
+  (text)->len = (env)->tenv->result_token.value.len; \
+  (text)->ptr = (buf)->cursor; \
+  FAXPP_Error err = FAXPP_buffer_append((buf), (env)->tenv->result_token.value.ptr, (env)->tenv->result_token.value.len); \
+  if((env)->tenv->null_terminate && err == 0) \
+    err = FAXPP_buffer_append_ch((buf), (env)->tenv->transcoder.encode, 0); \
+  if(err != 0) return err; \
+}
+
 #define p_copy_text_from_token_with_buffer(text, env, buf, useTokenBuffer) \
 { \
-  /* TBD null terminate in tokenizer - jpcs */ \
   (text)->len = (env)->tenv->result_token.value.len; \
   if(((useTokenBuffer) || (env)->tenv->result_token.value.ptr != (env)->tenv->token_buffer.buffer) && !(env)->tenv->null_terminate) { \
     (text)->ptr = (env)->tenv->result_token.value.ptr; \
@@ -765,10 +750,10 @@ FAXPP_Error p_normalize_attr_value(FAXPP_Text *text, FAXPP_Buffer *buffer, const
   for(; err == 0 && *chars; ++chars) { \
     err = FAXPP_buffer_append_ch((buffer), (env)->tenv->transcoder.encode, *chars); \
   } \
+  (text)->len = (buffer)->cursor - (text)->ptr; \
   if((env)->tenv->null_terminate && err == 0) \
     err = FAXPP_buffer_append_ch((buffer), (env)->tenv->transcoder.encode, 0); \
   if(err != 0) return err; \
-  (text)->len = (buffer)->cursor - (text)->ptr; \
 }
 
 static FAXPP_Error p_next_attr(FAXPP_ParserEnv *env)
@@ -1069,7 +1054,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
     case XML_DECL_END_TOKEN:
       env->next_event = nc_unsupported_encoding_next_event;
 
-      if(env->tenv->external_subset || env->tenv->in_markup_entity) {
+      if(env->tenv->external_subset || env->tenv->external_in_markup_entity) {
         // TBD event for start of external subset - jpcs
         next = nc_dtd_next_event;
       }
@@ -1131,7 +1116,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
     default:
       env->tenv->buffered_token = 1;
       p_reset_event(env);
-      if(env->tenv->external_subset || env->tenv->in_markup_entity) {
+      if(env->tenv->external_subset || env->tenv->external_in_markup_entity) {
         // TBD event for start of external subset - jpcs
         env->next_event = nc_dtd_next_event;
       }
@@ -1175,7 +1160,7 @@ static FAXPP_Error p_create_entity_info(FAXPP_ParserEnv *env, FAXPP_EntityInfo *
   *list = ent;
 
   p_set_text_from_text(&ent->base_uri, FAXPP_get_base_uri(env));
-  p_copy_text_from_token(&ent->name, env, /*useTokenBuffer*/0);
+  p_force_copy_text_from_token(&ent->name, env, &env->entity_buffer);
   p_set_location_from_token(ent, env);
 
   return NO_ERROR;
@@ -1400,7 +1385,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
       entv = p_add_entity_value(env);
       if(!entv) goto out_of_memory;
 
-      p_copy_text_from_token(&entv->value, env, /*useTokenBuffer*/0);
+      p_force_copy_text_from_token(&entv->value, env, &env->entity_buffer);
       break;
     case SYSTEM_LITERAL_TOKEN:
       if(env->current_entity) {
@@ -1409,7 +1394,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         entv = p_add_entity_value(env);
         if(!entv) goto out_of_memory;
 
-        p_copy_text_from_token(&entv->value, env, /*useTokenBuffer*/0);
+        p_force_copy_text_from_token(&entv->value, env, &env->entity_buffer);
       }
       else if(env->current_notation) {
         // We're in a notation decl - which we don't store yet
@@ -1425,7 +1410,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         entv = p_add_entity_value(env);
         if(!entv) goto out_of_memory;
 
-        p_copy_text_from_token(&entv->value, env, /*useTokenBuffer*/0);
+        p_force_copy_text_from_token(&entv->value, env, &env->entity_buffer);
       }
       else if(env->current_notation) {
         // We're in a notation decl - which we don't store yet
@@ -1568,7 +1553,6 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
           goto error;
         }
 
-        // TBD What if it's not in an entity value - jpcs
         entv = p_add_entity_value(env);
         if(!entv) goto out_of_memory;
 
@@ -2107,7 +2091,6 @@ static FAXPP_Error p_find_ns_info_impl(const FAXPP_ParserEnv *env, const FAXPP_T
   }
 
   // The prefix "xml" is always bound to the namespace URI "http://www.w3.org/XML/1998/namespace"
-  // TBD implement this properly - jpcs
 
   return NO_URI_FOR_PREFIX;
 }
