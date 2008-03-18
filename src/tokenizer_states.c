@@ -256,8 +256,12 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "entity_reference_state";
   else if(state == parameter_entity_reference_state)
     return "parameter_entity_reference_state";
+  else if(state == parameter_entity_reference_state2)
+    return "parameter_entity_reference_state2";
   else if(state == parameter_entity_reference_in_markup_state)
     return "parameter_entity_reference_in_markup_state";
+  else if(state == parameter_entity_reference_in_markup_state2)
+    return "parameter_entity_reference_in_markup_state2";
   else if(state == char_reference_state)
     return "char_reference_state";
   else if(state == dec_char_reference_state)

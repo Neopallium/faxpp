@@ -272,6 +272,9 @@ static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env)
   env->current_attlist = 0;
   env->current_notation = 0;
 
+  env->standalone = 0;
+  env->xml_version = XML_VERSION_NOT_KNOWN;
+
   // Put the element info objects back in the pool
   while(env->element_info_stack) {
     el = env->element_info_stack;
@@ -1044,12 +1047,31 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
       p_reset_event(env);
       p_copy_text_from_token(&env->event.version, env, /*useTokenBuffer*/0);
       p_set_event_location_from_token(env);
+
+      if(p_case_insensitive_equals("1.1", env->tenv->transcoder.encode, &env->event.version)) {
+        if(env->xml_version == XML_VERSION_NOT_KNOWN) {
+          env->xml_version = XML_VERSION_1_1;
+        }
+        else if(env->xml_version == XML_VERSION_1_0) {
+          err = UNKNOWN_XML_VERSION;
+          goto error;
+        }
+      }
+      else {
+        if(env->xml_version == XML_VERSION_NOT_KNOWN) {
+          env->xml_version = XML_VERSION_1_0;
+        }
+      }
       break;
     case XML_DECL_ENCODING_TOKEN:
       p_copy_text_from_token(&env->event.encoding, env, /*useTokenBuffer*/0);
       break;
     case XML_DECL_STANDALONE_TOKEN:
       p_copy_text_from_token(&env->event.standalone, env, /*useTokenBuffer*/0);
+
+      if(p_case_insensitive_equals("YES", env->tenv->transcoder.encode, &env->event.standalone)) {
+        env->standalone = 1;
+      }
       break;
     case XML_DECL_END_TOKEN:
       env->next_event = nc_unsupported_encoding_next_event;
@@ -1116,6 +1138,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
     default:
       env->tenv->buffered_token = 1;
       p_reset_event(env);
+
       if(env->tenv->external_subset || env->tenv->external_in_markup_entity) {
         // TBD event for start of external subset - jpcs
         env->next_event = nc_dtd_next_event;
@@ -1128,6 +1151,11 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
         env->event.type = START_DOCUMENT_EVENT;
         env->next_event = env->main_next_event;
       }
+
+      if(env->xml_version == XML_VERSION_NOT_KNOWN) {
+        env->xml_version = XML_VERSION_1_0;
+      }
+
       return NO_ERROR;
     }
   }
@@ -1163,6 +1191,8 @@ static FAXPP_Error p_create_entity_info(FAXPP_ParserEnv *env, FAXPP_EntityInfo *
   p_force_copy_text_from_token(&ent->name, env, &env->entity_buffer);
   p_set_location_from_token(ent, env);
 
+  ent->from_internal_subset = env->tenv->internal_subset;
+
   return NO_ERROR;
 }
 
@@ -1196,6 +1226,8 @@ static FAXPP_EntityInfo *p_find_entity_info(const FAXPP_Text *name, FAXPP_Entity
   return list;
 }
 
+static FAXPP_Error p_parse_entity_impl(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, FAXPP_EntityParseState state, FAXPP_EntityInfo **initial_entity);
+
 static FAXPP_Error p_parse_internal_entity(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, FAXPP_EntityParseState state, FAXPP_EntityInfo **initial_entity)
 {
   FAXPP_EntityValue *entv;
@@ -1205,7 +1237,7 @@ static FAXPP_Error p_parse_internal_entity(FAXPP_ParserEnv *env, FAXPP_EntityInf
   entv = ent->value;
   while(entv) {
     if(entv->entity_ref) {
-      err = p_parse_internal_entity(env, entv->entity_ref, state, initial_entity);
+      err = p_parse_entity_impl(env, entv->entity_ref, state, initial_entity);
       if(err) return err;
     }
     else {
@@ -1256,6 +1288,40 @@ static FAXPP_Error p_parse_external_entity(FAXPP_ParserEnv *env, FAXPP_EntityInf
   return err;
 }
 
+static FAXPP_Error p_parse_entity_impl(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, FAXPP_EntityParseState state, FAXPP_EntityInfo **initial_entity)
+{
+  FAXPP_Error err;
+
+  if(ent->external) {
+    switch(state) {
+    case ELEMENT_CONTENT_ENTITY: state = EXTERNAL_PARSED_ENTITY; break;
+    case INTERNAL_DTD_ENTITY: state = EXTERNAL_SUBSET_ENTITY; break;
+    case EXTERNAL_DTD_ENTITY: state = EXTERNAL_SUBSET_ENTITY; break;
+    case IN_MARKUP_ENTITY: state = EXTERNAL_IN_MARKUP_ENTITY; break;
+    default: break;
+    }
+
+    err = p_parse_external_entity(env, ent, state);
+    if(err) return err;
+
+    // Set the entity on the first new tokenizer
+    if(*initial_entity) {
+      env->tenv->start_of_entity = 1;
+      env->tenv->entity = *initial_entity;
+      *initial_entity = 0;
+    }
+    else {
+      env->tenv->start_of_entity = 0;
+    }
+  }
+  else {
+    err = p_parse_internal_entity(env, ent, state, initial_entity);
+    if(err) return err;
+  }
+
+  return NO_ERROR;
+}
+
 static const char single_space[] = {' '};
 
 static FAXPP_Error p_parse_entity(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, FAXPP_EntityParseState state)
@@ -1264,6 +1330,7 @@ static FAXPP_Error p_parse_entity(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, F
   FAXPP_EntityInfo *tmp;
 
   // Check for a recursive entity
+  // TBD Need a better method for doing this - jpcs
   FAXPP_TokenizerEnv *tokenizer = env->tenv;
   while(tokenizer) {
     if(tokenizer->entity == ent)
@@ -1514,6 +1581,10 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         // General entities in ATTLIST values should be looked up straight away
         ent = p_find_entity_info(&env->tenv->result_token.value, env->general_entities);
         if(ent == 0) {
+          err = UNDEFINED_ENTITY;
+          goto error;
+        }
+        if(env->standalone && !ent->from_internal_subset) {
           err = UNDEFINED_ENTITY;
           goto error;
         }
@@ -1949,6 +2020,10 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
     case ENTITY_REFERENCE_TOKEN:
       ent = p_find_entity_info(&env->tenv->result_token.value, env->general_entities);
       if(ent == 0) {
+        err = UNDEFINED_ENTITY;
+        goto error;
+      }
+      if(env->standalone && !ent->from_internal_subset) {
         err = UNDEFINED_ENTITY;
         goto error;
       }

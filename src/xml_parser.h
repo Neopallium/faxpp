@@ -68,6 +68,7 @@ struct FAXPP_EntityInfo_s {
 
   unsigned int external:1;
   unsigned int unparsed:1;
+  unsigned int from_internal_subset:1;
 
   unsigned int line;
   unsigned int column;
@@ -115,6 +116,14 @@ struct FAXPP_ParserEnv_s {
   FAXPP_ContentSpec *current_elementdecl;
   unsigned int current_attlist:1;
   unsigned int current_notation:1;
+
+  unsigned int standalone:1;
+
+  enum {
+    XML_VERSION_NOT_KNOWN = 0,
+    XML_VERSION_1_0,
+    XML_VERSION_1_1
+  } xml_version;
 
   FAXPP_AttrValue *av_ptr;
   FAXPP_AttrValue *av_dealloc;
