@@ -1,17 +1,11 @@
 Small tasks
 -----------
 
-Don't accept Namespace 1.1 undefines in XML 1.0 mode
 Normalize line endings in element character content / PI values / comment values
 Accept XML 1.1 line endings as whitespace
-Handle "xml" namespace properly
-xml:space value checking
-Error for redefining "xml" namespace
-Error for defining "xmlns" namespace
-Parse element decls correctly
-Parse parameter entities in markup correctly
 
 Large tasks
 -----------
 
+Attribute default values
 DTD validation

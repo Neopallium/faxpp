@@ -111,12 +111,10 @@ entitydecl_content_state(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     return NO_ERROR;
   case 'S':
-    env->stored_state = entitydecl_ws_state;
-    env->state = system_id_initial_state1;
+    env->state = entitydecl_system_id_initial_state1;
     break;
   case 'P':
-    env->stored_state = entitydecl_ws_state;
-    env->state = public_id_initial_state1;
+    env->state = entitydecl_public_id_initial_state1;
     break;
   LINE_ENDINGS
   default:
@@ -126,6 +124,16 @@ entitydecl_content_state(FAXPP_TokenizerEnv *env)
   next_char(env);
   return NO_ERROR;
 }
+
+#define PREFIX(name) entitydecl_ ## name
+#define END_STATE entitydecl_ws_state
+#define ALLOW_PARAMETER_ENTITIES
+
+#include "system_public_states.h"
+
+#undef ALLOW_PARAMETER_ENTITIES
+#undef END_STATE
+#undef PREFIX
 
 FAXPP_Error
 entitydecl_value_apos_state(FAXPP_TokenizerEnv *env)
@@ -422,12 +430,10 @@ paramentitydecl_content_state(FAXPP_TokenizerEnv *env)
     token_start_position(env);
     return NO_ERROR;
   case 'S':
-    env->stored_state = paramentitydecl_end_state;
-    env->state = system_id_initial_state1;
+    env->state = paramentitydecl_system_id_initial_state1;
     break;
   case 'P':
-    env->stored_state = paramentitydecl_end_state;
-    env->state = public_id_initial_state1;
+    env->state = paramentitydecl_public_id_initial_state1;
     break;
   LINE_ENDINGS
   default:
@@ -437,6 +443,16 @@ paramentitydecl_content_state(FAXPP_TokenizerEnv *env)
   next_char(env);
   return NO_ERROR;
 }
+
+#define PREFIX(name) paramentitydecl_ ## name
+#define END_STATE paramentitydecl_end_state
+#define ALLOW_PARAMETER_ENTITIES
+
+#include "system_public_states.h"
+
+#undef ALLOW_PARAMETER_ENTITIES
+#undef END_STATE
+#undef PREFIX
 
 FAXPP_Error
 paramentitydecl_value_apos_state(FAXPP_TokenizerEnv *env)

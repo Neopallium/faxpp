@@ -450,47 +450,47 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
   else if(state == external_subset_decl_state)
     return "external_subset_decl_state";
 
-  else if(state == system_id_initial_state1)
-    return "system_id_initial_state1";
-  else if(state == system_id_initial_state2)
-    return "system_id_initial_state2";
-  else if(state == system_id_initial_state3)
-    return "system_id_initial_state3";
-  else if(state == system_id_initial_state4)
-    return "system_id_initial_state4";
-  else if(state == system_id_initial_state5)
-    return "system_id_initial_state5";
-  else if(state == system_id_ws_state)
-    return "system_id_ws_state";
-  else if(state == system_literal_start_state)
-    return "system_literal_start_state";
-  else if(state == system_literal_apos_state)
-    return "system_literal_apos_state";
-  else if(state == system_literal_quot_state)
-    return "system_literal_quot_state";
+  else if(state == doctype_system_id_initial_state1)
+    return "doctype_system_id_initial_state1";
+  else if(state == doctype_system_id_initial_state2)
+    return "doctype_system_id_initial_state2";
+  else if(state == doctype_system_id_initial_state3)
+    return "doctype_system_id_initial_state3";
+  else if(state == doctype_system_id_initial_state4)
+    return "doctype_system_id_initial_state4";
+  else if(state == doctype_system_id_initial_state5)
+    return "doctype_system_id_initial_state5";
+  else if(state == doctype_system_id_ws_state)
+    return "doctype_system_id_ws_state";
+  else if(state == doctype_system_literal_start_state)
+    return "doctype_system_literal_start_state";
+  else if(state == doctype_system_literal_apos_state)
+    return "doctype_system_literal_apos_state";
+  else if(state == doctype_system_literal_quot_state)
+    return "doctype_system_literal_quot_state";
 
-  else if(state == public_id_initial_state1)
-    return "public_id_initial_state1";
-  else if(state == public_id_initial_state2)
-    return "public_id_initial_state2";
-  else if(state == public_id_initial_state3)
-    return "public_id_initial_state3";
-  else if(state == public_id_initial_state4)
-    return "public_id_initial_state4";
-  else if(state == public_id_initial_state5)
-    return "public_id_initial_state5";
-  else if(state == public_id_ws_state)
-    return "public_id_ws_state";
-  else if(state == pubid_literal_start_state)
-    return "pubid_literal_start_state";
-  else if(state == pubid_literal_apos_state)
-    return "pubid_literal_apos_state";
-  else if(state == pubid_literal_quot_state)
-    return "pubid_literal_quot_state";
-  else if(state == public_id_ws_state2)
-    return "public_id_ws_state2";
-  else if(state == public_id_ws_state3)
-    return "public_id_ws_state3";
+  else if(state == doctype_public_id_initial_state1)
+    return "doctype_public_id_initial_state1";
+  else if(state == doctype_public_id_initial_state2)
+    return "doctype_public_id_initial_state2";
+  else if(state == doctype_public_id_initial_state3)
+    return "doctype_public_id_initial_state3";
+  else if(state == doctype_public_id_initial_state4)
+    return "doctype_public_id_initial_state4";
+  else if(state == doctype_public_id_initial_state5)
+    return "doctype_public_id_initial_state5";
+  else if(state == doctype_public_id_ws_state)
+    return "doctype_public_id_ws_state";
+  else if(state == doctype_pubid_literal_start_state)
+    return "doctype_pubid_literal_start_state";
+  else if(state == doctype_pubid_literal_apos_state)
+    return "doctype_pubid_literal_apos_state";
+  else if(state == doctype_pubid_literal_quot_state)
+    return "doctype_pubid_literal_quot_state";
+  else if(state == doctype_public_id_ws_state2)
+    return "doctype_public_id_ws_state2";
+  else if(state == doctype_public_id_ws_state3)
+    return "doctype_public_id_ws_state3";
 
   else if(state == elementdecl_or_entitydecl_state)
     return "elementdecl_or_entitydecl_state";
@@ -797,6 +797,47 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
   else if(state == notationdecl_end_state)
     return "notationdecl_end_state";
 
+  else if(state == notationdecl_system_id_initial_state1)
+    return "notationdecl_system_id_initial_state1";
+  else if(state == notationdecl_system_id_initial_state2)
+    return "notationdecl_system_id_initial_state2";
+  else if(state == notationdecl_system_id_initial_state3)
+    return "notationdecl_system_id_initial_state3";
+  else if(state == notationdecl_system_id_initial_state4)
+    return "notationdecl_system_id_initial_state4";
+  else if(state == notationdecl_system_id_initial_state5)
+    return "notationdecl_system_id_initial_state5";
+  else if(state == notationdecl_system_id_ws_state)
+    return "notationdecl_system_id_ws_state";
+  else if(state == notationdecl_system_literal_start_state)
+    return "notationdecl_system_literal_start_state";
+  else if(state == notationdecl_system_literal_apos_state)
+    return "notationdecl_system_literal_apos_state";
+  else if(state == notationdecl_system_literal_quot_state)
+    return "notationdecl_system_literal_quot_state";
+  else if(state == notationdecl_public_id_initial_state1)
+    return "notationdecl_public_id_initial_state1";
+  else if(state == notationdecl_public_id_initial_state2)
+    return "notationdecl_public_id_initial_state2";
+  else if(state == notationdecl_public_id_initial_state3)
+    return "notationdecl_public_id_initial_state3";
+  else if(state == notationdecl_public_id_initial_state4)
+    return "notationdecl_public_id_initial_state4";
+  else if(state == notationdecl_public_id_initial_state5)
+    return "notationdecl_public_id_initial_state5";
+  else if(state == notationdecl_public_id_ws_state)
+    return "notationdecl_public_id_ws_state";
+  else if(state == notationdecl_pubid_literal_start_state)
+    return "notationdecl_pubid_literal_start_state";
+  else if(state == notationdecl_pubid_literal_apos_state)
+    return "notationdecl_pubid_literal_apos_state";
+  else if(state == notationdecl_pubid_literal_quot_state)
+    return "notationdecl_pubid_literal_quot_state";
+  else if(state == notationdecl_public_id_ws_state2)
+    return "notationdecl_public_id_ws_state2";
+  else if(state == notationdecl_public_id_ws_state3)
+    return "notationdecl_public_id_ws_state3";
+
   else if(state == entitydecl_initial_state1)
     return "entitydecl_initial_state1";
   else if(state == entitydecl_initial_state1)
@@ -837,6 +878,47 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
   else if(state == entitydecl_end_state)
     return "entitydecl_end_state";
 
+  else if(state == entitydecl_system_id_initial_state1)
+    return "entitydecl_system_id_initial_state1";
+  else if(state == entitydecl_system_id_initial_state2)
+    return "entitydecl_system_id_initial_state2";
+  else if(state == entitydecl_system_id_initial_state3)
+    return "entitydecl_system_id_initial_state3";
+  else if(state == entitydecl_system_id_initial_state4)
+    return "entitydecl_system_id_initial_state4";
+  else if(state == entitydecl_system_id_initial_state5)
+    return "entitydecl_system_id_initial_state5";
+  else if(state == entitydecl_system_id_ws_state)
+    return "entitydecl_system_id_ws_state";
+  else if(state == entitydecl_system_literal_start_state)
+    return "entitydecl_system_literal_start_state";
+  else if(state == entitydecl_system_literal_apos_state)
+    return "entitydecl_system_literal_apos_state";
+  else if(state == entitydecl_system_literal_quot_state)
+    return "entitydecl_system_literal_quot_state";
+  else if(state == entitydecl_public_id_initial_state1)
+    return "entitydecl_public_id_initial_state1";
+  else if(state == entitydecl_public_id_initial_state2)
+    return "entitydecl_public_id_initial_state2";
+  else if(state == entitydecl_public_id_initial_state3)
+    return "entitydecl_public_id_initial_state3";
+  else if(state == entitydecl_public_id_initial_state4)
+    return "entitydecl_public_id_initial_state4";
+  else if(state == entitydecl_public_id_initial_state5)
+    return "entitydecl_public_id_initial_state5";
+  else if(state == entitydecl_public_id_ws_state)
+    return "entitydecl_public_id_ws_state";
+  else if(state == entitydecl_pubid_literal_start_state)
+    return "entitydecl_pubid_literal_start_state";
+  else if(state == entitydecl_pubid_literal_apos_state)
+    return "entitydecl_pubid_literal_apos_state";
+  else if(state == entitydecl_pubid_literal_quot_state)
+    return "entitydecl_pubid_literal_quot_state";
+  else if(state == entitydecl_public_id_ws_state2)
+    return "entitydecl_public_id_ws_state2";
+  else if(state == entitydecl_public_id_ws_state3)
+    return "entitydecl_public_id_ws_state3";
+
   else if(state == paramentitydecl_name_state1)
     return "paramentitydecl_name_state1";
   else if(state == paramentitydecl_name_state2)
@@ -849,6 +931,47 @@ const char *FAXPP_state_to_string(FAXPP_StateFunction state)
     return "paramentitydecl_value_quot_state";
   else if(state == paramentitydecl_end_state)
     return "paramentitydecl_end_state";
+
+  else if(state == paramentitydecl_system_id_initial_state1)
+    return "paramentitydecl_system_id_initial_state1";
+  else if(state == paramentitydecl_system_id_initial_state2)
+    return "paramentitydecl_system_id_initial_state2";
+  else if(state == paramentitydecl_system_id_initial_state3)
+    return "paramentitydecl_system_id_initial_state3";
+  else if(state == paramentitydecl_system_id_initial_state4)
+    return "paramentitydecl_system_id_initial_state4";
+  else if(state == paramentitydecl_system_id_initial_state5)
+    return "paramentitydecl_system_id_initial_state5";
+  else if(state == paramentitydecl_system_id_ws_state)
+    return "paramentitydecl_system_id_ws_state";
+  else if(state == paramentitydecl_system_literal_start_state)
+    return "paramentitydecl_system_literal_start_state";
+  else if(state == paramentitydecl_system_literal_apos_state)
+    return "paramentitydecl_system_literal_apos_state";
+  else if(state == paramentitydecl_system_literal_quot_state)
+    return "paramentitydecl_system_literal_quot_state";
+  else if(state == paramentitydecl_public_id_initial_state1)
+    return "paramentitydecl_public_id_initial_state1";
+  else if(state == paramentitydecl_public_id_initial_state2)
+    return "paramentitydecl_public_id_initial_state2";
+  else if(state == paramentitydecl_public_id_initial_state3)
+    return "paramentitydecl_public_id_initial_state3";
+  else if(state == paramentitydecl_public_id_initial_state4)
+    return "paramentitydecl_public_id_initial_state4";
+  else if(state == paramentitydecl_public_id_initial_state5)
+    return "paramentitydecl_public_id_initial_state5";
+  else if(state == paramentitydecl_public_id_ws_state)
+    return "paramentitydecl_public_id_ws_state";
+  else if(state == paramentitydecl_pubid_literal_start_state)
+    return "paramentitydecl_pubid_literal_start_state";
+  else if(state == paramentitydecl_pubid_literal_apos_state)
+    return "paramentitydecl_pubid_literal_apos_state";
+  else if(state == paramentitydecl_pubid_literal_quot_state)
+    return "paramentitydecl_pubid_literal_quot_state";
+  else if(state == paramentitydecl_public_id_ws_state2)
+    return "paramentitydecl_public_id_ws_state2";
+  else if(state == paramentitydecl_public_id_ws_state3)
+    return "paramentitydecl_public_id_ws_state3";
 
   else if(state == conditional_ws_state)
     return "conditional_ws_state";

@@ -405,7 +405,7 @@ FAXPP_Error FAXPP_lookup_namespace_uri(const FAXPP_Parser *parser, const FAXPP_T
 {
   uri->ptr = 0;
   uri->len = 0;
-  return p_find_ns_info(parser, prefix, uri);
+  return p_find_ns_info_impl(parser, prefix, uri);
 }
 
 unsigned int FAXPP_get_nesting_level(const FAXPP_Parser *parser)
@@ -674,17 +674,6 @@ FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *env, void *buffer,
     if(err != 0) return err; \
   } else { \
     p_set_text_from_text((text), (o)); \
-  } \
-}
-
-#define p_copy_text_from_attr_value(text, attrval, env, buffer) \
-{ \
-  if((attrval)->next == 0) { \
-    p_copy_text_from_event((text), &(attrval)->value, (env), (buffer)); \
-  } \
-  else { \
-    FAXPP_Error err = p_normalize_attr_value((text), (buffer), (attrval), (env)); \
-    if(err != NO_ERROR) return err; \
   } \
 }
 
@@ -1032,6 +1021,30 @@ static int p_case_insensitive_equals(const char *str, FAXPP_EncodeFunction encod
   return text_ptr == text_end;
 }
 
+static int p_equals(const char *str, FAXPP_EncodeFunction encode, const FAXPP_Text *text)
+{
+  // No encoding represents a character with as many as 10 bytes
+  uint8_t encode_buffer[10];
+  unsigned int encode_len;
+
+  void *text_ptr = text->ptr;
+  void *text_end = text_ptr + text->len;
+
+  while(*str != 0) {
+    if(text_ptr >= text_end) return 0;
+
+    encode_len = encode(encode_buffer, encode_buffer + sizeof(encode_buffer), *str);
+    if((text_end - text_ptr) < encode_len || memcmp(encode_buffer, text_ptr, encode_len) != 0) {
+      return 0;
+    }
+
+    text_ptr += encode_len;
+    ++str;
+  }
+
+  return text_ptr == text_end;
+}
+
 static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
 {
   FAXPP_NextEvent next;
@@ -1048,7 +1061,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
       p_copy_text_from_token(&env->event.version, env, /*useTokenBuffer*/0);
       p_set_event_location_from_token(env);
 
-      if(p_case_insensitive_equals("1.1", env->tenv->transcoder.encode, &env->event.version)) {
+      if(p_equals("1.1", env->tenv->transcoder.encode, &env->event.version)) {
         if(env->xml_version == XML_VERSION_NOT_KNOWN) {
           env->xml_version = XML_VERSION_1_1;
         }
@@ -1069,7 +1082,7 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
     case XML_DECL_STANDALONE_TOKEN:
       p_copy_text_from_token(&env->event.standalone, env, /*useTokenBuffer*/0);
 
-      if(p_case_insensitive_equals("YES", env->tenv->transcoder.encode, &env->event.standalone)) {
+      if(p_equals("yes", env->tenv->transcoder.encode, &env->event.standalone)) {
         env->standalone = 1;
       }
       break;
@@ -1605,6 +1618,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
 
         err = p_parse_entity(env, ent, ATTRIBUTE_VALUE_ENTITY);
         if(err) goto error;
+        return NO_ERROR;
       }
       break;
     case PE_REFERENCE_TOKEN:
@@ -1639,6 +1653,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
         p_set_text_from_text(&env->event.public_id, &bkup_public);
 
         if(err) goto error;
+        return NO_ERROR;
       }
       break;
     case PE_REFERENCE_IN_MARKUP_TOKEN:
@@ -1660,7 +1675,7 @@ static FAXPP_Error nc_dtd_next_event(FAXPP_ParserEnv *env)
       p_set_text_from_text(&env->event.public_id, &bkup_public);
 
       if(err) goto error;
-      break;
+      return NO_ERROR;
 
     case ELEMENTDECL_LPAR_TOKEN:
       cs = (FAXPP_ContentSpec*)malloc(sizeof(FAXPP_ContentSpec));
@@ -2045,6 +2060,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
 
         err = p_parse_entity(env, ent, ATTRIBUTE_VALUE_ENTITY);
         if(err) goto error;
+        return NO_ERROR;
 
       } else {
         p_reset_event(env);
@@ -2119,10 +2135,36 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
   return err;
 }
 
+static const char *xml_prefix = "xml";
+static const char *xmlns_prefix = "xmlns";
+static const char *xml_uri = "http://www.w3.org/XML/1998/namespace";
+static const char *xmlns_uri = "http://www.w3.org/2000/xmlns/";
+
 static FAXPP_Error p_add_ns_info(FAXPP_ParserEnv *env, const FAXPP_Attribute *attr)
 {
-  FAXPP_NamespaceInfo *nsinfo = env->namespace_pool;
+  FAXPP_NamespaceInfo *nsinfo;
 
+  // Check for invalid "xml" or "xmlns" namespace declarations
+  if(attr->prefix.len != 0) {
+    if(p_equals(xmlns_prefix, env->tenv->transcoder.encode, &attr->name))
+      return INVALID_NAMESPACE_DECLARATION;
+    if(p_equals(xml_prefix, env->tenv->transcoder.encode, &attr->name) &&
+       !p_equals(xml_uri, env->tenv->transcoder.encode, &attr->value.value))
+      return INVALID_NAMESPACE_DECLARATION;
+  }
+
+  if((attr->prefix.len == 0 || !p_equals(xml_prefix, env->tenv->transcoder.encode, &attr->name)) &&
+     p_equals(xml_uri, env->tenv->transcoder.encode, &attr->value.value))
+    return INVALID_NAMESPACE_DECLARATION;
+
+  if(p_equals(xmlns_uri, env->tenv->transcoder.encode, &attr->value.value))
+    return INVALID_NAMESPACE_DECLARATION;
+
+  if(env->tenv->xml_char == CHAR10 && attr->prefix.len != 0 && attr->value.value.len == 0)
+    return INVALID_NAMESPACE_DECLARATION;
+
+  // Add the namespace binding
+  nsinfo = env->namespace_pool;
   if(nsinfo == 0) {
     nsinfo = (FAXPP_NamespaceInfo*)malloc(sizeof(FAXPP_NamespaceInfo));
     if(!nsinfo) return OUT_OF_MEMORY;
@@ -2136,7 +2178,7 @@ static FAXPP_Error p_add_ns_info(FAXPP_ParserEnv *env, const FAXPP_Attribute *at
   env->namespace_stack = nsinfo;
   env->element_info_stack->ns = nsinfo;
 
-  p_copy_text_from_attr_value(&nsinfo->uri, &attr->value, env, &env->element_info_stack->buffer);
+  p_copy_text_from_event(&nsinfo->uri, &attr->value.value, env, &env->element_info_stack->buffer);
 
   if(attr->prefix.len != 0) {
     p_copy_text_from_event(&nsinfo->prefix, &attr->name, env, &env->element_info_stack->buffer);
@@ -2166,6 +2208,10 @@ static FAXPP_Error p_find_ns_info_impl(const FAXPP_ParserEnv *env, const FAXPP_T
   }
 
   // The prefix "xml" is always bound to the namespace URI "http://www.w3.org/XML/1998/namespace"
+  if(p_equals(xml_prefix, env->tenv->transcoder.encode, prefix)) {
+    p_copy_text_from_str(uri, &((FAXPP_ParserEnv*)env)->event_buffer, (FAXPP_ParserEnv*)env, xml_uri);
+    return NO_ERROR;
+  }
 
   return NO_URI_FOR_PREFIX;
 }
@@ -2245,9 +2291,6 @@ static void p_pop_element(FAXPP_ParserEnv *env)
   env->element_info_pool = einfo;
 }
 
-static const char *xml_uri = "http://www.w3.org/XML/1998/namespace";
-static const char *xmlns_uri = "http://www.w3.org/2000/xmlns/";
-
 static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
 {
   int i, j;
@@ -2271,8 +2314,9 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
       attr = &env->event.attrs[i];
 
       /* Normalize the attribute values if required */
-      if(env->tenv->normalize_attrs &&
-         (attr->value.type != CHARACTERS_EVENT || attr->value.next != 0)) {
+      if(attr->xmlns_attr || attr->xml_attr ||
+         (env->tenv->normalize_attrs &&
+          (attr->value.type != CHARACTERS_EVENT || attr->value.next != 0))) {
         err = p_normalize_attr_value(&tmpText, &env->event_buffer, &attr->value, env);
         if(err != 0) return err;
 
@@ -2287,7 +2331,7 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
       /* Check for namespace attributes */
       if(attr->xmlns_attr) {
         err = p_add_ns_info(env, attr);
-        if(err != 0) {
+        if(err) {
           set_err_info_from_attr(env, attr);
           return err;
         }
@@ -2313,6 +2357,13 @@ static FAXPP_Error wf_next_event(FAXPP_ParserEnv *env)
       }
       else if(attr->xml_attr) {
         p_copy_text_from_str(&attr->uri, &env->event_buffer, env, xml_uri);
+
+        if(p_equals("space", env->tenv->transcoder.encode, &attr->name) &&
+           !p_equals("preserve", env->tenv->transcoder.encode, &attr->value.value) &&
+           !p_equals("default", env->tenv->transcoder.encode, &attr->value.value)) {
+          set_err_info_from_attr(env, attr);
+          return INVALID_XMLSPACE_VALUE;
+        }
       }
       else if(attr->prefix.len != 0) {
         err = p_find_ns_info(env, &attr->prefix, &attr->uri);

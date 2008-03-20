@@ -260,7 +260,8 @@ src/elementdecl.c \
 src/attlistdecl.c \
 src/notationdecl.c \
 src/entitydecl.c \
-src/conditional.c
+src/conditional.c \
+src/system_public_states.h
 
 tokenizer_example_LDADD = libfaxpp.la
 tokenizer_example_SOURCES = examples/tokenizer_example.c
@@ -268,13 +269,17 @@ parser_example_LDADD = libfaxpp.la
 parser_example_SOURCES = \
 examples/parser_example.c \
 examples/entity_resolver.c \
-examples/output_event.c
+examples/entity_resolver.h \
+examples/output_event.c \
+examples/output_event.h
 
 xmlconf_runner_LDADD = libfaxpp.la
 xmlconf_runner_SOURCES = \
 tests/xmlconf_runner.c \
 examples/entity_resolver.c \
-examples/output_event.c
+examples/entity_resolver.h \
+examples/output_event.c \
+examples/output_event.h
 
 EXTRA_DIST = \
 docs/Doxyfile.api \

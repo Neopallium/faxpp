@@ -97,12 +97,10 @@ notationdecl_content_state(FAXPP_TokenizerEnv *env)
 
   switch(env->current_char) {
   case 'S':
-    env->stored_state = notationdecl_end_state;
-    env->state = system_id_initial_state1;
+    env->state = notationdecl_system_id_initial_state1;
     break;
   case 'P':
-    env->stored_state = notationdecl_end_state;
-    env->state = public_id_initial_state1;
+    env->state = notationdecl_public_id_initial_state1;
     break;
   LINE_ENDINGS
   default:
@@ -112,6 +110,18 @@ notationdecl_content_state(FAXPP_TokenizerEnv *env)
   next_char(env);
   return NO_ERROR;
 }
+
+#define PREFIX(name) notationdecl_ ## name
+#define END_STATE notationdecl_end_state
+#define SKIP_SYSTEM_LITERAL
+#define ALLOW_PARAMETER_ENTITIES
+
+#include "system_public_states.h"
+
+#undef ALLOW_PARAMETER_ENTITIES
+#undef SKIP_SYSTEM_LITERAL
+#undef END_STATE
+#undef PREFIX
 
 FAXPP_Error
 notationdecl_end_state(FAXPP_TokenizerEnv *env)

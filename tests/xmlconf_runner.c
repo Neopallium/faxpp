@@ -192,10 +192,15 @@ main(int argc, char **argv)
 
       else if(text_equal(event->name, "TEST")) {
         // TBD Check output - jpcs
-/*         if(find_attribute(event, "OUTPUT")) { */
+/*         attr = find_attribute(event, "OUTPUT"); */
+/*         if(attr) { */
+/*           calculateBase(base_buffer, &attr->value, file_buffer); */
+
 /*           printf("^"); */
+/*           printf("\n%s\n", file_buffer); */
 /*           fflush(stdout); */
 /*           ++test_skips; */
+/*           exit(-1); */
 /*           break; */
 /*         } */
 
@@ -213,11 +218,12 @@ main(int argc, char **argv)
           break;
         }
 
+        attr = find_attribute(event, "TYPE");
+
         // Skip "error" type tests at the moment - since they
         // probably need detailed inspection to see which ones
         // ought to pass or fail
         // TBD enable these tests - jpcs
-        attr = find_attribute(event, "TYPE");
         if(text_equal(attr->value.value, "error")) {
           printf("^");
           fflush(stdout);
