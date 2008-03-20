@@ -26,7 +26,7 @@
 /**
  * \mainpage
  *
- * Faxpp is a small, fast and conformant XML pull parser written in C with an API that can return UTF-8 or UTF-16 strings.
+ * Faxpp is a small, fast and conformant XML pull parser written in C with an API that can return strings in any encoding including UTF-8 and UTF-16.
  *
  * Faxpp is written by John Snelson, and is released under the terms of the Apache Licence v2.
  *
@@ -39,7 +39,7 @@
  *
  * \section Performance
  *
- * Faxpp's main performance benefit comes from it's ability to not copy strings - instead
+ * Faxpp's main performance benefit comes from it's ability to reduce and eliminate string copies - instead,
  * the FAXPP_Text structure will point directly to the tokenizer's buffer when possible.
  * This is possible when:
  *
@@ -57,16 +57,17 @@
  *
  * \section Downloads
  *
- * \li Faxpp can be downloaded from here: http://sourceforge.net/project/showfiles.php?group_id=201903
- * \li Anonymous access to the subversion repository is also available. Instructions can be found here: http://sourceforge.net/svn/?group_id=201903
- * \li You can browse the subversion repository here: http://faxpp.svn.sourceforge.net/viewvc/faxpp/
+ * \li Faxpp can be <a href="http://sourceforge.net/project/showfiles.php?group_id=201903">downloaded</a> from Sourceforge.
+ * \li <a href="http://sourceforge.net/svn/?group_id=201903">Anonymous access</a> to the
+ * <a href="http://faxpp.svn.sourceforge.net/viewvc/faxpp/">subversion repository</a> is also available.
  *
  * \section Support
  *
- * \li There is a user mailing list, faxpp-user, which is the appropriate place to direct any questions or problems. You can join the mailing list here:
- * https://lists.sourceforge.net/lists/listinfo/faxpp-user
- * \li Archives for the mailing list are available here: http://sourceforge.net/mailarchive/forum.php?forum_name=faxpp-user
- * \li If you have a bug to report, you may wish to enter it into our bug database, here: http://sourceforge.net/tracker/?atid=979420&group_id=201903
+ * \li There is a <a href="http://sourceforge.net/mailarchive/forum.php?forum_name=faxpp-user">user mailing list</a>,
+ * <a href="https://lists.sourceforge.net/lists/listinfo/faxpp-user">faxpp-user</a>, which is the appropriate place to
+ * direct any questions or problems.
+ * \li If you have a bug to report, you may wish to enter it into our
+ * <a href="http://sourceforge.net/tracker/?atid=979420&group_id=201903">bug database</a>.
  *
  */
 
@@ -463,33 +464,7 @@ FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *parser, void *buffer,
  * 
  * \param parser
  *
- * \retval ELEMENT_NAME_MISMATCH
- * \retval NO_URI_FOR_PREFIX
- * \retval DUPLICATE_ATTRIBUTES
- * \retval DOUBLE_DASH_IN_COMMENT
- * \retval PREMATURE_END_OF_BUFFER
- * \retval INVALID_START_OF_COMMENT
- * \retval INVALID_CHAR_IN_START_ELEMENT
- * \retval INVALID_CHAR_IN_ATTRIBUTE
- * \retval INVALID_CHAR_IN_END_ELEMENT
- * \retval NON_WHITESPACE_OUTSIDE_DOC_ELEMENT
- * \retval BAD_ENCODING
- * \retval UNSUPPORTED_ENCODING
- * \retval ADDITIONAL_DOCUMENT_ELEMENT
- * \retval INVALID_CHAR_IN_PI_NAME
- * \retval INVALID_PI_NAME_OF_XML
- * \retval INVALID_CHAR_IN_ELEMENT_NAME
- * \retval INVALID_CHAR_IN_ATTRIBUTE_NAME
- * \retval RESTRICTED_CHAR
- * \retval INVALID_CHAR_IN_ENTITY_REFERENCE
- * \retval INVALID_CHAR_IN_CHAR_REFERENCE
- * \retval INVALID_CHAR_IN_XML_DECL
- * \retval EXPECTING_EQUALS
- * \retval EXPECTING_WHITESPACE
- * \retval UNKNOWN_XML_VERSION
- * \retval INVALID_ENCODING_VALUE
- * \retval OUT_OF_MEMORY
- * \retval NO_ERROR
+ * \return Any error that occurs
  *
  * \relatesalso FAXPP_Parser
  */
