@@ -17,7 +17,13 @@
 #ifndef __FAXPP__TRANSCODE_H
 #define __FAXPP__TRANSCODE_H
 
+#ifdef _MSC_VER
+typedef unsigned __int8 uint8_t
+typedef unsigned __int16 uint16_t
+typedef unsigned __int32 uint32_t
+#else
 #include <stdint.h>
+#endif
 
 /// A single unicode codepoint
 typedef uint32_t Char32;
