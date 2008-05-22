@@ -118,6 +118,7 @@ typedef enum {
 
 FAXPP_Error FAXPP_sniff_encoding(FAXPP_Tokenizer *tokenizer);
 FAXPP_Error FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state,
+                                        unsigned int internal_buffer,
                                         void *buffer, unsigned int length, unsigned int done);
 FAXPP_Error FAXPP_pop_tokenizer(FAXPP_Tokenizer **list);
 

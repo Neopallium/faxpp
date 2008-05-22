@@ -342,7 +342,7 @@ FAXPP_Error FAXPP_init_parse_callback(FAXPP_Parser *env, FAXPP_ReadCallback call
 
 FAXPP_Error FAXPP_parse_external_entity(FAXPP_Parser *env, FAXPP_EntityType type, void *buffer, unsigned int length, unsigned int done)
 {
-  FAXPP_Error err = FAXPP_push_entity_tokenizer(&env->tenv, type, buffer, length, done);
+  FAXPP_Error err = FAXPP_push_entity_tokenizer(&env->tenv, type, /*internal_buffer*/0, buffer, length, done);
   if(err != 0) return err;
 
   // Associate it with the relevent FAXPP_EntityInfo object
@@ -363,7 +363,7 @@ FAXPP_Error FAXPP_parse_external_entity_file(FAXPP_Parser *env, FAXPP_EntityType
 
 FAXPP_Error FAXPP_parse_external_entity_callback(FAXPP_Parser *env, FAXPP_EntityType type, FAXPP_ReadCallback callback, void *userData)
 {
-  FAXPP_Error err = FAXPP_push_entity_tokenizer(&env->tenv, type, 0, 0, 0);
+  FAXPP_Error err = FAXPP_push_entity_tokenizer(&env->tenv, type, /*internal_buffer*/0, 0, 0, 0);
   if(err != 0) return err;
 
   err = p_allocate_buffer(env);
@@ -1254,7 +1254,7 @@ static FAXPP_Error p_parse_internal_entity(FAXPP_ParserEnv *env, FAXPP_EntityInf
       if(err) return err;
     }
     else {
-      err = FAXPP_push_entity_tokenizer(&env->tenv, state, entv->value.ptr, entv->value.len, /*done*/1);
+      err = FAXPP_push_entity_tokenizer(&env->tenv, state, /*internal_buffer*/1, entv->value.ptr, entv->value.len, /*done*/1);
       if(err) return err;
 
       env->tenv->line = entv->line;
@@ -1354,7 +1354,7 @@ static FAXPP_Error p_parse_entity(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, F
 
   if(state == IN_MARKUP_ENTITY || state == EXTERNAL_IN_MARKUP_ENTITY) {
     // Add a space after the entity inside DTD markup
-    err = FAXPP_push_entity_tokenizer(&env->tenv, IN_MARKUP_ENTITY, (void*)single_space, 1, /*done*/1);
+    err = FAXPP_push_entity_tokenizer(&env->tenv, IN_MARKUP_ENTITY, /*internal_buffer*/0, (void*)single_space, 1, /*done*/1);
     if(err) return err;
 
     env->tenv->line = ent->line;
@@ -1382,7 +1382,7 @@ static FAXPP_Error p_parse_entity(FAXPP_ParserEnv *env, FAXPP_EntityInfo *ent, F
 
     if(state == IN_MARKUP_ENTITY || state == EXTERNAL_IN_MARKUP_ENTITY) {
       // Add a space before the entity inside DTD markup
-      err = FAXPP_push_entity_tokenizer(&env->tenv, IN_MARKUP_ENTITY, (void*)single_space, 1, /*done*/1);
+      err = FAXPP_push_entity_tokenizer(&env->tenv, IN_MARKUP_ENTITY, /*internal_buffer*/0, (void*)single_space, 1, /*done*/1);
       if(err) return err;
 
       env->tenv->line = ent->line;

@@ -762,7 +762,7 @@ xml_decl_seen_question_state(FAXPP_TokenizerEnv *env)
 
     if(env->external_in_markup_entity) {
       // Add a space before the entity inside DTD markup
-      err = FAXPP_push_entity_tokenizer(&env, IN_MARKUP_ENTITY, (void*)single_space, 1, /*done*/1);
+      err = FAXPP_push_entity_tokenizer(&env, IN_MARKUP_ENTITY, /*internal_buffer*/0, (void*)single_space, 1, /*done*/1);
       if(err) return err;
 
       tok = env;

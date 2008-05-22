@@ -108,6 +108,8 @@ typedef enum {
  * \param length The length of the buffer
  *
  * \return The number of bytes read - this will be less than length if the end of the input is reached
+ *
+ * \see FAXPP_init_parse_callback(), FAXPP_parse_external_entity_callback()
  */
 typedef unsigned int (*FAXPP_ReadCallback)(void *userData, void *buffer, unsigned int length);
 
@@ -127,6 +129,8 @@ typedef unsigned int (*FAXPP_ReadCallback)(void *userData, void *buffer, unsigne
  *
  * \return NO_ERROR on success, DONT_PARSE_EXTERNAL_ENTITY to return an unexpanded ENTITY_REFERENCE_EVENT
  * event, otherwise another error code to halt parsing (most probably CANT_LOCATE_EXTERNAL_ENTITY).
+ *
+ * \see FAXPP_set_external_entity_callback()
  */
 typedef FAXPP_Error (*FAXPP_ExternalEntityCallback)(void *userData, FAXPP_Parser *parser, FAXPP_EntityType type,
                                                     const FAXPP_Text *base_uri, const FAXPP_Text *system_id, const FAXPP_Text *public_id);
@@ -527,5 +531,16 @@ unsigned int FAXPP_get_error_line(const FAXPP_Parser *parser);
  * \relatesalso FAXPP_Parser
  */
 unsigned int FAXPP_get_error_column(const FAXPP_Parser *parser);
+
+/**
+ * \example parser_example.c
+ * A simple example of using the FAXPP_Parser API to parse a document.
+ *
+ * \example entity_resolver.c
+ * An example of an implementation of a FAXPP_ExternalEntityCallback function.
+ *
+ * \example output_event.c
+ * An example of outputting the information in FAXPP_Event structures.
+ */
 
 #endif

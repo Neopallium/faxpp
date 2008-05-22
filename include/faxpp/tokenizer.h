@@ -202,4 +202,9 @@ unsigned int FAXPP_get_tokenizer_error_line(const FAXPP_Tokenizer *tokenizer);
  */
 unsigned int FAXPP_get_tokenizer_error_column(const FAXPP_Tokenizer *tokenizer);
 
+/**
+ * \example tokenizer_example.c
+ * A simple example of using the FAXPP_Tokenizer API to parse a document.
+ */
+
 #endif

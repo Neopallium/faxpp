@@ -448,7 +448,8 @@ FAXPP_init_tokenize(FAXPP_Tokenizer *env, void *buffer, unsigned int length, uns
 }
 
 FAXPP_Error
-FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state, void *buffer, unsigned int length, unsigned int done)
+FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state, unsigned int internal_buffer,
+                            void *buffer, unsigned int length, unsigned int done)
 {
   FAXPP_Tokenizer *env = FAXPP_create_tokenizer((*list)->transcoder);
   if(!env) return OUT_OF_MEMORY;
@@ -482,7 +483,9 @@ FAXPP_push_entity_tokenizer(FAXPP_Tokenizer **list, FAXPP_EntityParseState state
   env->in_markup_entity = state == IN_MARKUP_ENTITY;
   env->external_in_markup_entity = state == EXTERNAL_IN_MARKUP_ENTITY;
 
-  FAXPP_set_tokenizer_decode(env, env->prev->transcoder.decode);
+  if(internal_buffer) {
+    FAXPP_set_tokenizer_decode(env, env->prev->transcoder.decode);
+  }
 
   switch(state) {
   case ELEMENT_CONTENT_ENTITY:
