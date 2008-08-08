@@ -19,6 +19,7 @@
 
 #include <faxpp/error.h>
 #include <faxpp/transcode.h>
+#include <faxpp/text.h>
 
 typedef struct FAXPP_Buffer_s FAXPP_Buffer;
 typedef void (*FAXPP_BufferResizeCallback)(void *userData, FAXPP_Buffer *buffer, void *newFAXPP_Buffer);
@@ -42,6 +43,7 @@ void FAXPP_swap_buffer(FAXPP_Buffer *a, FAXPP_Buffer *b);
 
 FAXPP_Error FAXPP_resize_buffer(FAXPP_Buffer *buffer, unsigned int minSize);
 FAXPP_Error FAXPP_buffer_append(FAXPP_Buffer *buffer, void *ptr, unsigned int len);
+FAXPP_Error FAXPP_buffer_append_text(FAXPP_Buffer *buffer, const FAXPP_Text *text);
 FAXPP_Error FAXPP_buffer_append_ch(FAXPP_Buffer *buffer, FAXPP_EncodeFunction encode, Char32 ch);
 
 #endif

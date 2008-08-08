@@ -118,6 +118,7 @@ struct FAXPP_ParserEnv_s {
   unsigned int current_notation:1;
 
   unsigned int standalone:1;
+  unsigned int event_returned:1;
 
   enum {
     XML_VERSION_NOT_KNOWN = 0,

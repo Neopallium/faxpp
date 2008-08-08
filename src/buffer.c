@@ -91,6 +91,20 @@ FAXPP_Error FAXPP_buffer_append(FAXPP_Buffer *buffer, void *ptr, unsigned int le
   return NO_ERROR;
 }
 
+FAXPP_Error FAXPP_buffer_append_text(FAXPP_Buffer *buffer, const FAXPP_Text *text)
+{
+  FAXPP_Error err;
+  if(buffer->cursor + text->len > buffer->buffer + buffer->length) {
+    err = FAXPP_resize_buffer(buffer, (buffer->cursor + text->len) - buffer->buffer);
+    if(err != 0) return err;
+  }
+
+  memcpy(buffer->cursor, text->ptr, text->len);
+  buffer->cursor += text->len;
+
+  return NO_ERROR;
+}
+
 FAXPP_Error FAXPP_buffer_append_ch(FAXPP_Buffer *buffer, FAXPP_EncodeFunction encode, Char32 ch)
 {
   FAXPP_Error err;

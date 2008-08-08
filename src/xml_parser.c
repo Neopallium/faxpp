@@ -273,6 +273,7 @@ static FAXPP_Error p_reset_parser(FAXPP_ParserEnv *env)
   env->current_notation = 0;
 
   env->standalone = 0;
+  env->event_returned = 0;
   env->xml_version = XML_VERSION_NOT_KNOWN;
 
   // Put the element info objects back in the pool
@@ -389,7 +390,14 @@ FAXPP_Error FAXPP_parse_external_entity_callback(FAXPP_Parser *env, FAXPP_Entity
 
 FAXPP_Error FAXPP_next_event(FAXPP_Parser *env)
 {
-  return env->next_event(env);
+  FAXPP_Error err;
+  do {
+    err = env->next_event(env);
+    if(err != NO_ERROR) return err;
+  } while(env->event.type == NO_EVENT);
+
+  env->event_returned = 1;
+  return err;
 }
 
 const FAXPP_Event *FAXPP_get_current_event(const FAXPP_Parser *parser)
@@ -681,15 +689,19 @@ FAXPP_Error p_normalize_attr_value(FAXPP_Text *text, FAXPP_Buffer *buffer, const
 {
   FAXPP_Error err;
 
-  text->ptr = buffer->cursor;
+  text->len = 0;
 
   while(value) {
-    err = FAXPP_buffer_append(buffer, value->value.ptr, value->value.len);
+    err = FAXPP_buffer_append_text(buffer, &value->value);
     if(err != NO_ERROR) return err;
+
+    text->len += value->value.len;
     value = value->next;
   }
-  
-  text->len = buffer->cursor - text->ptr;
+
+  // Work out the pointer from the calculated length - since a buffer
+  // reallocation won't necessarily update text->ptr
+  text->ptr = buffer->cursor - text->len;
 
   if(env->tenv->null_terminate)
     return FAXPP_buffer_append_ch(buffer, env->tenv->transcoder.encode, 0);
@@ -882,6 +894,9 @@ static void p_reset_event(FAXPP_ParserEnv *env)
 
   // Reset the event buffer cursor
   FAXPP_reset_buffer(&env->event_buffer);
+
+  // This event has not been returned yet
+  env->event_returned = 0;
 
   // Clear the event
   env->event.type = NO_EVENT;
@@ -1188,6 +1203,8 @@ static FAXPP_Error nc_unsupported_encoding_next_event(FAXPP_ParserEnv *env)
 
 static FAXPP_Error p_create_entity_info(FAXPP_ParserEnv *env, FAXPP_EntityInfo **list)
 {
+  const FAXPP_Text *text;
+
   FAXPP_EntityInfo *ent = (FAXPP_EntityInfo*)malloc(sizeof(FAXPP_EntityInfo));
   if(!ent) return OUT_OF_MEMORY;
 
@@ -1200,7 +1217,10 @@ static FAXPP_Error p_create_entity_info(FAXPP_ParserEnv *env, FAXPP_EntityInfo *
   }
   *list = ent;
 
-  p_set_text_from_text(&ent->base_uri, FAXPP_get_base_uri(env));
+  text  = FAXPP_get_base_uri(env);
+  if(text != 0) {
+    p_set_text_from_text(&ent->base_uri, text);
+  }
   p_force_copy_text_from_token(&ent->name, env, &env->entity_buffer);
   p_set_location_from_token(ent, env);
 
@@ -1863,7 +1883,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       p_set_event_location_from_token(env);
       break;
     case START_ELEMENT_NAME_TOKEN:
-      if(env->event.type != NO_EVENT) {
+      if(env->event_returned == 1) {
         p_reset_event(env);
       }
       p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/0);
@@ -1926,7 +1946,7 @@ static FAXPP_Error nc_next_event(FAXPP_ParserEnv *env)
       p_set_event_location_from_token(env);
       break;
     case END_ELEMENT_NAME_TOKEN:
-      if(env->event.type != NO_EVENT) {
+      if(env->event_returned == 1) {
         p_reset_event(env);
       }
       p_copy_text_from_token(&env->event.name, env, /*useTokenBuffer*/0);
@@ -2183,7 +2203,6 @@ static FAXPP_Error p_add_ns_info(FAXPP_ParserEnv *env, const FAXPP_Attribute *at
   if(attr->prefix.len != 0) {
     p_copy_text_from_event(&nsinfo->prefix, &attr->name, env, &env->element_info_stack->buffer);
   }
-
   return NO_ERROR;
 }
 
