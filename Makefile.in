@@ -234,7 +234,7 @@ INCLUDES = -I$(top_srcdir)/include/
 lib_LTLIBRARIES = libfaxpp.la
 
 # Library version, see http://sourceware.org/autobook/autobook/autobook_91.html
-libfaxpp_la_LDFLAGS = -version-info 2:0:0 -no-undefined
+libfaxpp_la_LDFLAGS = -version-info 2:1:0 -no-undefined
 libfaxpp_la_SOURCES = \
 src/attr_states.h \
 src/buffer.c \
