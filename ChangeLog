@@ -1,6 +1,15 @@
 Faxpp: A small, fast XML pull parser written in C with an API that can
 return UTF-8 or UTF-16 strings.
 
+version 0.4 (2008.12.04):
+	* Added the examples to the documentation.
+	* Fixed a bug where parsing would not resume properly after
+	  certain error cases.
+	* Fixed a freed memory read bug in attribute normalization.
+	* Fixed a bug in entity replacement when the output encoding is
+	  not UTF-8.
+	* Fixed Windows build.
+	
 version 0.3 (2008.03.20):
 	* Implemented the parsing of doctype declarations and internal
 	  subsets.
