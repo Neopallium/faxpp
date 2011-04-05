@@ -627,6 +627,22 @@ FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *env, void *buffer,
 /* static void p_print_token(FAXPP_ParserEnv *env) */
 /* { */
 /*   char buf[BUF_SIZE + 1]; */
+
+/*   if(env->tenv->base_uri.ptr != 0) { */
+/*     if(env->tenv->base_uri.len > BUF_SIZE) { */
+/*       strncpy(buf + 3, env->tenv->base_uri.ptr + env->tenv->base_uri.len - BUF_SIZE + 3, BUF_SIZE - 3); */
+/*       buf[0] = '.'; */
+/*       buf[1] = '.'; */
+/*       buf[2] = '.'; */
+/*       buf[BUF_SIZE] = 0; */
+/*     } */
+/*     else { */
+/*       strncpy(buf, env->tenv->base_uri.ptr, env->tenv->base_uri.len); */
+/*       buf[env->tenv->result_token.value.len] = 0; */
+/*     } */
+/*     printf("%s", buf); */
+/*   } */
+
 /*   if(env->tenv->result_token.value.ptr != 0) { */
 /*     if(env->tenv->result_token.value.len > BUF_SIZE) { */
 /*       strncpy(buf, env->tenv->result_token.value.ptr, BUF_SIZE - 3); */
@@ -639,11 +655,11 @@ FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *env, void *buffer,
 /*       strncpy(buf, env->tenv->result_token.value.ptr, env->tenv->result_token.value.len); */
 /*       buf[env->tenv->result_token.value.len] = 0; */
 /*     } */
-/*     printf("%03d:%03d Token ID: %s, Token: \"%s\"\n", env->tenv->result_token.line, */
+/*     printf(":%03d:%03d Token ID: %s, Token: \"%s\"\n", env->tenv->result_token.line, */
 /*            env->tenv->result_token.column, FAXPP_token_to_string(env->tenv->result_token.type), buf); */
 /*   } */
 /*   else { */
-/*     printf("%03d:%03d Token ID: %s\n", env->tenv->result_token.line, env->tenv->result_token.column, */
+/*     printf(":%03d:%03d Token ID: %s\n", env->tenv->result_token.line, env->tenv->result_token.column, */
 /*            FAXPP_token_to_string(env->tenv->result_token.type)); */
 /*   } */
 /* } */
@@ -659,7 +675,7 @@ FAXPP_Error FAXPP_continue_parse(FAXPP_Parser *env, void *buffer,
       (err) = (env)->tenv->state((env)->tenv); \
       p_check_err((err), (env)); \
     } \
-/*     p_print_token(env); */ \
+    /* p_print_token(env); */ \
   } \
 }
 
@@ -978,7 +994,8 @@ static FAXPP_Error p_read_more(FAXPP_ParserEnv *env)
       env->event.type = END_EXTERNAL_ENTITY_EVENT;
     }
     else if(env->tenv->external_subset) {
-      if(env->tenv->prev->internal_subset) {
+      if(env->tenv->prev->internal_subset ||
+         env->tenv->prev->external_subset) {
         env->next_event = nc_dtd_next_event;
       }
       else {
@@ -1165,17 +1182,18 @@ static FAXPP_Error nc_start_document_next_event(FAXPP_ParserEnv *env)
       return NO_ERROR;
     default:
       env->tenv->buffered_token = 1;
-      p_reset_event(env);
 
       if(env->tenv->external_subset || env->tenv->external_in_markup_entity) {
         // TBD event for start of external subset - jpcs
         env->next_event = nc_dtd_next_event;
       }
       else if(env->tenv->external_parsed_entity) {
+        p_reset_event(env);
         env->event.type = START_EXTERNAL_ENTITY_EVENT;
         env->next_event = env->main_next_event;
       }
       else {
+        p_reset_event(env);
         env->event.type = START_DOCUMENT_EVENT;
         env->next_event = env->main_next_event;
       }
